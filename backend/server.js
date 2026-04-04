@@ -42,50 +42,74 @@ app.get('/api/video-info', async (req, res) => {
   try {
     console.log('Fetching info for:', url);
     
-    // Detect platform and validate URL
+    // Detect platform
     const platform = detectPlatform(url);
     if (platform === 'Unknown') {
       return res.status(400).json({ error: 'Unsupported platform or invalid URL' });
     }
 
-    // Get video info - play-dl v1.x uses different methods per platform
-    let info;
+    // Use yt-dlp for all platforms to get video info
+    const { exec } = require('child_process');
+    const util = require('util');
+    const execPromise = util.promisify(exec);
+    
     try {
-      if (platform === 'YouTube') {
-        info = await play.video_info(url);
-      } else {
-        // For other platforms, we need to handle them differently
-        // play-dl primarily supports YouTube, limited support for others
-        return res.status(400).json({ 
-          error: `Platform '${platform}' is not fully supported yet. Currently optimized for YouTube videos.` 
-        });
-      }
+      // Get video info using yt-dlp
+      const cmd = `yt-dlp --dump-json --no-download "${url}"`;
+      const { stdout } = await execPromise(cmd, { timeout: 30000 });
+      const videoData = JSON.parse(stdout);
+      
+      // Format the response
+      const responseData = {
+        title: videoData.title || 'Unknown Title',
+        description: videoData.description || '',
+        thumbnail: videoData.thumbnail || videoData.thumbnails?.[0]?.url || '',
+        duration: formatDuration(videoData.duration || 0),
+        durationSeconds: videoData.duration || 0,
+        channel: videoData.channel || videoData.uploader || 'Unknown Channel',
+        views: formatViews(videoData.view_count || 0),
+        platform: platform,
+        url: url,
+        formats: getAvailableFormatsForPlatform(platform)
+      };
+
+      console.log('Video info fetched:', responseData.title);
+      res.json(responseData);
+      
     } catch (err) {
-      console.error('play-dl error:', err.message);
+      console.error('yt-dlp info error:', err.message);
+      
+      // Fallback to play-dl for YouTube if yt-dlp fails
+      if (platform === 'YouTube') {
+        try {
+          const info = await play.video_info(url);
+          const video = info.video_details;
+          
+          const videoData = {
+            title: video.title || 'Unknown Title',
+            description: video.description || '',
+            thumbnail: video.thumbnails[0]?.url || video.thumbnail?.url || '',
+            duration: formatDuration(video.durationInSec || 0),
+            durationSeconds: video.durationInSec || 0,
+            channel: video.channel?.name || video.author?.name || 'Unknown Channel',
+            views: formatViews(video.views || 0),
+            platform: platform,
+            url: url,
+            formats: getAvailableFormats(info)
+          };
+
+          console.log('Video info fetched (fallback):', videoData.title);
+          return res.json(videoData);
+        } catch (playErr) {
+          console.error('play-dl fallback error:', playErr.message);
+        }
+      }
+      
       return res.status(500).json({ 
         error: 'Failed to fetch video information',
         message: 'Video may be private, age-restricted, or unavailable'
       });
     }
-    
-    const video = info.video_details;
-    
-    // Format the response
-    const videoData = {
-      title: video.title || 'Unknown Title',
-      description: video.description || '',
-      thumbnail: video.thumbnails[0]?.url || video.thumbnail?.url || '',
-      duration: formatDuration(video.durationInSec || 0),
-      durationSeconds: video.durationInSec || 0,
-      channel: video.channel?.name || video.author?.name || 'Unknown Channel',
-      views: formatViews(video.views || 0),
-      platform: detectPlatform(url),
-      url: url,
-      formats: getAvailableFormats(info)
-    };
-
-    console.log('Video info fetched:', videoData.title);
-    res.json(videoData);
     
   } catch (error) {
     console.error('Error fetching video info:', error);
@@ -284,6 +308,20 @@ function getAvailableFormats(info) {
   
   // Add audio format
   formats.push({ quality: 'Audio Only', format: 'MP3', size: '~8 MB' });
+  
+  return formats;
+}
+
+function getAvailableFormatsForPlatform(platform) {
+  // All platforms support the same basic formats
+  // yt-dlp will handle finding the best available quality
+  const formats = [
+    { quality: '1080p HD', format: 'MP4', size: '~120 MB' },
+    { quality: '720p HD', format: 'MP4', size: '~65 MB' },
+    { quality: '480p', format: 'MP4', size: '~35 MB' },
+    { quality: '360p', format: 'MP4', size: '~20 MB' },
+    { quality: 'Audio Only', format: 'MP3', size: '~8 MB' }
+  ];
   
   return formats;
 }
