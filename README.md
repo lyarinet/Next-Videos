@@ -2,7 +2,7 @@
 
 A modern, high-performance full-stack video downloader for 2026. Built with a focus on speed, reliability, and extreme platform support. 
 
-![VideoGrab Dashboard](https://github.com/lyarinet/VideoGrab/raw/main/hero-shot.png) *(Placeholder - replace with actual screenshot if available)*
+![VideoGrab Dashboard](![alt text](image.png)) *(Placeholder - replace with actual screenshot if available)*
 
 ## 🌟 Premium Features
 
