@@ -347,22 +347,24 @@ function formatViews(views) {
 
 function detectPlatform(url) {
   const lowerUrl = url.toLowerCase();
-  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) {
-    return 'YouTube';
-  } else if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch')) {
-    return 'Facebook';
-  } else if (lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) {
-    return 'X / Twitter';
-  } else if (lowerUrl.includes('instagram.com')) {
-    return 'Instagram';
-  } else if (lowerUrl.includes('tiktok.com')) {
-    return 'TikTok';
-  } else if (lowerUrl.includes('vimeo.com')) {
-    return 'Vimeo';
-  } else if (lowerUrl.includes('dailymotion.com')) {
-    return 'Dailymotion';
+  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'YouTube';
+  if (lowerUrl.includes('facebook.com') || lowerUrl.includes('fb.watch')) return 'Facebook';
+  if (lowerUrl.includes('twitter.com') || lowerUrl.includes('x.com')) return 'X / Twitter';
+  if (lowerUrl.includes('instagram.com')) return 'Instagram';
+  if (lowerUrl.includes('tiktok.com')) return 'TikTok';
+  if (lowerUrl.includes('vimeo.com')) return 'Vimeo';
+  if (lowerUrl.includes('dailymotion.com')) return 'Dailymotion';
+  
+  // For all other 1000+ supported sites, extract the domain neatly
+  try {
+    const urlObj = new URL(url);
+    let domain = urlObj.hostname.replace('www.', '');
+    // Basic capitalization (e.g., cnn.com -> Cnn.com)
+    domain = domain.charAt(0).toUpperCase() + domain.slice(1);
+    return domain;
+  } catch (e) {
+    return 'Website';
   }
-  return 'Unknown';
 }
 
 function mapQuality(quality) {
