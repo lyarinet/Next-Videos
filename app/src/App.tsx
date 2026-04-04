@@ -134,6 +134,19 @@ function App() {
   const [selectedOption, setSelectedOption] = useState<DownloadOption | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
+  const [siteConfig, setSiteConfig] = useState<any>(null)
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/config`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) {
+          setSiteConfig(data);
+          if (data.siteTitle) document.title = data.siteTitle;
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   // Debounce URL input to auto-fetch info
   useEffect(() => {
@@ -280,7 +293,7 @@ function App() {
               <Download className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-              VideoGrab
+              {siteConfig?.siteTitle || 'VideoGrab'}
             </span>
           </div>
           <nav className="hidden sm:flex items-center gap-6">
@@ -306,17 +319,40 @@ function App() {
           </Badge>
           
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-            Download Videos from{' '}
-            <span className="bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
-              Any Platform
-            </span>
+            {siteConfig?.heroPrimaryText ? (
+              siteConfig.heroPrimaryText.includes('Any Platform') ? (
+                <>
+                  {siteConfig.heroPrimaryText.split('Any Platform')[0]}
+                  <span className="bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                    Any Platform
+                  </span>
+                  {siteConfig.heroPrimaryText.split('Any Platform')[1]}
+                </>
+              ) : (
+                siteConfig.heroPrimaryText
+              )
+            ) : (
+              <>
+                Download Videos from{' '}
+                <span className="bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                  Any Platform
+                </span>
+              </>
+            )}
           </h1>
           
           <p className="text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto flex flex-wrap justify-center items-center gap-x-1">
-            Fast, free, and easy video downloader. Support for YouTube, Facebook, X, Instagram, and
+            {siteConfig?.heroSecondaryText ? (
+              siteConfig.heroSecondaryText
+            ) : (
+              "Fast, free, and easy video downloader. Support for YouTube, Facebook, X, Instagram, and"
+            )}
+            
             <Dialog>
               <DialogTrigger asChild>
-                <span className="cursor-pointer bg-red-500/20 text-red-500 font-medium px-2 py-0.5 rounded hover:bg-red-500/30 transition-colors inline-block">1000+</span>
+                <span className="cursor-pointer bg-red-500/20 text-red-500 font-medium px-2 py-0.5 rounded hover:bg-red-500/30 transition-colors inline-block whitespace-nowrap">
+                  1000+ sites
+                </span>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col bg-slate-950 border-white/10 text-white sm:rounded-xl">
                 <DialogHeader>
@@ -344,7 +380,6 @@ function App() {
                 </div>
               </DialogContent>
             </Dialog>
-            sites.
           </p>
 
           {/* URL Input Card */}
@@ -601,10 +636,10 @@ function App() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
                 <Download className="w-4 h-4 text-white" />
               </div>
-              <span className="font-bold">VideoGrab</span>
+              <span className="font-bold">{siteConfig?.siteTitle || 'VideoGrab'}</span>
             </div>
             <p className="text-sm text-gray-500">
-              © 2024 VideoGrab. All rights reserved.
+              {siteConfig?.footerText || '© 2026 VideoGrab. All rights reserved.'}
             </p>
             <div className="flex items-center gap-4">
               <a href="#" className="text-sm text-gray-500 hover:text-white transition-colors">Terms</a>

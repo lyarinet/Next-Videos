@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 const http = require('http');
+const crypto = require('crypto');
 
 // Load env if available
 try { require('dotenv').config(); } catch(e) {}
@@ -35,6 +36,29 @@ const downloadsDir = path.join(__dirname, 'downloads');
 if (!fs.existsSync(downloadsDir)) {
   fs.mkdirSync(downloadsDir, { recursive: true });
 }
+
+// Config file setup
+const configFilePath = path.join(__dirname, 'config.json');
+if (!fs.existsSync(configFilePath)) {
+  fs.writeFileSync(configFilePath, JSON.stringify({
+    siteTitle: "VideoGrab",
+    heroPrimaryText: "Download Videos from Any Platform",
+    heroSecondaryText: "Fast, free, and easy video downloader. Support for YouTube, Facebook, X, Instagram, and 1000+ sites.",
+    footerText: "© 2026 VideoGrab. Disclaimer: Please do not download or use copyrighted materials without permission."
+  }, null, 2));
+}
+
+// Admin setup
+const adminToken = crypto.randomBytes(32).toString('hex');
+const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+console.log('\n=================================');
+console.log('🛡️  ADMIN PANEL CONFIGURATION');
+console.log(`URL: /#/admin`);
+console.log(`PASSWORD: ${adminPassword}`);
+console.log('=================================\n');
+
+// Global state for SSE real-time download tracking
+const downloadProgressMap = new Map();
 
 // Get video info endpoint
 app.get('/api/video-info', async (req, res) => {
@@ -127,9 +151,49 @@ app.get('/api/video-info', async (req, res) => {
   }
 });
 
+// Settings API
+app.get('/api/config', (req, res) => {
+  try {
+    const configData = JSON.parse(fs.readFileSync(configFilePath, 'utf8'));
+    res.json(configData);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read config' });
+  }
+});
+
+// Admin Authentication API
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body;
+  if (password === adminPassword) {
+    res.json({ token: adminToken });
+  } else {
+    res.status(401).json({ error: 'Invalid password' });
+  }
+});
+
+const verifyAdmin = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token && token === adminToken) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
+app.post('/api/admin/config', verifyAdmin, (req, res) => {
+  try {
+    const currentConfig = JSON.parse(fs.readFileSync(configFilePath, 'utf8') || '{}');
+    const newConfig = { ...currentConfig, ...req.body };
+    fs.writeFileSync(configFilePath, JSON.stringify(newConfig, null, 2));
+    res.json({ success: true, config: newConfig });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to write config' });
+  }
+});
+
 // Download video endpoint using yt-dlp
 app.post('/api/download', async (req, res) => {
-  const { url, quality, format } = req.body;
+  const { url, quality, format, downloadId } = req.body;
   
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
@@ -143,6 +207,9 @@ app.post('/api/download', async (req, res) => {
     
     // Generate safe filename
     const timestamp = Date.now();
+    const activeDownloadId = downloadId || timestamp.toString();
+    downloadProgressMap.set(activeDownloadId, 0);
+
     const outputTemplate = path.join(downloadsDir, `video_${timestamp}`);
     
     // Build yt-dlp command
@@ -178,7 +245,10 @@ app.post('/api/download', async (req, res) => {
     console.log('Executing:', cmd);
     
     // Execute yt-dlp
-    exec(cmd, { timeout: 300000 }, (error, stdout, stderr) => {
+    const child = exec(cmd, { timeout: 300000, maxBuffer: 10485760 }, (error, stdout, stderr) => {
+      // Clean up progress hook
+      downloadProgressMap.delete(activeDownloadId);
+
       if (error) {
         console.error('yt-dlp error:', error.message);
         console.error('stderr:', stderr);
@@ -225,6 +295,15 @@ app.post('/api/download', async (req, res) => {
       } catch (err) {
         console.error('Error finding file:', err);
         res.status(500).json({ error: 'Failed to locate downloaded file' });
+      }
+    });
+    
+    // Parse stdout for progress updates
+    child.stdout.on('data', (data) => {
+      const match = data.toString().match(/\[download\]\s+([\d\.]+)%/);
+      if (match) {
+        const percent = parseFloat(match[1]);
+        downloadProgressMap.set(activeDownloadId, percent);
       }
     });
     
@@ -314,9 +393,33 @@ app.get('/api/thumbnail-proxy', (req, res) => {
   fetchImage(url);
 });
 
-// Get download progress (for future implementation with WebSocket)
-app.get('/api/download/progress/:id', (req, res) => {
-  res.json({ progress: 0, status: 'pending' });
+app.get('/api/progress/:id', (req, res) => {
+  const id = req.params.id;
+  
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*' // Explicit CORS for SSE if needed
+  });
+
+  const sendProgress = () => {
+    // If it was deleted from map, it means download finished (or failed)
+    const progress = downloadProgressMap.has(id) ? downloadProgressMap.get(id) : 100;
+    res.write(`data: ${JSON.stringify({ progress })}\n\n`);
+    
+    if (progress >= 100 || !downloadProgressMap.has(id)) {
+      clearInterval(interval);
+      res.end();
+    }
+  };
+
+  sendProgress();
+  const interval = setInterval(sendProgress, 500);
+
+  req.on('close', () => {
+    clearInterval(interval);
+  });
 });
 
 // Health check
@@ -433,6 +536,34 @@ app.get('/{*path}', (req, res) => {
     });
   }
 });
+
+// Start auto-cleanup cron job (runs every 15 minutes)
+// Deletes files older than 1 hour to prevent server disk space overflow
+setInterval(() => {
+  try {
+    const files = fs.readdirSync(downloadsDir);
+    const now = Date.now();
+    files.forEach(file => {
+      // Ignore hidden files like .gitkeep
+      if (file.startsWith('.')) return; 
+      
+      const filePath = path.join(downloadsDir, file);
+      const stat = fs.statSync(filePath);
+      
+      // Delete if file older than 1 hour (3600000 ms)
+      if (now - stat.mtimeMs > 3600000) {
+        try {
+          fs.unlinkSync(filePath);
+          console.log(`Auto-Cleaned up old media file: ${file}`);
+        } catch (e) {
+          console.error(`Failed to delete old file ${file}:`, e.message);
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Cleanup cron error:', err);
+  }
+}, 15 * 60 * 1000);
 
 app.listen(PORT, () => {
   console.log(`VideoGrab server running on port ${PORT}`);

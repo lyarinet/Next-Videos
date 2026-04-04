@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 const https = require('https');
 const http = require('http');
+const crypto = require('crypto');
 
 // Load env if available
 try { require('dotenv').config(); } catch(e) {}
@@ -35,6 +36,26 @@ const downloadsDir = path.join(__dirname, 'downloads');
 if (!fs.existsSync(downloadsDir)) {
   fs.mkdirSync(downloadsDir, { recursive: true });
 }
+
+// Config file setup
+const configFilePath = path.join(__dirname, 'config.json');
+if (!fs.existsSync(configFilePath)) {
+  fs.writeFileSync(configFilePath, JSON.stringify({
+    siteTitle: "VideoGrab",
+    heroPrimaryText: "Download Videos from Any Platform",
+    heroSecondaryText: "Fast, free, and easy video downloader. Support for YouTube, Facebook, X, Instagram, and 1000+ sites.",
+    footerText: "© 2026 VideoGrab. Disclaimer: Please do not download or use copyrighted materials without permission."
+  }, null, 2));
+}
+
+// Admin setup
+const adminToken = crypto.randomBytes(32).toString('hex');
+const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+console.log('\n=================================');
+console.log('🛡️  ADMIN PANEL CONFIGURATION');
+console.log(`URL: /#/admin`);
+console.log(`PASSWORD: ${adminPassword}`);
+console.log('=================================\n');
 
 // Global state for SSE real-time download tracking
 const downloadProgressMap = new Map();
@@ -127,6 +148,46 @@ app.get('/api/video-info', async (req, res) => {
       error: 'Failed to fetch video info',
       message: error.message 
     });
+  }
+});
+
+// Settings API
+app.get('/api/config', (req, res) => {
+  try {
+    const configData = JSON.parse(fs.readFileSync(configFilePath, 'utf8'));
+    res.json(configData);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read config' });
+  }
+});
+
+// Admin Authentication API
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body;
+  if (password === adminPassword) {
+    res.json({ token: adminToken });
+  } else {
+    res.status(401).json({ error: 'Invalid password' });
+  }
+});
+
+const verifyAdmin = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token && token === adminToken) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
+app.post('/api/admin/config', verifyAdmin, (req, res) => {
+  try {
+    const currentConfig = JSON.parse(fs.readFileSync(configFilePath, 'utf8') || '{}');
+    const newConfig = { ...currentConfig, ...req.body };
+    fs.writeFileSync(configFilePath, JSON.stringify(newConfig, null, 2));
+    res.json({ success: true, config: newConfig });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to write config' });
   }
 });
 
