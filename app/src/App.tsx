@@ -27,7 +27,23 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
 import { toast } from 'sonner'
+
+const supportedSitesData = {
+  "Social Media": ["YouTube", "Facebook", "Instagram", "TikTok", "X (Twitter)", "LinkedIn", "Reddit", "Pinterest", "Snapchat", "VK", "OK.ru", "Tumblr"],
+  "Video Hosting": ["Vimeo", "Dailymotion", "Twitch", "Bilibili", "Rumble", "BitChute", "Odysee", "Streamable", "Brightcove", "Wistia", "Vidyard"],
+  "Audio & Music": ["SoundCloud", "Spotify", "Bandcamp", "Mixcloud", "Deezer", "Tidal", "Napster", "Qobuz", "Amazon Music", "Apple Music", "YouTube Music"],
+  "News & Media": ["CNN", "BBC", "NBC News", "ABC News", "FOX News", "Al Jazeera", "Reuters", "The Guardian", "The New York Times", "The Wall Street Journal"],
+  "Entertainment": ["Netflix", "Hulu", "Disney+", "HBO Max", "Amazon Prime Video", "Paramount+", "Peacock", "Discovery+", "Crunchyroll", "Funimation"],
+  "Tech & Gaming": ["GitHub", "GitLab", "Steam", "Epic Games", "GOG", "itch.io", "Unity", "Unreal Engine", "Roblox", "Minecraft"]
+};
 
 interface Platform {
   name: string
@@ -285,8 +301,39 @@ function App() {
             </span>
           </h1>
           
-          <p className="text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
-            Fast, free, and easy video downloader. Support for YouTube, Facebook, X, Instagram, and 1000+ sites.
+          <p className="text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto flex flex-wrap justify-center items-center gap-x-1">
+            Fast, free, and easy video downloader. Support for YouTube, Facebook, X, Instagram, and
+            <Dialog>
+              <DialogTrigger asChild>
+                <span className="cursor-pointer bg-red-500/20 text-red-500 font-medium px-2 py-0.5 rounded hover:bg-red-500/30 transition-colors inline-block">1000+</span>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col bg-slate-950 border-white/10 text-white sm:rounded-xl">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">Supported Platforms</DialogTitle>
+                </DialogHeader>
+                <div className="flex-1 overflow-y-auto pr-2 space-y-8 mt-4 pb-6">
+                  {Object.entries(supportedSitesData).map(([category, sites]) => (
+                    <div key={category}>
+                      <h3 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-red-500" />
+                        {category}
+                      </h3>
+                      <div className="flex flex-wrap gap-2">
+                        {sites.map(site => (
+                          <span key={site} className="px-3 py-1.5 text-sm bg-white/5 border border-white/10 rounded-full text-gray-300 hover:bg-white/10 transition-colors shadow-sm cursor-default">
+                            {site}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="pt-6 border-t border-white/10 text-center text-sm text-gray-500">
+                    And hundreds of other sites...
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+            sites.
           </p>
 
           {/* URL Input Card */}
