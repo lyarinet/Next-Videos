@@ -286,20 +286,29 @@ function App() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
       {/* Header */}
-      <header className="w-full py-4 px-4 sm:px-6 lg:px-8 border-b border-white/10">
+      <header className="sticky top-0 z-50 w-full py-4 px-4 sm:px-6 lg:px-8 border-b border-white/10 bg-slate-950/50 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
+          <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-red-500/20">
               <Download className="w-5 h-5 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-white via-white to-gray-500 bg-clip-text text-transparent">
               {siteConfig?.siteTitle || 'Next-Videos'}
             </span>
           </div>
-          <nav className="hidden sm:flex items-center gap-6">
-            <a href="#features" className="text-sm text-gray-400 hover:text-white transition-colors">Features</a>
-            <a href="#how-it-works" className="text-sm text-gray-400 hover:text-white transition-colors">How It Works</a>
-            <a href="#platforms" className="text-sm text-gray-400 hover:text-white transition-colors">Platforms</a>
+          <nav className="hidden sm:flex items-center gap-8">
+            <a href="#features" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
+              Features
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
+            </a>
+            <a href="#how-it-works" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
+              How It Works
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
+            </a>
+            <a href="#platforms" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
+              Platforms
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
+            </a>
           </nav>
         </div>
       </header>
@@ -307,9 +316,10 @@ function App() {
       {/* Hero Section */}
       <section className="relative pt-16 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Background Effects */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-red-600/20 rounded-full blur-[120px] animate-blob" />
+          <div className="absolute top-[10%] right-[-5%] w-[35%] h-[35%] bg-orange-600/20 rounded-full blur-[120px] animate-blob animation-delay-2000" />
+          <div className="absolute bottom-[-10%] left-[20%] w-[30%] h-[30%] bg-purple-600/10 rounded-full blur-[120px] animate-blob animation-delay-4000" />
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
@@ -318,12 +328,12 @@ function App() {
             Free & Unlimited Downloads
           </Badge>
           
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold mb-8 leading-[1.1] tracking-tight">
             {siteConfig?.heroPrimaryText ? (
               siteConfig.heroPrimaryText.includes('Any Platform') ? (
                 <>
                   {siteConfig.heroPrimaryText.split('Any Platform')[0]}
-                  <span className="bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent drop-shadow-sm">
                     Any Platform
                   </span>
                   {siteConfig.heroPrimaryText.split('Any Platform')[1]}
@@ -334,7 +344,7 @@ function App() {
             ) : (
               <>
                 Download Videos from{' '}
-                <span className="bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 bg-clip-text text-transparent drop-shadow-sm">
                   Any Platform
                 </span>
               </>
@@ -383,21 +393,21 @@ function App() {
           </p>
 
           {/* URL Input Card */}
-          <Card className="bg-white/5 border-white/10 backdrop-blur-xl max-w-2xl mx-auto">
-            <CardContent className="p-4 sm:p-6">
+          <Card className="glass-card max-w-2xl mx-auto shadow-2xl shadow-red-500/5 ring-1 ring-white/10">
+            <CardContent className="p-4 sm:p-8">
               <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <div className="relative flex-1 group">
+                  <Link2 className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500 group-focus-within:text-red-500 transition-colors" />
                   <Input
                     placeholder="Paste video URL here..."
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    className="pl-10 pr-10 h-12 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-red-500 focus:ring-red-500/20"
+                    className="pl-12 pr-12 h-14 bg-white/5 border-white/10 text-white text-lg placeholder:text-gray-500 focus:border-red-500/50 focus:ring-4 focus:ring-red-500/10 transition-all rounded-xl"
                   />
                   {url && (
                     <button
                       onClick={clearUrl}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-full"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -423,13 +433,13 @@ function App() {
 
               {/* Video Preview Card */}
               {videoInfo && !isLoading && (
-                <div className="mt-6 animate-slide-up">
-                  <div className="flex items-center justify-center gap-2 text-sm text-green-400 mb-4">
+                <div className="mt-8 animate-slide-up">
+                  <div className="flex items-center justify-center gap-2 text-sm font-medium text-green-400 mb-6 bg-green-400/5 py-2 rounded-full border border-green-400/10 max-w-[200px] mx-auto">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Detected: {videoInfo.platform}</span>
                   </div>
                   
-                  <div className="relative rounded-xl overflow-hidden bg-white/5 border border-white/10">
+                  <div className="relative rounded-2xl overflow-hidden bg-slate-900/50 border border-white/10 shadow-2xl">
                     {/* Thumbnail */}
                     <div className="relative aspect-video">
                       <img 
@@ -566,13 +576,13 @@ function App() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, index) => (
-              <Card key={index} className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors">
-                <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4">
+              <Card key={index} className="glass-card glass-card-hover group">
+                <CardContent className="p-8 text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/5 to-white/10 flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 animate-floating">
                     {feature.icon}
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                  <p className="text-sm text-gray-400">{feature.description}</p>
+                  <h3 className="text-xl font-bold mb-3">{feature.title}</h3>
+                  <p className="text-sm text-gray-400 leading-relaxed">{feature.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -581,23 +591,23 @@ function App() {
       </section>
 
       {/* How It Works Section */}
-      <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/5">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">How It Works</h2>
-            <p className="text-gray-400">Download your favorite videos in three simple steps</p>
+      <section id="how-it-works" className="py-24 px-4 sm:px-6 lg:px-8 border-t border-white/5 relative overflow-hidden">
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl sm:text-5xl font-bold mb-6">How It Works</h2>
+            <p className="text-xl text-gray-400">Download your favorite videos in three simple steps</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {howItWorks.map((step, index) => (
-              <div key={index} className="relative text-center">
-                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
+              <div key={index} className="relative group text-center">
+                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center mx-auto mb-8 text-3xl font-black shadow-xl shadow-red-500/20 group-hover:scale-110 transition-transform duration-500 ring-4 ring-white/10">
                   {step.step}
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{step.title}</h3>
-                <p className="text-sm text-gray-400">{step.description}</p>
+                <h3 className="text-2xl font-bold mb-4">{step.title}</h3>
+                <p className="text-gray-400 leading-relaxed px-4">{step.description}</p>
                 {index < howItWorks.length - 1 && (
-                  <div className="hidden md:block absolute top-8 left-[60%] w-full h-0.5 bg-gradient-to-r from-red-500/50 to-transparent" />
+                  <div className="hidden md:block absolute top-10 left-[70%] w-full h-[2px] bg-gradient-to-r from-red-500/50 via-white/10 to-transparent" />
                 )}
               </div>
             ))}
@@ -606,22 +616,23 @@ function App() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/5">
-        <div className="max-w-3xl mx-auto text-center">
-          <Card className="bg-gradient-to-br from-red-500/20 to-orange-500/20 border-red-500/30">
-            <CardContent className="p-8 sm:p-12">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-4">
-                Ready to Download?
+      <section className="py-24 px-4 sm:px-6 lg:px-8 border-t border-white/5 bg-slate-900/20">
+        <div className="max-w-4xl mx-auto text-center">
+          <Card className="relative overflow-hidden border-none bg-gradient-to-br from-red-600 to-orange-700 shadow-2xl shadow-red-900/20 rounded-[2rem]">
+            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
+            <CardContent className="p-12 sm:p-20 relative z-10">
+              <h2 className="text-3xl sm:text-5xl font-black mb-6 text-white tracking-tight">
+                Ready to Experience Speed?
               </h2>
-              <p className="text-gray-400 mb-6">
-                Start downloading your favorite videos now. No registration required.
+              <p className="text-white/80 text-lg sm:text-xl mb-10 max-w-xl mx-auto">
+                Join thousands of users who download their favorite media safely every day. No strings attached.
               </p>
               <Button
                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                className="h-12 px-8 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-semibold"
+                className="h-16 px-12 bg-white text-red-600 hover:bg-gray-100 font-bold text-xl rounded-2xl shadow-xl hover:scale-105 transition-all duration-300 group"
               >
-                <Download className="w-4 h-4 mr-2" />
-                Start Downloading
+                <Download className="w-6 h-6 mr-3 group-hover:animate-bounce" />
+                Start Downloading Now
               </Button>
             </CardContent>
           </Card>
@@ -629,23 +640,31 @@ function App() {
       </section>
 
       {/* Footer */}
-      <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-white/10">
+      <footer className="py-12 px-4 sm:px-6 lg:px-8 border-t border-white/10 bg-slate-950">
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-                <Download className="w-4 h-4 text-white" />
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-3 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/10">
+                <Download className="w-5 h-5 text-white" />
               </div>
-              <span className="font-bold">{siteConfig?.siteTitle || 'Next-Videos'}</span>
+              <span className="text-xl font-bold">{siteConfig?.siteTitle || 'Next-Videos'}</span>
             </div>
-            <p className="text-sm text-gray-500">
+            
+            <p className="text-sm text-gray-500 font-medium">
               {siteConfig?.footerText || '© 2026 Next-Videos. All rights reserved.'}
             </p>
-            <div className="flex items-center gap-4">
-              <a href="#/terms" className="text-sm text-gray-500 hover:text-white transition-colors">Terms</a>
-              <a href="#/privacy" className="text-sm text-gray-500 hover:text-white transition-colors">Privacy</a>
-              <a href="#/contact" className="text-sm text-gray-500 hover:text-white transition-colors">Contact</a>
+            
+            <div className="flex items-center gap-6">
+              <a href="#/terms" className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Terms</a>
+              <a href="#/privacy" className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Privacy</a>
+              <a href="#/contact" className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Contact</a>
             </div>
+          </div>
+          
+          <div className="mt-8 pt-8 border-t border-white/5 text-center">
+            <p className="text-xs text-gray-600 max-w-2xl mx-auto">
+              Please respect the intellectual property rights of others. This tool is intended for personal use only.
+            </p>
           </div>
         </div>
       </footer>
