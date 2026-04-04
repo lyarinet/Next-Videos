@@ -1,0 +1,19 @@
+{
+  "name": "videograb-backend",
+  "version": "1.0.0",
+  "description": "Video downloader backend API",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["video", "downloader", "youtube"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "express": "^5.2.1",
+    "play-dl": "^1.9.7"
+  }
+}
