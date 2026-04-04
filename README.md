@@ -2,7 +2,7 @@
 
 A modern, high-performance full-stack video downloader for 2026. Built with a focus on speed, reliability, and extreme platform support. 
 
-![VideoGrab Dashboard](![alt text]()) *(image.png)*
+![Next-Videos Dashboard](image.png)
 
 ## 🌟 Premium Features
 
