@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VideoGrab - Quick Start Script (Development Mode)
+# Next-Videos - Quick Start Script (Development Mode)
 # This script starts both frontend and backend in development mode
 
 set -e
@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}================================${NC}"
-echo -e "${BLUE}  VideoGrab Development Server${NC}"
+echo -e "${BLUE}  Next-Videos Development Server${NC}"
 echo -e "${BLUE}================================${NC}"
 echo ""
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VideoGrab - Production Start Script
+# Next-Videos - Production Start Script
 # This script starts the combined deployment (frontend + backend on same server)
 
 set -e
@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}================================${NC}"
-echo -e "${BLUE}  VideoGrab Production Server${NC}"
+echo -e "${BLUE}  Next-Videos Production Server${NC}"
 echo -e "${BLUE}================================${NC}"
 echo ""
 

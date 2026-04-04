@@ -15,6 +15,9 @@ export default function Admin() {
     heroPrimaryText: '',
     heroSecondaryText: '',
     footerText: '',
+    termsContent: '',
+    privacyContent: '',
+    contactContent: '',
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -200,6 +203,35 @@ export default function Admin() {
                     value={config.footerText || ''} 
                     onChange={e => setConfig({...config, footerText: e.target.value})}
                     className="bg-slate-950 border-white/10 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 shadow-sm p-4 bg-white/5 rounded-xl border border-white/5">
+                <h3 className="text-lg font-semibold text-white border-b border-white/10 pb-2">Static Pages</h3>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Terms of Service Content</label>
+                  <textarea 
+                    value={config.termsContent || ''} 
+                    onChange={e => setConfig({...config, termsContent: e.target.value})}
+                    className="w-full flex min-h-[120px] rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-red-500/50 resize-y"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Accepts plain text. Use \n for new lines.</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Privacy Policy Content</label>
+                  <textarea 
+                    value={config.privacyContent || ''} 
+                    onChange={e => setConfig({...config, privacyContent: e.target.value})}
+                    className="w-full flex min-h-[120px] rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-red-500/50 resize-y"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Contact Us Content</label>
+                  <textarea 
+                    value={config.contactContent || ''} 
+                    onChange={e => setConfig({...config, contactContent: e.target.value})}
+                    className="w-full flex min-h-[120px] rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-gray-500 outline-none focus:ring-2 focus:ring-red-500/50 resize-y"
                   />
                 </div>
               </div>

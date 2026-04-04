@@ -1,4 +1,4 @@
-# ✅ VideoGrab - Downloads NOW WORKING!
+# ✅ Next-Videos - Downloads NOW WORKING!
 
 ## 🎉 Success!
 
@@ -294,7 +294,7 @@ files.forEach(file => {
 
 ## 🎊 Congratulations!
 
-Your VideoGrab application now has:
+Your Next-Videos application now has:
 - ✅ Professional UI with React + TypeScript
 - ✅ Real-time video metadata fetching
 - ✅ Working video downloads (YouTube)

@@ -9,7 +9,7 @@ const http = require('http');
 const crypto = require('crypto');
 
 // Load env if available
-try { require('dotenv').config(); } catch(e) {}
+try { require('dotenv').config(); } catch (e) { }
 
 const app = express();
 const PORT = process.env.PORT || 3005;
@@ -41,10 +41,10 @@ if (!fs.existsSync(downloadsDir)) {
 const configFilePath = path.join(__dirname, 'config.json');
 if (!fs.existsSync(configFilePath)) {
   fs.writeFileSync(configFilePath, JSON.stringify({
-    siteTitle: "VideoGrab",
+    siteTitle: "Next-Videos",
     heroPrimaryText: "Download Videos from Any Platform",
-    heroSecondaryText: "Fast, free, and easy video downloader. Support for YouTube, Facebook, X, Instagram, and 1000+ sites.",
-    footerText: "© 2026 VideoGrab. Disclaimer: Please do not download or use copyrighted materials without permission."
+    heroSecondaryText: "Fast, free, and easy video downloader. Support for YouTube, Facebook, X, Instagram, and .",
+    footerText: "© 2026 Next-Videos. Disclaimer: Please do not download or use copyrighted materials without permission."
   }, null, 2));
 }
 
@@ -63,14 +63,14 @@ const downloadProgressMap = new Map();
 // Get video info endpoint
 app.get('/api/video-info', async (req, res) => {
   const { url } = req.query;
-  
+
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
 
   try {
     console.log('Fetching info for:', url);
-    
+
     // Detect platform
     const platform = detectPlatform(url);
     if (platform === 'Unknown') {
@@ -81,13 +81,13 @@ app.get('/api/video-info', async (req, res) => {
     const { exec } = require('child_process');
     const util = require('util');
     const execPromise = util.promisify(exec);
-    
+
     try {
       // Get video info using yt-dlp
       const cmd = `yt-dlp --dump-json --no-download "${url}"`;
       const { stdout } = await execPromise(cmd, { timeout: 30000 });
       const videoData = JSON.parse(stdout);
-      
+
       // Format the response
       const rawThumbnail = videoData.thumbnail || videoData.thumbnails?.[0]?.url || '';
       const responseData = {
@@ -105,16 +105,16 @@ app.get('/api/video-info', async (req, res) => {
 
       console.log('Video info fetched:', responseData.title);
       res.json(responseData);
-      
+
     } catch (err) {
       console.error('yt-dlp info error:', err.message);
-      
+
       // Fallback to play-dl for YouTube if yt-dlp fails
       if (platform === 'YouTube') {
         try {
           const info = await play.video_info(url);
           const video = info.video_details;
-          
+
           const rawFallbackThumb = video.thumbnails[0]?.url || video.thumbnail?.url || '';
           const videoData = {
             title: video.title || 'Unknown Title',
@@ -135,18 +135,18 @@ app.get('/api/video-info', async (req, res) => {
           console.error('play-dl fallback error:', playErr.message);
         }
       }
-      
-      return res.status(500).json({ 
+
+      return res.status(500).json({
         error: 'Failed to fetch video information',
         message: 'Video may be private, age-restricted, or unavailable'
       });
     }
-    
+
   } catch (error) {
     console.error('Error fetching video info:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to fetch video info',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -194,30 +194,30 @@ app.post('/api/admin/config', verifyAdmin, (req, res) => {
 // Download video endpoint using yt-dlp
 app.post('/api/download', async (req, res) => {
   const { url, quality, format, downloadId } = req.body;
-  
+
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
 
   try {
     console.log('Starting download:', url, 'Quality:', quality, 'Format:', format);
-    
+
     // Detect platform
     const platform = detectPlatform(url);
-    
+
     // Generate safe filename
     const timestamp = Date.now();
     const activeDownloadId = downloadId || timestamp.toString();
     downloadProgressMap.set(activeDownloadId, 0);
 
     const outputTemplate = path.join(downloadsDir, `video_${timestamp}`);
-    
+
     // Build yt-dlp command
     let cmd = `yt-dlp`;
-    
+
     // Set output template
     cmd += ` -o "${outputTemplate}.%(ext)s"`;
-    
+
     // Handle audio-only download
     if (format.toLowerCase() === 'mp3' || quality === 'Audio Only') {
       cmd += ' -x --audio-format mp3 --audio-quality 0';
@@ -231,19 +231,19 @@ app.post('/api/download', async (req, res) => {
         '480p': '480',
         '360p': '360'
       };
-      
+
       const maxHeight = qualityMap[quality] || '720';
-      
+
       // Use best available video and audio that matches criteria, fallback to best overall
       cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best"`;
       cmd += ' --merge-output-format mp4';
     }
-    
+
     // Add URL
     cmd += ` "${url}"`;
-    
+
     console.log('Executing:', cmd);
-    
+
     // Execute yt-dlp
     const child = exec(cmd, { timeout: 300000, maxBuffer: 10485760 }, (error, stdout, stderr) => {
       // Clean up progress hook
@@ -252,7 +252,7 @@ app.post('/api/download', async (req, res) => {
       if (error) {
         console.error('yt-dlp error:', error.message);
         console.error('stderr:', stderr);
-        
+
         // Provide more specific error messages
         let userMessage = 'Download failed';
         if (stderr.includes('Requested format is not available')) {
@@ -266,27 +266,27 @@ app.post('/api/download', async (req, res) => {
         } else if (stderr.includes('Sign in')) {
           userMessage = 'Authentication required. This content may be private.';
         }
-        
-        return res.status(500).json({ 
+
+        return res.status(500).json({
           error: 'Download failed',
           message: userMessage,
           details: stderr.split('\n')[0] // First line of error
         });
       }
-      
+
       console.log('yt-dlp stdout:', stdout);
-      
+
       // Find the downloaded file
       try {
         const files = fs.readdirSync(downloadsDir);
         const downloadedFile = files.find(f => f.startsWith(`video_${timestamp}`));
-        
+
         if (!downloadedFile) {
           return res.status(500).json({ error: 'File not found after download' });
         }
-        
+
         console.log('Download completed:', downloadedFile);
-        
+
         res.json({
           success: true,
           filename: downloadedFile,
@@ -297,7 +297,7 @@ app.post('/api/download', async (req, res) => {
         res.status(500).json({ error: 'Failed to locate downloaded file' });
       }
     });
-    
+
     // Parse stdout for progress updates
     child.stdout.on('data', (data) => {
       const match = data.toString().match(/\[download\]\s+([\d\.]+)%/);
@@ -306,12 +306,12 @@ app.post('/api/download', async (req, res) => {
         downloadProgressMap.set(activeDownloadId, percent);
       }
     });
-    
+
   } catch (error) {
     console.error('Download error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Download failed',
-      message: error.message 
+      message: error.message
     });
   }
 });
@@ -320,7 +320,7 @@ app.post('/api/download', async (req, res) => {
 app.get('/api/download/file/:filename', (req, res) => {
   const filename = req.params.filename;
   const filepath = path.join(downloadsDir, filename);
-  
+
   if (!fs.existsSync(filepath)) {
     return res.status(404).json({ error: 'File not found' });
   }
@@ -341,7 +341,7 @@ app.get('/api/thumbnail-proxy', (req, res) => {
 
   const fetchImage = (targetUrlString, redirectCount = 0) => {
     if (redirectCount > 3) return res.status(502).json({ error: 'Too many redirects' });
-    
+
     let targetUrl;
     try {
       targetUrl = new URL(targetUrlString);
@@ -395,7 +395,7 @@ app.get('/api/thumbnail-proxy', (req, res) => {
 
 app.get('/api/progress/:id', (req, res) => {
   const id = req.params.id;
-  
+
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
@@ -407,7 +407,7 @@ app.get('/api/progress/:id', (req, res) => {
     // If it was deleted from map, it means download finished (or failed)
     const progress = downloadProgressMap.has(id) ? downloadProgressMap.get(id) : 100;
     res.write(`data: ${JSON.stringify({ progress })}\n\n`);
-    
+
     if (progress >= 100 || !downloadProgressMap.has(id)) {
       clearInterval(interval);
       res.end();
@@ -432,7 +432,7 @@ function formatDuration(seconds) {
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  
+
   if (hrs > 0) {
     return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
@@ -457,7 +457,7 @@ function detectPlatform(url) {
   if (lowerUrl.includes('tiktok.com')) return 'TikTok';
   if (lowerUrl.includes('vimeo.com')) return 'Vimeo';
   if (lowerUrl.includes('dailymotion.com')) return 'Dailymotion';
-  
+
   // For all other 1000+ supported sites, extract the domain neatly
   try {
     const urlObj = new URL(url);
@@ -484,7 +484,7 @@ function mapQuality(quality) {
 
 function getAvailableFormats(info) {
   const formats = [];
-  
+
   // Add video formats
   formats.push(
     { quality: '1080p HD', format: 'MP4', size: '~120 MB' },
@@ -492,10 +492,10 @@ function getAvailableFormats(info) {
     { quality: '480p', format: 'MP4', size: '~35 MB' },
     { quality: '360p', format: 'MP4', size: '~20 MB' }
   );
-  
+
   // Add audio format
   formats.push({ quality: 'Audio Only', format: 'MP3', size: '~8 MB' });
-  
+
   return formats;
 }
 
@@ -509,7 +509,7 @@ function getAvailableFormatsForPlatform(platform) {
     { quality: '360p', format: 'MP4', size: '~20 MB' },
     { quality: 'Audio Only', format: 'MP3', size: '~8 MB' }
   ];
-  
+
   return formats;
 }
 
@@ -525,8 +525,8 @@ app.get('/{*path}', (req, res) => {
   if (fs.existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.json({ 
-      message: 'VideoGrab API Server',
+    res.json({
+      message: 'Next-Videos API Server',
       status: 'running',
       endpoints: [
         '/api/health',
@@ -545,11 +545,11 @@ setInterval(() => {
     const now = Date.now();
     files.forEach(file => {
       // Ignore hidden files like .gitkeep
-      if (file.startsWith('.')) return; 
-      
+      if (file.startsWith('.')) return;
+
       const filePath = path.join(downloadsDir, file);
       const stat = fs.statSync(filePath);
-      
+
       // Delete if file older than 1 hour (3600000 ms)
       if (now - stat.mtimeMs > 3600000) {
         try {
@@ -566,7 +566,7 @@ setInterval(() => {
 }, 15 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`VideoGrab server running on port ${PORT}`);
+  console.log(`Next-Videos server running on port ${PORT}`);
   console.log(`Downloads directory: ${downloadsDir}`);
   console.log(`API endpoints:`);
   console.log(`  - GET /api/health`);

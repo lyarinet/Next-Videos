@@ -1,6 +1,6 @@
-# VideoGrab - Scripts Overview
+# Next-Videos - Scripts Overview
 
-This document provides an overview of all the startup scripts created for the VideoGrab project.
+This document provides an overview of all the startup scripts created for the Next-Videos project.
 
 ## 📜 Available Scripts
 

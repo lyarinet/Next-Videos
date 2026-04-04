@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VideoGrab - Install Dependencies Only
+# Next-Videos - Install Dependencies Only
 # Use this script to install dependencies without starting servers
 
 set -e
@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}================================${NC}"
-echo -e "${BLUE}  VideoGrab Install Dependencies${NC}"
+echo -e "${BLUE}  Next-Videos Install Dependencies${NC}"
 echo -e "${BLUE}================================${NC}"
 echo ""
 

@@ -1,4 +1,4 @@
-# VideoGrab - Bug Fixes & Updates
+# Next-Videos - Bug Fixes & Updates
 
 ## 🐛 Issues Fixed (Latest Update)
 
@@ -40,7 +40,7 @@ Added inline SVG favicon to `app/index.html`:
 
 **Files Changed:**
 - `app/index.html` - Added favicon link
-- Updated page title to "VideoGrab - Video Downloader"
+- Updated page title to "Next-Videos - Video Downloader"
 
 ---
 

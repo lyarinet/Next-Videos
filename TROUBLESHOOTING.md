@@ -1,4 +1,4 @@
-# VideoGrab - Troubleshooting Guide
+# Next-Videos - Troubleshooting Guide
 
 Common issues and their solutions.
 
@@ -199,7 +199,7 @@ Open browser to: http://localhost:3001
 ### View Backend Logs
 Backend logs appear in the terminal where you started the server. Look for:
 - `Serving static files from: ...`
-- `VideoGrab server running on port 3001`
+- `Next-Videos server running on port 3001`
 - Error messages with stack traces
 
 ### View Frontend Logs

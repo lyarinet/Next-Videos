@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# VideoGrab - Project Setup and Start Script
+# Next-Videos - Project Setup and Start Script
 # This script installs dependencies and starts both frontend and backend
 
 set -e  # Exit on error
@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}================================${NC}"
-echo -e "${BLUE}  VideoGrab Setup & Start Script${NC}"
+echo -e "${BLUE}  Next-Videos Setup & Start Script${NC}"
 echo -e "${BLUE}================================${NC}"
 echo ""
 

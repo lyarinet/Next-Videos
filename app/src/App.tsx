@@ -293,7 +293,7 @@ function App() {
               <Download className="w-5 h-5 text-white" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-              {siteConfig?.siteTitle || 'VideoGrab'}
+              {siteConfig?.siteTitle || 'Next-Videos'}
             </span>
           </div>
           <nav className="hidden sm:flex items-center gap-6">
@@ -558,7 +558,7 @@ function App() {
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 border-t border-white/5">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why Choose VideoGrab?</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Why Choose Next-Videos?</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
               The most reliable and feature-rich video downloader on the web
             </p>
@@ -636,15 +636,15 @@ function App() {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
                 <Download className="w-4 h-4 text-white" />
               </div>
-              <span className="font-bold">{siteConfig?.siteTitle || 'VideoGrab'}</span>
+              <span className="font-bold">{siteConfig?.siteTitle || 'Next-Videos'}</span>
             </div>
             <p className="text-sm text-gray-500">
-              {siteConfig?.footerText || '© 2026 VideoGrab. All rights reserved.'}
+              {siteConfig?.footerText || '© 2026 Next-Videos. All rights reserved.'}
             </p>
             <div className="flex items-center gap-4">
-              <a href="#" className="text-sm text-gray-500 hover:text-white transition-colors">Terms</a>
-              <a href="#" className="text-sm text-gray-500 hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="text-sm text-gray-500 hover:text-white transition-colors">Contact</a>
+              <a href="#/terms" className="text-sm text-gray-500 hover:text-white transition-colors">Terms</a>
+              <a href="#/privacy" className="text-sm text-gray-500 hover:text-white transition-colors">Privacy</a>
+              <a href="#/contact" className="text-sm text-gray-500 hover:text-white transition-colors">Contact</a>
             </div>
           </div>
         </div>

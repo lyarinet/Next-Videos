@@ -1,4 +1,4 @@
-# VideoGrab - Quick Start Guide
+# Next-Videos - Quick Start Guide
 
 ## 🚀 Getting Started
 

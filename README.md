@@ -1,4 +1,4 @@
-# 🚀 VideoGrab - The Ultimate Video Downloader
+# 🚀 Next-Videos - The Ultimate Video Downloader
 
 A modern, high-performance full-stack video downloader for 2026. Built with a focus on speed, reliability, and extreme platform support. 
 
@@ -7,7 +7,7 @@ A modern, high-performance full-stack video downloader for 2026. Built with a fo
 ## 🌟 Premium Features
 
 ### 📡 1000+ Platforms Support
-Powered by an optimized `yt-dlp` backend, VideoGrab can process almost any link on the internet, including **YouTube, Facebook, Instagram, TikTok, LinkedIn, Reddit, Twitch, Vimeo, CNN, Netflix**, and 1000+ more.
+Powered by an optimized `yt-dlp` backend, Next-Videos can process almost any link on the internet, including **YouTube, Facebook, Instagram, TikTok, LinkedIn, Reddit, Twitch, Vimeo, CNN, Netflix**, and 1000+ more.
 
 ### 📊 Real-Time Progress Engine
 No more guessing. Using Server-Sent Events (SSE), the download interface provides a **live, frame-sync percentage bar** that tracks data transmission from the source server to our backend in real-time.
@@ -92,6 +92,15 @@ ADMIN_PASSWORD=your_secret_password
 VITE_API_URL=/api
 ```
 *(The Vite proxy handles routing to the correctly configured backend port)*
+
+---
+
+## 🚀 What's Next?
+
+We're expanding Next-Videos beyond the web! Check out our [Full Roadmap](NEXT.md) for details on upcoming features:
+- 📱 **Mobile Apps:** Native Android and iOS support.
+- 💻 **Desktop Apps:** Dedicated Windows, Linux, and macOS versions.
+- 🔗 **Browser Extensions:** Chrome and Firefox plugins for one-click downloads.
 
 ---
 

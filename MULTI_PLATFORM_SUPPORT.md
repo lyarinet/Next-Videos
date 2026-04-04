@@ -2,7 +2,7 @@
 
 ## 🎉 All Platforms Now Supported!
 
-VideoGrab now supports **ALL major video platforms** using `yt-dlp` as the universal backend!
+Next-Videos now supports **ALL major video platforms** using `yt-dlp` as the universal backend!
 
 ---
 
@@ -375,6 +375,6 @@ The server is running with full multi-platform support!
 
 ---
 
-**🎉 Your VideoGrab app now supports ALL major video platforms!**
+**🎉 Your Next-Videos app now supports ALL major video platforms!**
 
 Just paste any URL and start downloading! 🚀

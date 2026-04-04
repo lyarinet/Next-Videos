@@ -41,10 +41,10 @@ if (!fs.existsSync(downloadsDir)) {
 const configFilePath = path.join(__dirname, 'config.json');
 if (!fs.existsSync(configFilePath)) {
   fs.writeFileSync(configFilePath, JSON.stringify({
-    siteTitle: "VideoGrab",
+    siteTitle: "Next-Videos",
     heroPrimaryText: "Download Videos from Any Platform",
     heroSecondaryText: "Fast, free, and easy video downloader. Support for YouTube, Facebook, X, Instagram, and 1000+ sites.",
-    footerText: "© 2026 VideoGrab. Disclaimer: Please do not download or use copyrighted materials without permission."
+    footerText: "© 2026 Next-Videos. Disclaimer: Please do not download or use copyrighted materials without permission."
   }, null, 2));
 }
 
@@ -526,7 +526,7 @@ app.get('/{*path}', (req, res) => {
     res.sendFile(indexPath);
   } else {
     res.json({ 
-      message: 'VideoGrab API Server',
+      message: 'Next-Videos API Server',
       status: 'running',
       endpoints: [
         '/api/health',
@@ -566,7 +566,7 @@ setInterval(() => {
 }, 15 * 60 * 1000);
 
 app.listen(PORT, () => {
-  console.log(`VideoGrab server running on port ${PORT}`);
+  console.log(`Next-Videos server running on port ${PORT}`);
   console.log(`Downloads directory: ${downloadsDir}`);
   console.log(`API endpoints:`);
   console.log(`  - GET /api/health`);

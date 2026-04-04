@@ -1,6 +1,6 @@
 # Network Access Guide
 
-## 🌐 Accessing VideoGrab from Other Devices
+## 🌐 Accessing Next-Videos from Other Devices
 
 All startup scripts now display network URLs automatically!
 
@@ -12,7 +12,7 @@ When you run any start script, you'll see output like this:
 
 ```
 ================================
-  VideoGrab Development Server
+  Next-Videos Development Server
 ================================
 
 [i] Starting development servers...
