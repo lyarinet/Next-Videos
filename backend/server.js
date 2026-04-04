@@ -247,8 +247,8 @@ app.get('/api/download/file/:filename', (req, res) => {
   }
 
   res.download(filepath, filename, (err) => {
-    if (err) {
-      console.error('Download error:', err);
+    if (err && err.code !== 'EPIPE' && err.code !== 'ECONNRESET') {
+      console.error('Download error:', err.message || err);
     }
     // Optionally delete file after download
     // fs.unlinkSync(filepath);
@@ -260,46 +260,58 @@ app.get('/api/thumbnail-proxy', (req, res) => {
   const { url } = req.query;
   if (!url) return res.status(400).json({ error: 'url param required' });
 
-  let targetUrl;
-  try {
-    targetUrl = new URL(url);
-  } catch {
-    return res.status(400).json({ error: 'Invalid URL' });
-  }
-
-  const protocol = targetUrl.protocol === 'https:' ? https : http;
-  const options = {
-    hostname: targetUrl.hostname,
-    path: targetUrl.pathname + targetUrl.search,
-    method: 'GET',
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; VideoGrab/1.0)',
-      'Accept': 'image/*,*/*',
-      'Referer': targetUrl.origin,
+  const fetchImage = (targetUrlString, redirectCount = 0) => {
+    if (redirectCount > 3) return res.status(502).json({ error: 'Too many redirects' });
+    
+    let targetUrl;
+    try {
+      targetUrl = new URL(targetUrlString);
+    } catch {
+      return res.status(400).json({ error: 'Invalid URL' });
     }
+
+    const protocol = targetUrl.protocol === 'https:' ? https : http;
+    const options = {
+      hostname: targetUrl.hostname,
+      path: targetUrl.pathname + targetUrl.search,
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Referer': 'https://www.instagram.com/',
+      }
+    };
+
+    const proxyReq = protocol.request(options, (proxyRes) => {
+      // Follow redirects
+      if ([301, 302, 303, 307, 308].includes(proxyRes.statusCode) && proxyRes.headers.location) {
+        return fetchImage(proxyRes.headers.location, redirectCount + 1);
+      }
+
+      // Forward content-type but remove restrictive CORP/CORS headers
+      res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'image/jpeg');
+      res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.statusCode = proxyRes.statusCode;
+      proxyRes.pipe(res);
+    });
+
+    proxyReq.on('error', (err) => {
+      console.error('Thumbnail proxy error:', err.message);
+      if (!res.headersSent) res.status(502).json({ error: 'Failed to fetch thumbnail' });
+    });
+
+    proxyReq.setTimeout(10000, () => {
+      proxyReq.destroy();
+      if (!res.headersSent) res.status(504).json({ error: 'Thumbnail proxy timeout' });
+    });
+
+    proxyReq.end();
   };
 
-  const proxyReq = protocol.request(options, (proxyRes) => {
-    // Forward content-type but remove restrictive CORP/CORS headers
-    res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'image/jpeg');
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    res.statusCode = proxyRes.statusCode;
-    proxyRes.pipe(res);
-  });
-
-  proxyReq.on('error', (err) => {
-    console.error('Thumbnail proxy error:', err.message);
-    res.status(502).json({ error: 'Failed to fetch thumbnail' });
-  });
-
-  proxyReq.setTimeout(10000, () => {
-    proxyReq.destroy();
-    res.status(504).json({ error: 'Thumbnail proxy timeout' });
-  });
-
-  proxyReq.end();
+  fetchImage(url);
 });
 
 // Get download progress (for future implementation with WebSocket)
@@ -316,7 +328,7 @@ app.get('/api/health', (req, res) => {
 function formatDuration(seconds) {
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
+  const secs = Math.floor(seconds % 60);
   
   if (hrs > 0) {
     return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
