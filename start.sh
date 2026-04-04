@@ -140,9 +140,51 @@ echo ""
 # Start servers
 print_info "Starting servers..."
 echo ""
-print_info "Backend will run on: http://localhost:3001"
-print_info "Frontend dev server will run on: http://localhost:5173"
-print_info "Combined server will be available at: http://localhost:3001"
+
+# Get all network IPs
+get_network_ips() {
+  local ips=""
+  if command -v ipconfig &> /dev/null; then
+    # macOS
+    ips=$(ipconfig getifaddr en0 2>/dev/null)
+    if [ -z "$ips" ]; then
+      ips=$(ipconfig getifaddr en1 2>/dev/null)
+    fi
+  elif command -v hostname &> /dev/null; then
+    # Linux
+    ips=$(hostname -I 2>/dev/null | awk '{print $1}')
+  fi
+  echo "$ips"
+}
+
+NETWORK_IP=$(get_network_ips)
+
+print_info "Backend API:"
+print_info "  Local:   http://localhost:3001"
+if [ -n "$NETWORK_IP" ]; then
+  print_info "  Network: http://${NETWORK_IP}:3001"
+fi
+
+echo ""
+print_info "Frontend Dev Server:"
+print_info "  Local:   http://localhost:5173"
+if [ -n "$NETWORK_IP" ]; then
+  print_info "  Network: http://${NETWORK_IP}:5173"
+fi
+
+echo ""
+print_info "Combined Production Server:"
+print_info "  Local:   http://localhost:3001"
+if [ -n "$NETWORK_IP" ]; then
+  print_info "  Network: http://${NETWORK_IP}:3001"
+fi
+
+echo ""
+if [ -n "$NETWORK_IP" ]; then
+  print_warning "Access from other devices on your network using the Network URLs above"
+else
+  print_warning "To expose to network, run with: vite --host (frontend) or configure backend accordingly"
+fi
 echo ""
 print_warning "Press Ctrl+C to stop all servers"
 echo ""

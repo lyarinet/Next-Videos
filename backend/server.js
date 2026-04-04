@@ -4,9 +4,14 @@ const play = require('play-dl');
 const { exec } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+const http = require('http');
+
+// Load env if available
+try { require('dotenv').config(); } catch(e) {}
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3005;
 
 // Middleware
 app.use(cors());
@@ -60,10 +65,11 @@ app.get('/api/video-info', async (req, res) => {
       const videoData = JSON.parse(stdout);
       
       // Format the response
+      const rawThumbnail = videoData.thumbnail || videoData.thumbnails?.[0]?.url || '';
       const responseData = {
         title: videoData.title || 'Unknown Title',
         description: videoData.description || '',
-        thumbnail: videoData.thumbnail || videoData.thumbnails?.[0]?.url || '',
+        thumbnail: rawThumbnail ? `/api/thumbnail-proxy?url=${encodeURIComponent(rawThumbnail)}` : '',
         duration: formatDuration(videoData.duration || 0),
         durationSeconds: videoData.duration || 0,
         channel: videoData.channel || videoData.uploader || 'Unknown Channel',
@@ -85,10 +91,11 @@ app.get('/api/video-info', async (req, res) => {
           const info = await play.video_info(url);
           const video = info.video_details;
           
+          const rawFallbackThumb = video.thumbnails[0]?.url || video.thumbnail?.url || '';
           const videoData = {
             title: video.title || 'Unknown Title',
             description: video.description || '',
-            thumbnail: video.thumbnails[0]?.url || video.thumbnail?.url || '',
+            thumbnail: rawFallbackThumb ? `/api/thumbnail-proxy?url=${encodeURIComponent(rawFallbackThumb)}` : '',
             duration: formatDuration(video.durationInSec || 0),
             durationSeconds: video.durationInSec || 0,
             channel: video.channel?.name || video.author?.name || 'Unknown Channel',
@@ -160,8 +167,8 @@ app.post('/api/download', async (req, res) => {
       
       const maxHeight = qualityMap[quality] || '720';
       
-      // Select best video+audio format within quality limit
-      cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]"`;
+      // Use best available video and audio that matches criteria, fallback to best overall
+      cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best"`;
       cmd += ' --merge-output-format mp4';
     }
     
@@ -175,9 +182,25 @@ app.post('/api/download', async (req, res) => {
       if (error) {
         console.error('yt-dlp error:', error.message);
         console.error('stderr:', stderr);
+        
+        // Provide more specific error messages
+        let userMessage = 'Download failed';
+        if (stderr.includes('Requested format is not available')) {
+          userMessage = 'This video format is not available for download';
+        } else if (stderr.includes('ERROR: [Instagram]')) {
+          userMessage = 'Instagram video unavailable or requires authentication. Try a public post.';
+        } else if (stderr.includes('Private video') || stderr.includes('login')) {
+          userMessage = 'This content is private and requires authentication';
+        } else if (stderr.includes('Video unavailable') || stderr.includes('does not exist')) {
+          userMessage = 'Video not found or has been deleted';
+        } else if (stderr.includes('Sign in')) {
+          userMessage = 'Authentication required. This content may be private.';
+        }
+        
         return res.status(500).json({ 
           error: 'Download failed',
-          message: error.message 
+          message: userMessage,
+          details: stderr.split('\n')[0] // First line of error
         });
       }
       
@@ -230,6 +253,53 @@ app.get('/api/download/file/:filename', (req, res) => {
     // Optionally delete file after download
     // fs.unlinkSync(filepath);
   });
+});
+
+// Thumbnail proxy - fetches external images server-side to bypass CORP restrictions
+app.get('/api/thumbnail-proxy', (req, res) => {
+  const { url } = req.query;
+  if (!url) return res.status(400).json({ error: 'url param required' });
+
+  let targetUrl;
+  try {
+    targetUrl = new URL(url);
+  } catch {
+    return res.status(400).json({ error: 'Invalid URL' });
+  }
+
+  const protocol = targetUrl.protocol === 'https:' ? https : http;
+  const options = {
+    hostname: targetUrl.hostname,
+    path: targetUrl.pathname + targetUrl.search,
+    method: 'GET',
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; VideoGrab/1.0)',
+      'Accept': 'image/*,*/*',
+      'Referer': targetUrl.origin,
+    }
+  };
+
+  const proxyReq = protocol.request(options, (proxyRes) => {
+    // Forward content-type but remove restrictive CORP/CORS headers
+    res.setHeader('Content-Type', proxyRes.headers['content-type'] || 'image/jpeg');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cache-Control', 'public, max-age=3600');
+    res.statusCode = proxyRes.statusCode;
+    proxyRes.pipe(res);
+  });
+
+  proxyReq.on('error', (err) => {
+    console.error('Thumbnail proxy error:', err.message);
+    res.status(502).json({ error: 'Failed to fetch thumbnail' });
+  });
+
+  proxyReq.setTimeout(10000, () => {
+    proxyReq.destroy();
+    res.status(504).json({ error: 'Thumbnail proxy timeout' });
+  });
+
+  proxyReq.end();
 });
 
 // Get download progress (for future implementation with WebSocket)

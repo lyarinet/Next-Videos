@@ -151,7 +151,7 @@ function App() {
       
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Failed to fetch video info')
+        throw new Error(errorData.message || errorData.error || 'Failed to fetch video info')
       }
       
       const data = await response.json()
@@ -189,7 +189,7 @@ function App() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.error || 'Download failed')
+        throw new Error(errorData.message || errorData.error || 'Download failed')
       }
 
       const data = await response.json()
@@ -344,7 +344,14 @@ function App() {
                         alt={videoInfo.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/640x360?text=No+Thumbnail'
+                          const target = e.target as HTMLImageElement;
+                          if (!target.dataset.retry) {
+                            target.dataset.retry = 'true';
+                            target.src = videoInfo.thumbnail;
+                          } else {
+                            // Fallback to inline SVG placeholder
+                            target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='640' height='360' viewBox='0 0 640 360'%3E%3Crect fill='%23374151' width='640' height='360'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='24' fill='%239CA3AF'%3ENo Thumbnail Available%3C/text%3E%3C/svg%3E";
+                          }
                         }}
                       />
                       {/* Play Button Overlay */}

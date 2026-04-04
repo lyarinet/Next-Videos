@@ -7,6 +7,10 @@ import { inspectAttr } from 'kimi-plugin-inspect-react'
 export default defineConfig({
   base: './',
   plugins: [inspectAttr(), react()],
+  server: {
+    host: '0.0.0.0', // Listen on all interfaces (LAN + localhost)
+    port: 5173,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
