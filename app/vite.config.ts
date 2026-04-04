@@ -10,6 +10,7 @@ export default defineConfig({
   server: {
     host: '0.0.0.0', // Listen on all interfaces (LAN + localhost)
     port: 5173,
+    allowedHosts: true, // Allow all hosts (ventoy.lyarinet.com, etc)
     proxy: {
       '/api': {
         target: 'http://localhost:3005',

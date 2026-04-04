@@ -247,7 +247,7 @@ app.get('/api/download/file/:filename', (req, res) => {
   }
 
   res.download(filepath, filename, (err) => {
-    if (err && err.code !== 'EPIPE' && err.code !== 'ECONNRESET') {
+    if (err && err.code !== 'EPIPE' && err.code !== 'ECONNRESET' && err.message !== 'Request aborted') {
       console.error('Download error:', err.message || err);
     }
     // Optionally delete file after download

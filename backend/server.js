@@ -36,6 +36,9 @@ if (!fs.existsSync(downloadsDir)) {
   fs.mkdirSync(downloadsDir, { recursive: true });
 }
 
+// Global state for SSE real-time download tracking
+const downloadProgressMap = new Map();
+
 // Get video info endpoint
 app.get('/api/video-info', async (req, res) => {
   const { url } = req.query;
@@ -129,7 +132,7 @@ app.get('/api/video-info', async (req, res) => {
 
 // Download video endpoint using yt-dlp
 app.post('/api/download', async (req, res) => {
-  const { url, quality, format } = req.body;
+  const { url, quality, format, downloadId } = req.body;
   
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
@@ -143,6 +146,9 @@ app.post('/api/download', async (req, res) => {
     
     // Generate safe filename
     const timestamp = Date.now();
+    const activeDownloadId = downloadId || timestamp.toString();
+    downloadProgressMap.set(activeDownloadId, 0);
+
     const outputTemplate = path.join(downloadsDir, `video_${timestamp}`);
     
     // Build yt-dlp command
@@ -178,7 +184,10 @@ app.post('/api/download', async (req, res) => {
     console.log('Executing:', cmd);
     
     // Execute yt-dlp
-    exec(cmd, { timeout: 300000 }, (error, stdout, stderr) => {
+    const child = exec(cmd, { timeout: 300000, maxBuffer: 10485760 }, (error, stdout, stderr) => {
+      // Clean up progress hook
+      downloadProgressMap.delete(activeDownloadId);
+
       if (error) {
         console.error('yt-dlp error:', error.message);
         console.error('stderr:', stderr);
@@ -225,6 +234,15 @@ app.post('/api/download', async (req, res) => {
       } catch (err) {
         console.error('Error finding file:', err);
         res.status(500).json({ error: 'Failed to locate downloaded file' });
+      }
+    });
+    
+    // Parse stdout for progress updates
+    child.stdout.on('data', (data) => {
+      const match = data.toString().match(/\[download\]\s+([\d\.]+)%/);
+      if (match) {
+        const percent = parseFloat(match[1]);
+        downloadProgressMap.set(activeDownloadId, percent);
       }
     });
     
@@ -314,9 +332,33 @@ app.get('/api/thumbnail-proxy', (req, res) => {
   fetchImage(url);
 });
 
-// Get download progress (for future implementation with WebSocket)
-app.get('/api/download/progress/:id', (req, res) => {
-  res.json({ progress: 0, status: 'pending' });
+app.get('/api/progress/:id', (req, res) => {
+  const id = req.params.id;
+  
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*' // Explicit CORS for SSE if needed
+  });
+
+  const sendProgress = () => {
+    // If it was deleted from map, it means download finished (or failed)
+    const progress = downloadProgressMap.has(id) ? downloadProgressMap.get(id) : 100;
+    res.write(`data: ${JSON.stringify({ progress })}\n\n`);
+    
+    if (progress >= 100 || !downloadProgressMap.has(id)) {
+      clearInterval(interval);
+      res.end();
+    }
+  };
+
+  sendProgress();
+  const interval = setInterval(sendProgress, 500);
+
+  req.on('close', () => {
+    clearInterval(interval);
+  });
 });
 
 // Health check
@@ -433,6 +475,34 @@ app.get('/{*path}', (req, res) => {
     });
   }
 });
+
+// Start auto-cleanup cron job (runs every 15 minutes)
+// Deletes files older than 1 hour to prevent server disk space overflow
+setInterval(() => {
+  try {
+    const files = fs.readdirSync(downloadsDir);
+    const now = Date.now();
+    files.forEach(file => {
+      // Ignore hidden files like .gitkeep
+      if (file.startsWith('.')) return; 
+      
+      const filePath = path.join(downloadsDir, file);
+      const stat = fs.statSync(filePath);
+      
+      // Delete if file older than 1 hour (3600000 ms)
+      if (now - stat.mtimeMs > 3600000) {
+        try {
+          fs.unlinkSync(filePath);
+          console.log(`Auto-Cleaned up old media file: ${file}`);
+        } catch (e) {
+          console.error(`Failed to delete old file ${file}:`, e.message);
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Cleanup cron error:', err);
+  }
+}, 15 * 60 * 1000);
 
 app.listen(PORT, () => {
   console.log(`VideoGrab server running on port ${PORT}`);

@@ -189,7 +189,29 @@ function App() {
     setIsDownloading(true)
     setDownloadProgress(0)
 
+    const progressId = Date.now().toString()
+    let sse: EventSource | null = null;
+
     try {
+      // Connect to SSE for real-time progress tracking
+      sse = new EventSource(`${API_BASE_URL}/progress/${progressId}`)
+      sse.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data)
+          if (data.progress !== undefined) {
+            setDownloadProgress(data.progress)
+          }
+          if (data.progress >= 100 && sse) {
+            sse.close()
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+      sse.onerror = () => {
+        if (sse) sse.close()
+      }
+
       // Start download request
       const response = await fetch(`${API_BASE_URL}/download`, {
         method: 'POST',
@@ -199,7 +221,8 @@ function App() {
         body: JSON.stringify({
           url: videoInfo.url,
           quality: option.quality,
-          format: option.format
+          format: option.format,
+          downloadId: progressId
         })
       })
 
@@ -210,25 +233,12 @@ function App() {
 
       const data = await response.json()
       
-      // Simulate progress (in real implementation, use WebSocket)
-      const interval = setInterval(() => {
-        setDownloadProgress(prev => {
-          if (prev >= 90) {
-            clearInterval(interval)
-            return 90
-          }
-          return prev + Math.random() * 10
-        })
-      }, 500)
-
-      // Wait a bit then complete
-      await new Promise(resolve => setTimeout(resolve, 3000))
-      clearInterval(interval)
       setDownloadProgress(100)
+      if (sse) sse.close()
 
       // Trigger file download
       if (data.downloadUrl) {
-        const downloadLink = `${API_BASE_URL.replace('/api', '')}${data.downloadUrl}`
+        const downloadLink = `${API_BASE_URL.replace(/\/api$/, '')}${data.downloadUrl}`
         window.open(downloadLink, '_blank')
       }
 
@@ -240,6 +250,7 @@ function App() {
       setIsDownloading(false)
       setDownloadProgress(0)
       setSelectedOption(null)
+      if (sse) sse.close()
     }
   }
 
