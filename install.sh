@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Next-Videos - Comprehensive Linux Installation Script
-# This script installs system dependencies (yt-dlp, ffmpeg, python3) and project dependencies.
+# This script installs system dependencies (yt-dlp, ffmpeg, python3) and project dependencies..
 
 set -e
 
@@ -74,18 +74,30 @@ install_system_dep "python3" "python3"
 install_system_dep "ffmpeg" "ffmpeg"
 install_system_dep "curl" "curl"
 
-# --- 2. yt-dlp Installation (Direct Binary for Latest Version) ---
-if ! command -v yt-dlp &> /dev/null; then
-    print_info "Installing yt-dlp..."
-    sudo curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp
-    sudo chmod a+rx /usr/local/bin/yt-dlp
-    print_status "yt-dlp installed to /usr/local/bin/yt-dlp"
-else
-    # Update yt-dlp to ensure latest features/fixes
-    print_info "Updating yt-dlp to latest version..."
-    sudo yt-dlp -U || print_warning "Could not auto-update yt-dlp. You may need to update it manually."
-    print_status "yt-dlp version: $(yt-dlp --version)"
+# --- 2. yt-dlp Installation (via Python venv for reliability) ---
+print_info "Installing / Updating yt-dlp via Python venv..."
+
+# Explicitly ensure python3-venv is installed on Debian/Ubuntu
+if [ "$PKG_MANAGER" = "apt-get" ]; then
+    if ! dpkg -l | grep -q python3-venv; then
+        print_warning "python3-venv not found. Installing..."
+        sudo apt-get update -y && sudo apt-get install -y python3-venv
+    fi
 fi
+
+if [ ! -f "$SCRIPT_DIR/backend/venv/bin/pip" ]; then
+    rm -rf "$SCRIPT_DIR/backend/venv"
+    python3 -m venv "$SCRIPT_DIR/backend/venv"
+    print_status "Created Python virtual environment"
+fi
+
+print_info "Installing yt-dlp in virtual environment..."
+"$SCRIPT_DIR/backend/venv/bin/pip" install -U yt-dlp
+
+print_info "Symlinking yt-dlp to /usr/local/bin..."
+sudo ln -sf "$SCRIPT_DIR/backend/venv/bin/yt-dlp" /usr/local/bin/yt-dlp
+
+print_status "yt-dlp version: $(/usr/local/bin/yt-dlp --version || echo "unknown")"
 
 # --- 3. App Setup ---
 print_info "Setting up application..."
