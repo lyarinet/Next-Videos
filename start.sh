@@ -188,10 +188,11 @@ show_menu() {
     echo ""
     echo -e "${YELLOW}--- System ---${NC}"
     echo "7) Setup / Update Auto-Start (Systemd)"
-    echo "8) Run Installer / Update Dependencies"
-    echo "9) Exit"
+    echo "8) RESTART Auto-Start Service (Systemd)"
+    echo "9) Run Installer / Update Dependencies"
+    echo "10) Exit"
     echo ""
-    read -p "Select an option [1-9]: " choice
+    read -p "Select an option [1-10]: " choice
     
     case $choice in
         1) ./start-dev.sh ;;
@@ -201,8 +202,16 @@ show_menu() {
         5) stop_background; show_menu ;;
         6) view_logs; show_menu ;;
         7) setup_autostart; show_menu ;;
-        8) ./install.sh; show_menu ;;
-        9) exit 0 ;;
+        8) 
+            echo ""
+            print_info "Restarting Systemd service..."
+            sudo systemctl restart next-videos 2>/dev/null || print_warning "Service not active or failed to restart"
+            print_status "Service restart command completed"
+            sleep 2
+            show_menu
+            ;;
+        9) ./install.sh; show_menu ;;
+        10) exit 0 ;;
         *) print_error "Invalid option"; sleep 1; show_menu ;;
     esac
 }
