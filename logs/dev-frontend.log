@@ -1,0 +1,10 @@
+
+> my-app@0.0.0 dev
+> vite
+
+
+  VITE v7.3.1  ready in 374 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.2.112:5173/
+  ➜  Network: http://10.240.150.139:5173/

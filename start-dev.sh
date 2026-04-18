@@ -12,12 +12,6 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}================================${NC}"
-echo -e "${BLUE}  Next-Videos Development Server${NC}"
-echo -e "${BLUE}================================${NC}"
-echo ""
-
-# Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
@@ -33,99 +27,82 @@ print_warning() {
     echo -e "${YELLOW}[!]${NC} $1"
 }
 
-# Check if dependencies are installed
-if [ ! -d "backend/node_modules" ]; then
-    print_warning "Backend dependencies not found. Installing..."
-    cd "$SCRIPT_DIR/backend"
-    npm install
-    print_status "Backend dependencies installed"
+# --- Initialization ---
+BACKGROUND=false
+if [[ "$1" == "--background" ]]; then
+    BACKGROUND=true
+    mkdir -p logs .pids
 fi
 
-cd "$SCRIPT_DIR/app"
-if [ ! -d "app/node_modules" ]; then
-    print_warning "Frontend dependencies not found. Installing..."
-    npm install
-    print_status "Frontend dependencies installed"
-fi
-
-# Create .env files if they don't exist
-cd "$SCRIPT_DIR"
-if [ ! -f "backend/.env" ]; then
-    echo "PORT=3001" > backend/.env
-    print_status "Created backend/.env"
-fi
-
-if [ ! -f "app/.env" ]; then
-    echo "VITE_API_URL=http://localhost:3001/api" > app/.env
-    print_status "Created app/.env"
-fi
-
+echo -e "${BLUE}========================================${NC}"
+echo -e "${BLUE}    Starting Development Environment    ${NC}"
+echo -e "${BLUE}========================================${NC}"
 echo ""
+
+# Check for .env files
+if [ ! -f "backend/.env" ] || [ ! -f "app/.env" ]; then
+    print_warning "Environment files missing. Generating defaults..."
+    [ ! -f "backend/.env" ] && echo "PORT=3001" > backend/.env
+    [ ! -f "app/.env" ] && echo "VITE_API_URL=http://localhost:3001/api" > app/.env
+fi
 
 # Get network IP
-get_network_ips() {
-  local ips=""
-  if command -v ipconfig &> /dev/null; then
-    ips=$(ipconfig getifaddr en0 2>/dev/null)
-    if [ -z "$ips" ]; then
-      ips=$(ipconfig getifaddr en1 2>/dev/null)
+NETWORK_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+
+if [ "$BACKGROUND" = true ]; then
+    print_info "Running in BACKGROUND mode"
+    print_info "Backend Logs:  logs/dev-backend.log"
+    print_info "Frontend Logs: logs/dev-frontend.log"
+else
+    print_info "Backend API:      http://localhost:3001"
+    print_info "Frontend Dashboard: http://localhost:5173"
+    if [ -n "$NETWORK_IP" ]; then
+        print_info "Network Access:   http://${NETWORK_IP}:5173"
     fi
-  elif command -v hostname &> /dev/null; then
-    ips=$(hostname -I 2>/dev/null | awk '{print $1}')
-  fi
-  echo "$ips"
-}
-
-NETWORK_IP=$(get_network_ips)
-
-print_info "Starting development servers..."
-echo ""
-print_info "Backend API:"
-print_info "  Local:   http://localhost:3001"
-if [ -n "$NETWORK_IP" ]; then
-  print_info "  Network: http://${NETWORK_IP}:3001"
-fi
-
-echo ""
-print_info "Frontend Dev Server:"
-print_info "  Local:   http://localhost:5173"
-if [ -n "$NETWORK_IP" ]; then
-  print_info "  Network: http://${NETWORK_IP}:5173"
-fi
-
-echo ""
-if [ -n "$NETWORK_IP" ]; then
-  print_warning "Access from other devices using the Network URLs above"
-fi
-print_warning "Press Ctrl+C to stop all servers"
-echo ""
-
-# Function to cleanup processes
-cleanup() {
     echo ""
-    print_info "Shutting down servers..."
-    kill $BACKEND_PID 2>/dev/null
-    kill $FRONTEND_PID 2>/dev/null
-    wait $BACKEND_PID 2>/dev/null
-    wait $FRONTEND_PID 2>/dev/null
-    print_status "All servers stopped"
+    print_warning "Press Ctrl+C to stop both servers"
+    echo ""
+fi
+
+# --- Process Management ---
+cleanup() {
+    if [ "$BACKGROUND" = false ]; then
+        echo ""
+        print_info "Shutting down servers..."
+        kill $BACKEND_PID 2>/dev/null || true
+        kill $FRONTEND_PID 2>/dev/null || true
+        wait $BACKEND_PID 2>/dev/null || true
+        wait $FRONTEND_PID 2>/dev/null || true
+        print_status "All servers stopped"
+    fi
     exit 0
 }
 
 trap cleanup SIGINT SIGTERM
 
-# Start backend in background
+# Start backend
 cd "$SCRIPT_DIR/backend"
-npm start &
-BACKEND_PID=$!
+if [ "$BACKGROUND" = true ]; then
+    nohup npm run dev > "$SCRIPT_DIR/logs/dev-backend.log" 2>&1 &
+    echo $! > "$SCRIPT_DIR/.pids/dev-backend.pid"
+    BACKEND_PID=$!
+else
+    npm run dev &
+    BACKEND_PID=$!
+fi
 
-# Wait for backend to initialize
-sleep 2
-
-# Start frontend in background
+# Start frontend
 cd "$SCRIPT_DIR/app"
-npm run dev &
-FRONTEND_PID=$!
-
-# Wait for processes
-wait
+if [ "$BACKGROUND" = true ]; then
+    nohup npm run dev > "$SCRIPT_DIR/logs/dev-frontend.log" 2>&1 &
+    echo $! > "$SCRIPT_DIR/.pids/dev-frontend.pid"
+    FRONTEND_PID=$!
+    
+    print_status "Development servers started in background"
+    print_info "Use ./start.sh to view logs or stop them"
+else
+    npm run dev &
+    FRONTEND_PID=$!
+    # Wait for processes
+    wait
+fi

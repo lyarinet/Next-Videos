@@ -12,12 +12,11 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}================================${NC}"
-echo -e "${BLUE}  Next-Videos Production Server${NC}"
-echo -e "${BLUE}================================${NC}"
-echo ""
+BUILD_ONLY=false
+if [[ "$1" == "--build-only" ]]; then
+    BUILD_ONLY=true
+fi
 
-# Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
@@ -33,85 +32,87 @@ print_warning() {
     echo -e "${YELLOW}[!]${NC} $1"
 }
 
-# Setup combined folder if needed
-if [ ! -f "combined/server.js" ] || [ ! -d "combined/public" ]; then
+# --- Setup Combined Folder ---
+setup_combined() {
     print_info "Setting up combined deployment..."
     
+    # Ensure backend is ready
+    if [ ! -f "backend/server.js" ]; then
+        print_error "Backend server.js not found"
+        exit 1
+    fi
+    
+    # Build frontend
+    print_info "Building frontend..."
+    cd "$SCRIPT_DIR/app"
+    npm run build
+    
+    # Setup combined directory
     cd "$SCRIPT_DIR/combined"
     
-    # Copy backend files
+    # Copy files
     cp "$SCRIPT_DIR/backend/server.js" .
     cp "$SCRIPT_DIR/backend/package.json" .
     
-    # Build frontend if needed
-    if [ ! -d "$SCRIPT_DIR/app/dist" ]; then
-        print_info "Building frontend..."
-        cd "$SCRIPT_DIR/app"
-        npm run build
-    fi
-    
     # Copy frontend build
-    if [ -d "public" ]; then
-        rm -rf public
-    fi
+    if [ -d "public" ]; then rm -rf public; fi
     cp -r "$SCRIPT_DIR/app/dist" public
+
+    # Create downloads directory early
+    mkdir -p downloads
     
     # Install dependencies
     print_info "Installing combined dependencies..."
     npm install
-    print_status "Combined deployment ready"
-else
-    print_status "Combined deployment already configured"
-    # Always update server.js to latest version
-    cp "$SCRIPT_DIR/backend/server.js" "$SCRIPT_DIR/combined/server.js"
     
-    # Ensure dependencies are installed
-    cd "$SCRIPT_DIR/combined"
-    if [ ! -d "node_modules" ]; then
-        print_info "Installing combined dependencies..."
-        npm install
-        print_status "Dependencies installed"
+    # Create .env if missing
+    if [ ! -f ".env" ]; then
+        echo "PORT=3001" > .env
     fi
-fi
-
-# Create .env if it doesn't exist
-cd "$SCRIPT_DIR"
-if [ ! -f "combined/.env" ]; then
-    echo "PORT=3001" > combined/.env
-    print_status "Created combined/.env"
-fi
-
-echo ""
-
-# Get network IP
-get_network_ips() {
-  local ips=""
-  if command -v ipconfig &> /dev/null; then
-    ips=$(ipconfig getifaddr en0 2>/dev/null)
-    if [ -z "$ips" ]; then
-      ips=$(ipconfig getifaddr en1 2>/dev/null)
-    fi
-  elif command -v hostname &> /dev/null; then
-    ips=$(hostname -I 2>/dev/null | awk '{print $1}')
-  fi
-  echo "$ips"
+    
+    print_status "Combined deployment ready"
 }
 
-NETWORK_IP=$(get_network_ips)
+# Always perform setup if public folder is missing or if build is forced
+if [ ! -d "combined/public" ]; then
+    setup_combined
+fi
 
-print_info "Starting production server..."
-print_info "Application:"
-print_info "  Local:   http://localhost:3001"
+# Ensure downloads directory exists in combined folder to avoid cron errors
+mkdir -p "$SCRIPT_DIR/combined/downloads"
+
+if [ "$BUILD_ONLY" = true ]; then
+    print_status "Build complete (--build-only)"
+    exit 0
+fi
+
+# --- Start Server ---
+cd "$SCRIPT_DIR/combined"
+
+# Get network IP
+NETWORK_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+
+if [ "$1" == "--background" ]; then
+    mkdir -p "$SCRIPT_DIR/logs" "$SCRIPT_DIR/.pids"
+    print_info "Starting Production Server in BACKGROUND mode..."
+    nohup npm start > "$SCRIPT_DIR/logs/prod.log" 2>&1 &
+    echo $! > "$SCRIPT_DIR/.pids/prod.pid"
+    print_status "Production server started in background"
+    print_info "Logs: logs/prod.log"
+    exit 0
+fi
+
+echo ""
+echo -e "${BLUE}========================================${NC}"
+echo -e "${BLUE}    Starting Production Server          ${NC}"
+echo -e "${BLUE}========================================${NC}"
+echo ""
+print_info "Local:   http://localhost:3001"
 if [ -n "$NETWORK_IP" ]; then
-  print_info "  Network: http://${NETWORK_IP}:3001"
+    print_info "Network: http://${NETWORK_IP}:3001"
 fi
 echo ""
-if [ -n "$NETWORK_IP" ]; then
-  print_warning "Access from other devices using the Network URL above"
-fi
 print_warning "Press Ctrl+C to stop the server"
 echo ""
 
-# Start the combined server
-cd "$SCRIPT_DIR/combined"
 npm start
