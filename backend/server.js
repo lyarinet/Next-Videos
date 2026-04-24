@@ -8,6 +8,13 @@ const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
 
+// Find yt-dlp path (prefer venv)
+const getYtDlpPath = () => {
+  const venvPath = path.join(__dirname, 'venv', 'bin', 'yt-dlp');
+  if (fs.existsSync(venvPath)) return venvPath;
+  return 'yt-dlp'; // Fallback to system path
+};
+
 // Load env if available
 try { require('dotenv').config(); } catch (e) { }
 
@@ -84,7 +91,7 @@ app.get('/api/video-info', async (req, res) => {
 
     try {
       // Get video info using yt-dlp
-      const cmd = `yt-dlp --dump-json --no-download "${url}"`;
+      const cmd = `"${getYtDlpPath()}" --dump-json --no-download "${url}"`;
       const { stdout } = await execPromise(cmd, { timeout: 30000 });
       const videoData = JSON.parse(stdout);
 
@@ -213,7 +220,7 @@ app.post('/api/download', async (req, res) => {
     const outputTemplate = path.join(downloadsDir, `video_${timestamp}`);
 
     // Build yt-dlp command
-    let cmd = `yt-dlp`;
+    let cmd = `"${getYtDlpPath()}"`;
 
     // Set output template
     cmd += ` -o "${outputTemplate}.%(ext)s"`;

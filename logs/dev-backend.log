@@ -16,3 +16,13 @@ API endpoints:
   - GET /api/health
   - GET /api/video-info?url=VIDEO_URL
   - POST /api/download
+Fetching info for: https://x.com/i/status/2047657905470460299
+yt-dlp info error: Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download "https://x.com/i/status/2047657905470460299"
+ERROR: [twitter] 2047657905470460299: No video could be found in this tweet
+
+Fetching info for: https://x.com/i/status/2047657905470460299
+yt-dlp info error: Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download "https://x.com/i/status/2047657905470460299"
+ERROR: [twitter] 2047657905470460299: No video could be found in this tweet
+
+Fetching info for: https://x.com/StuffWorthSee/status/2047598627393032537?s=20
+Video info fetched: Stuff Worth Seeing - All my life, I’ve waited for this invention!!!!!

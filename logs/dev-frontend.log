@@ -2,9 +2,12 @@
 > my-app@0.0.0 dev
 > vite
 
+Port 5173 is in use, trying another one...
+Port 5174 is in use, trying another one...
+Port 5175 is in use, trying another one...
 
-  VITE v7.3.1  ready in 373 ms
+  VITE v7.3.1  ready in 356 ms
 
-  ➜  Local:   http://localhost:5173/
-  ➜  Network: http://192.168.2.112:5173/
-  ➜  Network: http://10.240.150.139:5173/
+  ➜  Local:   http://localhost:5176/
+  ➜  Network: http://192.168.2.112:5176/
+  ➜  Network: http://10.240.150.139:5176/
