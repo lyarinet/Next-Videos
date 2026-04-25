@@ -401,12 +401,10 @@ app.get('/api/progress/:id', (req, res) => {
     const data = downloadProgressMap.get(id) || { progress: 100, downloadUrl: null, error: null };
     res.write(`data: ${JSON.stringify(data)}\n\n`);
 
-    if (data.progress >= 100 || data.error) {
+    // Only close the connection when we actually have the final URL or an error
+    if (data.downloadUrl || data.error || !downloadProgressMap.has(id)) {
       clearInterval(interval);
-      // Only delete if it's finished and consumed
-      if (data.progress >= 100 || data.error) {
-        setTimeout(() => downloadProgressMap.delete(id), 5000);
-      }
+      setTimeout(() => downloadProgressMap.delete(id), 5000);
       res.end();
     }
   };

@@ -16,3 +16,11 @@ API endpoints:
   - GET /api/health
   - GET /api/video-info?url=VIDEO_URL
   - POST /api/download
+Fetching info for: https://www.youtube.com/shorts/sO6t1dI8He4
+Video info fetched: 💫💫👏 #design #contractor #construction ##shorts #viralvideo #trending #business #homedecor #work
+Starting download: https://www.youtube.com/shorts/sO6t1dI8He4 Quality: Audio Only Format: MP3
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" -o "/var/www/web/Next-Videos/backend/downloads/video_1777137780941.%(ext)s" -x --audio-format mp3 --audio-quality 0 --extract-audio "https://www.youtube.com/shorts/sO6t1dI8He4"
+Fetching info for: https://www.youtube.com/watch?v=DrwU9OgJjW8
+Video info fetched: Samjho Na Kuch To Samjho Na Video Song Himesh Reshammiya Feat. Sonal Chauhan | Aap Kaa Surroor
+Starting download: https://www.youtube.com/watch?v=DrwU9OgJjW8 Quality: Audio Only Format: MP3
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" -o "/var/www/web/Next-Videos/backend/downloads/video_1777137829938.%(ext)s" -x --audio-format mp3 --audio-quality 0 --extract-audio "https://www.youtube.com/watch?v=DrwU9OgJjW8"
