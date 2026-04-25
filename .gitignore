@@ -1,6 +1,30 @@
+# Dependencies
+node_modules/
 backend/venv/
+app/dist/
+combined/
+
+# Downloads and media
+backend/downloads/
+combined/downloads/
+*.mp4
+*.mp3
+*.webm
+*.mkv
+image.png
+
+# Environment and secrets
+.env
+app/.env
+backend/.env
+
+# Logs and temporary files
+logs/
+.pids/
 __pycache__/
 *.pyc
-.env
-node_modules/
 .DS_Store
+
+# System files
+.next/
+build/

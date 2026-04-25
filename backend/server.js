@@ -164,7 +164,11 @@ app.get('/api/config', (req, res) => {
     const configData = JSON.parse(fs.readFileSync(configFilePath, 'utf8'));
     res.json(configData);
   } catch (err) {
-    res.status(500).json({ error: 'Failed to read config' });
+    console.error('Error reading config file:', err.message);
+    res.status(500).json({ 
+      error: 'Failed to read config', 
+      message: err.message 
+    });
   }
 });
 
@@ -215,7 +219,7 @@ app.post('/api/download', async (req, res) => {
     // Generate safe filename
     const timestamp = Date.now();
     const activeDownloadId = downloadId || timestamp.toString();
-    downloadProgressMap.set(activeDownloadId, 0);
+    downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: null });
 
     const outputTemplate = path.join(downloadsDir, `video_${timestamp}`);
 
@@ -233,6 +237,7 @@ app.post('/api/download', async (req, res) => {
       // Video download with quality selection
       const qualityMap = {
         '4K (2160p)': '2160',
+        '2K (1440p)': '1440',
         '1080p HD': '1080',
         '720p HD': '720',
         '480p': '480',
@@ -251,69 +256,50 @@ app.post('/api/download', async (req, res) => {
 
     console.log('Executing:', cmd);
 
-    // Execute yt-dlp
-    const child = exec(cmd, { timeout: 300000, maxBuffer: 10485760 }, (error, stdout, stderr) => {
-      // Clean up progress hook
-      downloadProgressMap.delete(activeDownloadId);
-
+    // Start yt-dlp in the background and respond immediately to avoid 504 timeout
+    exec(cmd, { timeout: 3600000, maxBuffer: 10485760 }, (error, stdout, stderr) => {
       if (error) {
         console.error('yt-dlp error:', error.message);
-        console.error('stderr:', stderr);
-
-        // Provide more specific error messages
         let userMessage = 'Download failed';
-        if (stderr.includes('Requested format is not available')) {
-          userMessage = 'This video format is not available for download';
-        } else if (stderr.includes('ERROR: [Instagram]')) {
-          userMessage = 'Instagram video unavailable or requires authentication. Try a public post.';
-        } else if (stderr.includes('Private video') || stderr.includes('login')) {
-          userMessage = 'This content is private and requires authentication';
-        } else if (stderr.includes('Video unavailable') || stderr.includes('does not exist')) {
-          userMessage = 'Video not found or has been deleted';
-        } else if (stderr.includes('Sign in')) {
-          userMessage = 'Authentication required. This content may be private.';
-        }
-
-        return res.status(500).json({
-          error: 'Download failed',
-          message: userMessage,
-          details: stderr.split('\n')[0] // First line of error
+        if (stderr.includes('Requested format is not available')) userMessage = 'Format not available';
+        else if (stderr.includes('Private video')) userMessage = 'Private video';
+        
+        downloadProgressMap.set(activeDownloadId, { 
+          progress: 0, 
+          downloadUrl: null, 
+          error: userMessage 
         });
+        return;
       }
 
-      console.log('yt-dlp stdout:', stdout);
-
-      // Find the downloaded file
       try {
         const files = fs.readdirSync(downloadsDir);
         const downloadedFile = files.find(f => f.startsWith(`video_${timestamp}`));
 
         if (!downloadedFile) {
-          return res.status(500).json({ error: 'File not found after download' });
+          downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'File not found' });
+          return;
         }
 
-        console.log('Download completed:', downloadedFile);
-
-        res.json({
-          success: true,
-          filename: downloadedFile,
-          downloadUrl: `/api/download/file/${downloadedFile}`
+        downloadProgressMap.set(activeDownloadId, { 
+          progress: 100, 
+          downloadUrl: `/api/download/file/${downloadedFile}`, 
+          error: null 
         });
       } catch (err) {
-        console.error('Error finding file:', err);
-        res.status(500).json({ error: 'Failed to locate downloaded file' });
+        downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'Cleanup error' });
       }
-    });
-
-    // Parse stdout for progress updates
-    child.stdout.on('data', (data) => {
+    }).stdout.on('data', (data) => {
       const match = data.toString().match(/\[download\]\s+([\d\.]+)%/);
       if (match) {
         const percent = parseFloat(match[1]);
-        downloadProgressMap.set(activeDownloadId, percent);
+        const current = downloadProgressMap.get(activeDownloadId) || {};
+        downloadProgressMap.set(activeDownloadId, { ...current, progress: percent });
       }
     });
 
+    // Respond immediately
+    return res.json({ success: true, downloadId: activeDownloadId });
   } catch (error) {
     console.error('Download error:', error);
     res.status(500).json({
@@ -407,16 +393,20 @@ app.get('/api/progress/:id', (req, res) => {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
     'Connection': 'keep-alive',
-    'Access-Control-Allow-Origin': '*' // Explicit CORS for SSE if needed
+    'Access-Control-Allow-Origin': '*', // Explicit CORS for SSE if needed
+    'X-Accel-Buffering': 'no' // Prevent Nginx from buffering SSE
   });
 
   const sendProgress = () => {
-    // If it was deleted from map, it means download finished (or failed)
-    const progress = downloadProgressMap.has(id) ? downloadProgressMap.get(id) : 100;
-    res.write(`data: ${JSON.stringify({ progress })}\n\n`);
+    const data = downloadProgressMap.get(id) || { progress: 100, downloadUrl: null, error: null };
+    res.write(`data: ${JSON.stringify(data)}\n\n`);
 
-    if (progress >= 100 || !downloadProgressMap.has(id)) {
+    if (data.progress >= 100 || data.error) {
       clearInterval(interval);
+      // Only delete if it's finished and consumed
+      if (data.progress >= 100 || data.error) {
+        setTimeout(() => downloadProgressMap.delete(id), 5000);
+      }
       res.end();
     }
   };
@@ -480,6 +470,7 @@ function detectPlatform(url) {
 function mapQuality(quality) {
   const qualityMap = {
     '4K (2160p)': 2160,
+    '2K (1440p)': 1440,
     '1080p HD': 1080,
     '720p HD': 720,
     '480p': 480,
@@ -494,6 +485,8 @@ function getAvailableFormats(info) {
 
   // Add video formats
   formats.push(
+    { quality: '4K (2160p)', format: 'MP4', size: '~450 MB' },
+    { quality: '2K (1440p)', format: 'MP4', size: '~250 MB' },
     { quality: '1080p HD', format: 'MP4', size: '~120 MB' },
     { quality: '720p HD', format: 'MP4', size: '~65 MB' },
     { quality: '480p', format: 'MP4', size: '~35 MB' },
@@ -510,6 +503,8 @@ function getAvailableFormatsForPlatform(platform) {
   // All platforms support the same basic formats
   // yt-dlp will handle finding the best available quality
   const formats = [
+    { quality: '4K (2160p)', format: 'MP4', size: '~450 MB' },
+    { quality: '2K (1440p)', format: 'MP4', size: '~250 MB' },
     { quality: '1080p HD', format: 'MP4', size: '~120 MB' },
     { quality: '720p HD', format: 'MP4', size: '~65 MB' },
     { quality: '480p', format: 'MP4', size: '~35 MB' },

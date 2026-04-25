@@ -214,8 +214,19 @@ function App() {
           if (data.progress !== undefined) {
             setDownloadProgress(data.progress)
           }
-          if (data.progress >= 100 && sse) {
-            sse.close()
+          
+          if (data.error) {
+            toast.error(data.error);
+            if (sse) sse.close();
+            setIsDownloading(false);
+          }
+
+          if (data.downloadUrl) {
+            const downloadLink = `${API_BASE_URL.replace(/\/api$/, '')}${data.downloadUrl}`
+            window.open(downloadLink, '_blank')
+            toast.success('Download completed!')
+            if (sse) sse.close()
+            setIsDownloading(false)
           }
         } catch (e) {
           // ignore parse errors
@@ -225,7 +236,7 @@ function App() {
         if (sse) sse.close()
       }
 
-      // Start download request
+      // Start download request (responds immediately now)
       const response = await fetch(`${API_BASE_URL}/download`, {
         method: 'POST',
         headers: {
@@ -244,25 +255,12 @@ function App() {
         throw new Error(errorData.message || errorData.error || 'Download failed')
       }
 
-      const data = await response.json()
-      
-      setDownloadProgress(100)
-      if (sse) sse.close()
-
-      // Trigger file download
-      if (data.downloadUrl) {
-        const downloadLink = `${API_BASE_URL.replace(/\/api$/, '')}${data.downloadUrl}`
-        window.open(downloadLink, '_blank')
-      }
-
-      toast.success('Download completed!')
+      // We don't need to do anything with the response data here anymore, 
+      // as the SSE stream handles the completion.
     } catch (err: any) {
       console.error('Download error:', err)
       toast.error(err.message || 'Download failed')
-    } finally {
       setIsDownloading(false)
-      setDownloadProgress(0)
-      setSelectedOption(null)
       if (sse) sse.close()
     }
   }

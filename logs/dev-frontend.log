@@ -2,12 +2,28 @@
 > my-app@0.0.0 dev
 > vite
 
-Port 5173 is in use, trying another one...
-Port 5174 is in use, trying another one...
-Port 5175 is in use, trying another one...
+node:internal/fs/watchers:247
+    const error = new UVException({
+                  ^
 
-  VITE v7.3.1  ready in 356 ms
+Error: ENOSPC: System limit for number of file watchers reached, watch '/var/www/web/Next-Videos/app/src/components/ui'
+    at FSWatcher.<computed> (node:internal/fs/watchers:247:19)
+    at Object.watch (node:fs:2503:36)
+    at createFsWatchInstance (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:12942:16)
+    at setFsWatchListener (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:12984:14)
+    at NodeFsHandler$1._watchWithNodeFs (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:13098:20)
+    at NodeFsHandler$1._handleDir (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:13261:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async NodeFsHandler$1._addToNodeFs (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:13304:15)
+Emitted 'error' event on FSWatcher instance at:
+    at FSWatcher._handleError (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:14117:148)
+    at NodeFsHandler$1._addToNodeFs (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:13321:18)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  errno: -28,
+  syscall: 'watch',
+  code: 'ENOSPC',
+  path: '/var/www/web/Next-Videos/app/src/components/ui',
+  filename: '/var/www/web/Next-Videos/app/src/components/ui'
+}
 
-  ➜  Local:   http://localhost:5176/
-  ➜  Network: http://192.168.2.112:5176/
-  ➜  Network: http://10.240.150.139:5176/
+Node.js v20.20.2
