@@ -501,9 +501,9 @@ function App() {
                         >
                           <div className="flex items-center gap-3">
                             <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              option.format === 'MP3' ? 'bg-purple-500/20' : 'bg-red-500/20'
+                              option.quality.startsWith('Audio') ? 'bg-purple-500/20' : 'bg-red-500/20'
                             }`}>
-                              {option.format === 'MP3' ? (
+                              {option.quality.startsWith('Audio') ? (
                                 <Music className="w-5 h-5 text-purple-400" />
                               ) : (
                                 <FileVideo className="w-5 h-5 text-red-400" />

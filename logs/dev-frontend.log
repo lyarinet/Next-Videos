@@ -9,9 +9,33 @@ Port 5176 is in use, trying another one...
 Port 5177 is in use, trying another one...
 Port 5178 is in use, trying another one...
 Port 5179 is in use, trying another one...
+Port 5180 is in use, trying another one...
 
-  VITE v7.3.1  ready in 8292 ms
+  VITE v7.3.1  ready in 361 ms
 
-  ➜  Local:   http://localhost:5180/
-  ➜  Network: http://192.168.2.112:5180/
-  ➜  Network: http://10.240.150.139:5180/
+  ➜  Local:   http://localhost:5181/
+  ➜  Network: http://192.168.2.112:5181/
+  ➜  Network: http://10.240.150.139:5181/
+node:internal/fs/watchers:247
+    const error = new UVException({
+                  ^
+
+Error: ENOSPC: System limit for number of file watchers reached, watch '/var/www/web/Next-Videos/app/tsconfig.node.json'
+    at FSWatcher.<computed> (node:internal/fs/watchers:247:19)
+    at Object.watch (node:fs:2503:36)
+    at createFsWatchInstance (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:12942:16)
+    at setFsWatchListener (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:12984:14)
+    at NodeFsHandler$1._watchWithNodeFs (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:13098:20)
+    at NodeFsHandler$1._handleFile (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:13142:24)
+    at NodeFsHandler$1._addToNodeFs (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:13316:26)
+Emitted 'error' event on FSWatcher instance at:
+    at FSWatcher._handleError (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:14117:148)
+    at NodeFsHandler$1._addToNodeFs (file:///var/www/web/Next-Videos/app/node_modules/vite/dist/node/chunks/config.js:13321:18) {
+  errno: -28,
+  syscall: 'watch',
+  code: 'ENOSPC',
+  path: '/var/www/web/Next-Videos/app/tsconfig.node.json',
+  filename: '/var/www/web/Next-Videos/app/tsconfig.node.json'
+}
+
+Node.js v20.20.2

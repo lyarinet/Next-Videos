@@ -230,8 +230,14 @@ app.post('/api/download', async (req, res) => {
     cmd += ` -o "${outputTemplate}.%(ext)s"`;
 
     // Handle audio-only download
-    if (format.toLowerCase() === 'mp3' || quality === 'Audio Only') {
-      cmd += ' -x --audio-format mp3 --audio-quality 0';
+    if (quality.startsWith('Audio (') || quality === 'Audio Only') {
+      let audioFormat = 'mp3'; // default
+      if (format.toLowerCase() === 'm4a') audioFormat = 'm4a';
+      else if (format.toLowerCase() === 'wav') audioFormat = 'wav';
+      else if (format.toLowerCase() === 'flac') audioFormat = 'flac';
+      else if (format.toLowerCase() === 'opus') audioFormat = 'opus';
+
+      cmd += ` -x --audio-format ${audioFormat} --audio-quality 0`;
       cmd += ` --extract-audio`;
     } else {
       // Video download with quality selection
@@ -241,14 +247,18 @@ app.post('/api/download', async (req, res) => {
         '1080p HD': '1080',
         '720p HD': '720',
         '480p': '480',
-        '360p': '360'
+        '360p': '360',
+        '144p': '144'
       };
 
       const maxHeight = qualityMap[quality] || '720';
 
       // Use best available video and audio that matches criteria, fallback to best overall
       cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best"`;
-      cmd += ' --merge-output-format mp4';
+
+      if (maxHeight >= '1440' || maxHeight === '144') {
+        cmd += ' --merge-output-format mp4';
+      }
     }
 
     // Add URL
@@ -488,11 +498,18 @@ function getAvailableFormats(info) {
     { quality: '1080p HD', format: 'MP4', size: '~120 MB' },
     { quality: '720p HD', format: 'MP4', size: '~65 MB' },
     { quality: '480p', format: 'MP4', size: '~35 MB' },
-    { quality: '360p', format: 'MP4', size: '~20 MB' }
+    { quality: '360p', format: 'MP4', size: '~20 MB' },
+    { quality: '144p', format: '3GP', size: '~10 MB' }
   );
 
-  // Add audio format
-  formats.push({ quality: 'Audio Only', format: 'MP3', size: '~8 MB' });
+  // Add audio formats
+  formats.push(
+    { quality: 'Audio (MP3)', format: 'MP3', size: '~8 MB' },
+    { quality: 'Audio (M4A)', format: 'M4A', size: '~8 MB' },
+    { quality: 'Audio (WAV)', format: 'WAV', size: '~30 MB' },
+    { quality: 'Audio (FLAC)', format: 'FLAC', size: '~20 MB' },
+    { quality: 'Audio (OPUS)', format: 'OPUS', size: '~5 MB' }
+  );
 
   return formats;
 }
@@ -507,7 +524,12 @@ function getAvailableFormatsForPlatform(platform) {
     { quality: '720p HD', format: 'MP4', size: '~65 MB' },
     { quality: '480p', format: 'MP4', size: '~35 MB' },
     { quality: '360p', format: 'MP4', size: '~20 MB' },
-    { quality: 'Audio Only', format: 'MP3', size: '~8 MB' }
+    { quality: '144p', format: '3GP', size: '~10 MB' },
+    { quality: 'Audio (MP3)', format: 'MP3', size: '~8 MB' },
+    { quality: 'Audio (M4A)', format: 'M4A', size: '~8 MB' },
+    { quality: 'Audio (WAV)', format: 'WAV', size: '~30 MB' },
+    { quality: 'Audio (FLAC)', format: 'FLAC', size: '~20 MB' },
+    { quality: 'Audio (OPUS)', format: 'OPUS', size: '~5 MB' }
   ];
 
   return formats;
