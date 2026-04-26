@@ -10,7 +10,7 @@ URL: /#/admin
 PASSWORD: admin123
 =================================
 
-Next-Videos server running on port 3005
+Next-Videos server running on port 3001
 Downloads directory: /var/www/web/Next-Videos/backend/downloads
 API endpoints:
   - GET /api/health

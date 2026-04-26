@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { 
   Download, 
@@ -137,6 +137,8 @@ function App() {
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [siteConfig, setSiteConfig] = useState<any>(null)
   const [selectedAudioTrack, setSelectedAudioTrack] = useState<string>('default')
+  const activeRequestRef = useRef(0)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/config`)
@@ -156,6 +158,9 @@ function App() {
       if (url && isValidUrl(url)) {
         fetchVideoInfo(url)
       } else {
+        abortControllerRef.current?.abort()
+        activeRequestRef.current += 1
+        setIsLoading(false)
         setVideoInfo(null)
         setError(null)
       }
@@ -163,6 +168,12 @@ function App() {
 
     return () => clearTimeout(timer)
   }, [url])
+
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort()
+    }
+  }, [])
 
   const isValidUrl = (inputUrl: string): boolean => {
     try {
@@ -174,11 +185,22 @@ function App() {
   }
 
   const fetchVideoInfo = async (videoUrl: string) => {
+    activeRequestRef.current += 1
+    const requestId = activeRequestRef.current
+    abortControllerRef.current?.abort()
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     setIsLoading(true)
     setError(null)
+    const timeoutId = window.setTimeout(() => controller.abort(), 30000)
     
     try {
-      const response = await fetch(`${API_BASE_URL}/video-info?url=${encodeURIComponent(videoUrl)}`)
+      const response = await fetch(`${API_BASE_URL}/video-info?url=${encodeURIComponent(videoUrl)}`, {
+        signal: controller.signal
+      })
+
+      if (requestId !== activeRequestRef.current) return
       
       if (!response.ok) {
         const errorData = await response.json()
@@ -186,15 +208,25 @@ function App() {
       }
       
       const data = await response.json()
+      if (requestId !== activeRequestRef.current) return
       setVideoInfo(data)
       setSelectedAudioTrack('default') // Reset audio track when fetching new video
       toast.success(`Found: ${data.title.substring(0, 50)}...`)
     } catch (err: any) {
+      if (requestId !== activeRequestRef.current) return
+      if (err.name === 'AbortError') {
+        setError('Video analysis timed out. Please try again.')
+        setVideoInfo(null)
+        return
+      }
       console.error('Error fetching video info:', err)
       setError(err.message || 'Failed to fetch video information')
       setVideoInfo(null)
     } finally {
-      setIsLoading(false)
+      window.clearTimeout(timeoutId)
+      if (requestId === activeRequestRef.current) {
+        setIsLoading(false)
+      }
     }
   }
 

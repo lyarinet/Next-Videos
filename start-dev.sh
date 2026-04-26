@@ -43,7 +43,7 @@ echo ""
 if [ ! -f "backend/.env" ] || [ ! -f "app/.env" ]; then
     print_warning "Environment files missing. Generating defaults..."
     [ ! -f "backend/.env" ] && echo "PORT=3001" > backend/.env
-    [ ! -f "app/.env" ] && echo "VITE_API_URL=http://localhost:3001/api" > app/.env
+    [ ! -f "app/.env" ] && echo "VITE_API_URL=/api" > app/.env
 fi
 
 # Get network IP

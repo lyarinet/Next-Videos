@@ -40,11 +40,11 @@ async function probeAudioTracksFromFormats(audioFormats) {
 
   const tracks = [];
   const seenLangs = new Set();
-  for (const streamUrl of toProbe) {
+  for (const streamUrl of toProbe.slice(0, 3)) {
     try {
       const { stdout } = await execPromise(
         `ffprobe -v quiet -print_format json -show_streams -select_streams a "${streamUrl}"`,
-        { timeout: 10000 }
+        { timeout: 4000 }
       );
       const data = JSON.parse(stdout);
       for (const s of (data.streams || [])) {
@@ -119,10 +119,11 @@ async function fetchYtDlpMetadata(url) {
   const cookies = getCookiesFlag();
   const hasCookies = !!cookies;
   const clients = hasCookies ? 'tv' : 'android_vr';
+  const metadataTimeout = 30000;
   let cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams --js-runtimes "node:${nodePath}" ${cookies} --extractor-args "youtube:player_client=${clients}" "${url}"`;
 
   try {
-    const result = await execPromise(cmd, { timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
+    const result = await execPromise(cmd, { timeout: metadataTimeout, maxBuffer: 10 * 1024 * 1024 });
     return JSON.parse(result.stdout);
   } catch (err) {
     if (err.stdout && err.stdout.trim().startsWith('{')) {
@@ -131,10 +132,60 @@ async function fetchYtDlpMetadata(url) {
 
     console.log(`yt-dlp ${clients} failed (${err.message?.slice(0, 120)}), trying default...`);
     cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams --js-runtimes "node:${nodePath}" ${cookies} "${url}"`;
-    const result = await execPromise(cmd, { timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
+    const result = await execPromise(cmd, { timeout: metadataTimeout, maxBuffer: 10 * 1024 * 1024 });
     return JSON.parse(result.stdout);
   }
 }
+
+const sanitizeFilenamePart = (value) => {
+  return String(value || '')
+    .replace(/[<>:"/\\|?*\x00-\x1F]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const shortenDownloadTitle = (title) => {
+  const safeTitle = sanitizeFilenamePart(title);
+  if (!safeTitle) return 'Lyarinet Print P360';
+  return 'Lyarinet Print P360';
+};
+
+const getQualityLabel = (quality, format, audioTrack) => {
+  if (!quality) return '';
+  if (quality === '4K (2160p)') return '2160p';
+  if (quality === '2K (1440p)') return '1440p';
+  if (quality === '1080p HD') return '1080p';
+  if (quality === '720p HD') return '720p';
+  if (quality === '480p') return '480p';
+  if (quality === '360p') return '360p';
+  if (quality === '144p') return '144p';
+
+  if (quality.startsWith('Audio (') || quality === 'Audio Only') {
+    return `${String(format || 'audio').toUpperCase()} Audio`;
+  }
+
+  if (audioTrack === 'all') return 'Multi Audio';
+  return sanitizeFilenamePart(quality);
+};
+
+const buildDownloadBaseName = ({ title, quality, format, audioTrack, timestamp }) => {
+  const safeTitle = shortenDownloadTitle(title);
+  const safeQuality = getQualityLabel(quality, format, audioTrack);
+  const parts = [safeQuality, safeTitle].filter(Boolean);
+  let baseName = parts.join(' ');
+
+  if (audioTrack === 'all' && !(quality.startsWith('Audio (') || quality === 'Audio Only')) {
+    baseName += ' Multi Audio';
+  }
+
+  baseName = baseName
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 80)
+    .trim();
+
+  return baseName || `video_${timestamp}`;
+};
 
 function pickBestVideoFormat(formats, maxHeight) {
   const limit = getNumericFormatValue(maxHeight);
@@ -338,7 +389,8 @@ async function downloadWithAllAudioTracks(url, quality, outputTemplate, download
 try { require('dotenv').config(); } catch (e) { }
 
 const app = express();
-const PORT = process.env.PORT || 3005;
+const PORT = process.env.PORT || 3001;
+const ENABLE_DEEP_AUDIO_PROBE = process.env.ENABLE_DEEP_AUDIO_PROBE === 'true';
 
 // Middleware
 app.use(cors());
@@ -409,29 +461,7 @@ app.get('/api/video-info', async (req, res) => {
       //   1. web+android  — web supports cookies, android supports cookies+DASH (exposes dubbed tracks)
       //   2. android_vr   — fallback without cookies (DASH only, but skipped when cookies present)
       //   3. default      — last resort
-      const nodePath = process.execPath || '/usr/bin/node';
-      const cookies = getCookiesFlag();
-      const hasCookies = !!cookies;
-      // 'tv' client + cookies exposes all auto-dubbed audio tracks (French, Hindi, Arabic, etc.)
-      // Without cookies, fall back to android_vr which at least returns DASH audio-only formats.
-      const clients = hasCookies ? 'tv' : 'android_vr';
-      let cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams --js-runtimes "node:${nodePath}" ${cookies} --extractor-args "youtube:player_client=${clients}" "${url}"`;
-      let stdout;
-      try {
-        const result = await execPromise(cmd, { timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
-        stdout = result.stdout;
-      } catch (err) {
-        // yt-dlp exits non-zero on warnings but still writes valid JSON to stdout
-        if (err.stdout && err.stdout.trim().startsWith('{')) {
-          stdout = err.stdout;
-        } else {
-          console.log(`yt-dlp ${clients} failed (${err.message?.slice(0, 120)}), trying default...`);
-          cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams --js-runtimes "node:${nodePath}" ${cookies} "${url}"`;
-          const result = await execPromise(cmd, { timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
-          stdout = result.stdout;
-        }
-      }
-      const videoData = JSON.parse(stdout);
+      const videoData = await fetchYtDlpMetadata(url);
 
       // Extract unique language tracks using the language code field (not format_note which is a quality description)
       const audioFormats = videoData.formats ? videoData.formats.filter(f => f.vcodec === 'none' && f.acodec !== 'none') : [];
@@ -452,14 +482,17 @@ app.get('/api/video-info', async (req, res) => {
       }
       let languages = [...langMap.entries()].map(([code, name]) => ({ code, name }));
 
-      // If yt-dlp only found one language (or none), run a deeper ffprobe scan to
-      // If yt-dlp found ≤1 language, probe the CDN stream URLs with ffprobe —
-      // no second YouTube request, just reads metadata from the signed DASH URLs.
-      if (languages.length <= 1 && audioFormats.length > 0) {
+      // Deep probing is intentionally opt-in because ffprobe against remote CDN URLs
+      // can add several seconds and make the analyze step feel stuck.
+      if (ENABLE_DEEP_AUDIO_PROBE && languages.length <= 1 && audioFormats.length > 0) {
         const probed = await probeAudioTracksFromFormats(audioFormats);
         if (probed.length > languages.length) {
           languages = probed;
         }
+      }
+
+      if (languages.length === 0) {
+        languages = [{ code: 'default', name: 'Default Audio' }];
       }
 
       // Format the response
@@ -619,8 +652,22 @@ app.post('/api/download', async (req, res) => {
     const timestamp = Date.now();
     const activeDownloadId = downloadId || timestamp.toString();
     downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: null });
+    let resolvedTitle = 'Video';
+    try {
+      const metadata = await fetchYtDlpMetadata(url);
+      resolvedTitle = metadata?.title || resolvedTitle;
+    } catch (err) {
+      console.log(`Could not resolve title for filename: ${err.message}`);
+    }
 
-    const outputTemplate = path.join(downloadsDir, `video_${timestamp}`);
+    const outputBaseName = buildDownloadBaseName({
+      title: resolvedTitle,
+      quality,
+      format,
+      audioTrack,
+      timestamp
+    });
+    const outputTemplate = path.join(downloadsDir, outputBaseName);
 
     // When a specific audio track is selected, download that exact stream and mux it with video.
     // When all audio tracks are selected, mux one downloaded audio file per language into a single MKV.
@@ -683,7 +730,8 @@ app.post('/api/download', async (req, res) => {
       }
 
       const files = fs.readdirSync(downloadsDir);
-      const downloadedFile = files.find(f => f.startsWith(`video_${timestamp}`));
+      const templateBase = path.basename(outputTemplate);
+      const downloadedFile = files.find(f => f.startsWith(templateBase));
       if (!downloadedFile) {
         downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'File not found' });
         return;

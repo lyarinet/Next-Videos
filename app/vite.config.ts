@@ -13,7 +13,7 @@ export default defineConfig({
     allowedHosts: ['vd.lyarinet.com', 'ventoy.lyarinet.com'], // Explicitly allow domains
     proxy: {
       '/api': {
-        target: 'http://localhost:3005',
+        target: 'http://localhost:3001',
         changeOrigin: true,
       }
     }
