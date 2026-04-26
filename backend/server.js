@@ -297,11 +297,6 @@ async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack
 }
 
 async function downloadWithAllAudioTracks(url, quality, outputTemplate, downloadId) {
-  const cookies = getCookiesFlag();
-  const nodePath = process.execPath || '/usr/bin/node';
-  const jsRuntime = `--js-runtimes "node:${nodePath}"`;
-  const dlClients = cookies ? 'tv' : 'android_vr';
-  const dlClientArg = `--extractor-args "youtube:player_client=${dlClients}"`;
   const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '144p': '144' };
   const maxHeight = qualityMap[quality] || '720';
 
@@ -313,47 +308,23 @@ async function downloadWithAllAudioTracks(url, quality, outputTemplate, download
   if (!bestVideoFormat || audioFormats.length === 0) {
     throw new Error('Could not resolve video/audio streams for all-track download');
   }
-
-  const tempVideoOutput = outputTemplate + '_video';
-  const videoDownloadCmd = `"${getYtDlpPath()}" --newline --progress ${cookies} ${jsRuntime} ${dlClientArg} ` +
-    `-f "${bestVideoFormat.format_id}" -o "${tempVideoOutput}.%(ext)s" "${url}"`;
-
-  await runYtDlpDownload(videoDownloadCmd, downloadId, 0, 45);
-  const tempVideoPath = findDownloadedFile(tempVideoOutput);
-  if (!tempVideoPath) throw new Error('Video stream file not found');
-
-  const downloadedAudioPaths = [];
-  try {
-    for (let index = 0; index < audioFormats.length; index += 1) {
-      const audioFormat = audioFormats[index];
-      const tempAudioOutput = `${outputTemplate}_audio_${index}`;
-      const audioDownloadCmd = `"${getYtDlpPath()}" --newline --progress ${cookies} ${jsRuntime} ${dlClientArg} ` +
-        `-f "${audioFormat.format_id}" -o "${tempAudioOutput}.%(ext)s" "${url}"`;
-      const start = 45 + Math.floor((index / audioFormats.length) * 35);
-      const span = Math.max(1, Math.ceil(35 / audioFormats.length));
-      await runYtDlpDownload(audioDownloadCmd, downloadId, start, span);
-      const tempAudioPath = findDownloadedFile(tempAudioOutput);
-      if (!tempAudioPath) throw new Error(`Audio stream file not found for ${audioFormat.language || audioFormat.format_id}`);
-      downloadedAudioPaths.push({ path: tempAudioPath, language: audioFormat.language });
-    }
-
-    downloadProgressMap.set(downloadId, { progress: 85, downloadUrl: null, error: null });
-
-    const ffmpegInputs = [`-i "${tempVideoPath}"`, ...downloadedAudioPaths.map((item) => `-i "${item.path}"`)].join(' ');
-    const ffmpegMaps = ['-map 0:v:0', ...downloadedAudioPaths.map((_, index) => `-map ${index + 1}:a:0`)].join(' ');
-    const ffmpegMetadata = downloadedAudioPaths
-      .map((item, index) => `-metadata:s:a:${index} language=${toFfmpegLanguageTag(item.language)}`)
-      .join(' ');
-    const outPath = `${outputTemplate}.mkv`;
-    const ffmpegCmd = `ffmpeg -y ${ffmpegInputs} ${ffmpegMaps} ${ffmpegMetadata} -c copy "${outPath}"`;
-
-    await execPromise(ffmpegCmd, { timeout: 3600000 });
-  } finally {
-    try { fs.unlinkSync(tempVideoPath); } catch (_) {}
-    for (const item of downloadedAudioPaths) {
-      try { fs.unlinkSync(item.path); } catch (_) {}
-    }
+  const videoUrl = bestVideoFormat.url;
+  const audioInputFormats = audioFormats.filter((item) => item.url);
+  if (!videoUrl || audioInputFormats.length === 0) {
+    throw new Error('Resolved formats are missing downloadable stream URLs');
   }
+
+  downloadProgressMap.set(downloadId, { progress: 70, downloadUrl: null, error: null });
+
+  const ffmpegInputs = [`-i "${videoUrl}"`, ...audioInputFormats.map((item) => `-i "${item.url}"`)].join(' ');
+  const ffmpegMaps = ['-map 0:v:0', ...audioInputFormats.map((_, index) => `-map ${index + 1}:a:0`)].join(' ');
+  const ffmpegMetadata = audioInputFormats
+    .map((item, index) => `-metadata:s:a:${index} language=${toFfmpegLanguageTag(item.language)}`)
+    .join(' ');
+  const outPath = `${outputTemplate}.mkv`;
+  const ffmpegCmd = `ffmpeg -y ${ffmpegInputs} ${ffmpegMaps} ${ffmpegMetadata} -c copy "${outPath}"`;
+
+  await execPromise(ffmpegCmd, { timeout: 3600000 });
 
   const outputFileName = `${path.basename(outputTemplate)}.mkv`;
   downloadProgressMap.set(downloadId, {
