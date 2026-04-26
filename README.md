@@ -12,6 +12,13 @@ Powered by an optimized `yt-dlp` backend, Next-Videos can process almost any lin
 ### 📊 Real-Time Progress Engine
 No more guessing. Using Server-Sent Events (SSE), the download interface provides a **live, frame-sync percentage bar** that tracks data transmission from the source server to our backend in real-time.
 
+### 🔊 Multi-Language Audio Downloads
+For supported YouTube videos, the downloader can detect and export multiple dubbed audio tracks such as **English, Hindi, French, Japanese, Korean, Spanish**, and more.
+
+- `Default Audio (Best)` downloads the platform default track.
+- `Select Audio Track` downloads the exact chosen language and muxes it into the final file.
+- `All Audio Tracks` builds a single **MKV** containing every detected language track with proper language tags for players like VLC.
+
 ### 🛡️ Admin Control Panel (`/#/admin`)
 Full control without touching a line of code. Securely manage your site's:
 - Branding & Logo
@@ -74,6 +81,7 @@ Default Password: `admin123`
 ### Backend
 - **Server:** Node.js + Express
 - **Engine:** `yt-dlp` (Universal Scraper)
+- **Muxing:** `ffmpeg` for exact audio-track selection and multi-track MKV output
 - **Security:** In-memory crypto tokenization for admin sessions
 - **Storage:** File-based lightweight persistence (`config.json`)
 
@@ -92,6 +100,23 @@ ADMIN_PASSWORD=your_secret_password
 VITE_API_URL=/api
 ```
 *(The Vite proxy handles routing to the correctly configured backend port)*
+
+### Cookies for YouTube Dubbed Audio
+If you want YouTube videos to expose all available dubbed tracks, place a valid `cookies.txt` file in:
+
+```text
+backend/cookies.txt
+```
+
+Without cookies, many videos will fall back to default audio only.
+
+---
+
+## 🎧 Audio Track Notes
+
+- Single-language downloads keep only the selected audio track in the final file.
+- `All Audio Tracks` always exports as **MKV**, because MP4 is not a good container for many separate dubbed audio streams.
+- Older files downloaded before the latest audio-track fixes will not change automatically. Download them again to get corrected language tracks.
 
 ---
 
