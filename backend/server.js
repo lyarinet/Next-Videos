@@ -12,8 +12,154 @@ const crypto = require('crypto');
 const getYtDlpPath = () => {
   const venvPath = path.join(__dirname, 'venv', 'bin', 'yt-dlp');
   if (fs.existsSync(venvPath)) return venvPath;
-  return 'yt-dlp'; // Fallback to system path
+  return '/usr/local/bin/yt-dlp';
 };
+
+// Returns --cookies flag if a cookies.txt file is present in the backend directory
+const getCookiesFlag = () => {
+  const cookiesPath = path.join(__dirname, 'cookies.txt');
+  return fs.existsSync(cookiesPath) ? `--cookies "${cookiesPath}"` : '';
+};
+
+const execPromise = require('util').promisify(exec);
+
+// Probe audio track metadata from the stream URLs already returned by yt-dlp dump-json.
+// Uses ffprobe directly on the CDN URLs — no second yt-dlp / YouTube request needed.
+// Returns an array of { code, name } objects.
+async function probeAudioTracksFromFormats(audioFormats) {
+  // Collect one representative URL per format_id (avoid hitting the same language twice)
+  const seen = new Set();
+  const toProbe = [];
+  for (const f of audioFormats) {
+    if (f.url && f.format_id && !seen.has(f.format_id)) {
+      seen.add(f.format_id);
+      toProbe.push(f.url);
+    }
+  }
+  if (toProbe.length === 0) return [];
+
+  const tracks = [];
+  const seenLangs = new Set();
+  for (const streamUrl of toProbe) {
+    try {
+      const { stdout } = await execPromise(
+        `ffprobe -v quiet -print_format json -show_streams -select_streams a "${streamUrl}"`,
+        { timeout: 10000 }
+      );
+      const data = JSON.parse(stdout);
+      for (const s of (data.streams || [])) {
+        const code = s.tags?.language;
+        if (!code || seenLangs.has(code)) continue;
+        seenLangs.add(code);
+        const rawTitle = s.tags?.title || s.tags?.handler_name || '';
+        const name = rawTitle
+          .split(',')[0]
+          .replace(/\s*\(default\)/gi, '')
+          .replace(/\s*original$/gi, '')
+          .trim() || code.toUpperCase();
+        tracks.push({ code, name });
+      }
+    } catch (_) {}
+  }
+  return tracks;
+}
+
+// When a specific audio track is selected: yt-dlp downloads all streams, ffprobe locates
+// the right stream index, ffmpeg remuxes/transcodes with just that track.
+async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack, outputTemplate, downloadId) {
+  const cookies = getCookiesFlag();
+  const nodePath = process.execPath || '/usr/bin/node';
+  const isAudioOnly = quality.startsWith('Audio (');
+  const tempOutput = outputTemplate + '_all';
+
+  const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '144p': '144' };
+  const maxHeight = qualityMap[quality] || '720';
+
+  // Phase 1 – yt-dlp: download best video + all available audio into a temp MKV
+  // 'tv' client + cookies exposes all dubbed tracks; without cookies fall back to android_vr.
+  const jsRuntime = `--js-runtimes "node:${nodePath}"`;
+  const dlClients = cookies ? 'tv' : 'android_vr';
+  const dlClientArg = `--extractor-args "youtube:player_client=${dlClients}"`;
+  let ytCmd;
+  if (isAudioOnly) {
+    ytCmd = `"${getYtDlpPath()}" --newline --progress --audio-multistreams ${cookies} ${jsRuntime} ${dlClientArg} ` +
+      `-f "bestaudio" -o "${tempOutput}.%(ext)s" "${url}"`;
+  } else {
+    ytCmd = `"${getYtDlpPath()}" --newline --progress --audio-multistreams ${cookies} ${jsRuntime} ${dlClientArg} ` +
+      `--merge-output-format mkv ` +
+      `-f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]" ` +
+      `-o "${tempOutput}.%(ext)s" "${url}"`;
+  }
+
+  await new Promise((resolve, reject) => {
+    const proc = exec(ytCmd, { timeout: 3600000, maxBuffer: 10485760 }, (err) => {
+      if (err) reject(new Error('yt-dlp failed: ' + err.message));
+      else resolve();
+    });
+    proc.stdout?.on('data', (chunk) => {
+      const m = chunk.toString().match(/\[download\]\s+([\d.]+)%/);
+      if (m) {
+        const pct = Math.round(parseFloat(m[1]) * 0.80); // phase 1 = 0–80%
+        downloadProgressMap.set(downloadId, { progress: pct, downloadUrl: null, error: null });
+      }
+    });
+  });
+
+  // Locate the downloaded file
+  const allFiles = fs.readdirSync(downloadsDir);
+  const tempBase = path.basename(tempOutput);
+  const tempFile = allFiles.find(f => f.startsWith(tempBase));
+  if (!tempFile) throw new Error('Merged download file not found');
+  const tempPath = path.join(downloadsDir, tempFile);
+
+  downloadProgressMap.set(downloadId, { progress: 83, downloadUrl: null, error: null });
+
+  // Phase 2 – ffprobe: find audio stream index for the selected language
+  let streamIndex = 0;
+  try {
+    const ffprobeCmd = `ffprobe -v quiet -print_format json -show_streams -select_streams a "${tempPath}"`;
+    const { stdout } = await execPromise(ffprobeCmd, { timeout: 15000 });
+    const probeData = JSON.parse(stdout);
+    for (let i = 0; i < (probeData.streams || []).length; i++) {
+      const lang = probeData.streams[i].tags?.language || '';
+      if (lang.toLowerCase() === audioTrack.toLowerCase()) {
+        streamIndex = i;
+        break;
+      }
+    }
+    console.log(`Selected audio stream index ${streamIndex} for language "${audioTrack}"`);
+  } catch (e) {
+    console.error('ffprobe error (using stream 0):', e.message);
+  }
+
+  downloadProgressMap.set(downloadId, { progress: 87, downloadUrl: null, error: null });
+
+  // Phase 3 – ffmpeg: remux/transcode with only the selected audio track
+  const audioCodecMap = { mp3: 'libmp3lame', m4a: 'aac', wav: 'pcm_s16le', flac: 'flac', opus: 'libopus' };
+  let outputExt, ffmpegCmd;
+
+  if (isAudioOnly) {
+    outputExt = format.toLowerCase();
+    const codec = audioCodecMap[outputExt] || 'libmp3lame';
+    const outPath = `${outputTemplate}.${outputExt}`;
+    ffmpegCmd = `ffmpeg -y -i "${tempPath}" -map 0:a:${streamIndex} -c:a ${codec} "${outPath}"`;
+  } else {
+    outputExt = 'mkv';
+    const outPath = `${outputTemplate}.${outputExt}`;
+    ffmpegCmd = `ffmpeg -y -i "${tempPath}" -map 0:v:0 -map 0:a:${streamIndex} -c copy "${outPath}"`;
+  }
+
+  await execPromise(ffmpegCmd, { timeout: 3600000 });
+
+  try { fs.unlinkSync(tempPath); } catch (_) {}
+
+  const outputFileName = `${path.basename(outputTemplate)}.${outputExt}`;
+  downloadProgressMap.set(downloadId, {
+    progress: 100,
+    downloadUrl: `/api/download/file/${outputFileName}`,
+    error: null
+  });
+}
 
 // Load env if available
 try { require('dotenv').config(); } catch (e) { }
@@ -84,16 +230,64 @@ app.get('/api/video-info', async (req, res) => {
       return res.status(400).json({ error: 'Unsupported platform or invalid URL' });
     }
 
-    // Use yt-dlp for all platforms to get video info
-    const { exec } = require('child_process');
-    const util = require('util');
-    const execPromise = util.promisify(exec);
-
     try {
       // Get video info using yt-dlp
-      const cmd = `"${getYtDlpPath()}" --dump-json --no-download "${url}"`;
-      const { stdout } = await execPromise(cmd, { timeout: 30000 });
+      // Priority:
+      //   1. web+android  — web supports cookies, android supports cookies+DASH (exposes dubbed tracks)
+      //   2. android_vr   — fallback without cookies (DASH only, but skipped when cookies present)
+      //   3. default      — last resort
+      const nodePath = process.execPath || '/usr/bin/node';
+      const cookies = getCookiesFlag();
+      const hasCookies = !!cookies;
+      // 'tv' client + cookies exposes all auto-dubbed audio tracks (French, Hindi, Arabic, etc.)
+      // Without cookies, fall back to android_vr which at least returns DASH audio-only formats.
+      const clients = hasCookies ? 'tv' : 'android_vr';
+      let cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams --js-runtimes "node:${nodePath}" ${cookies} --extractor-args "youtube:player_client=${clients}" "${url}"`;
+      let stdout;
+      try {
+        const result = await execPromise(cmd, { timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
+        stdout = result.stdout;
+      } catch (err) {
+        // yt-dlp exits non-zero on warnings but still writes valid JSON to stdout
+        if (err.stdout && err.stdout.trim().startsWith('{')) {
+          stdout = err.stdout;
+        } else {
+          console.log(`yt-dlp ${clients} failed (${err.message?.slice(0, 120)}), trying default...`);
+          cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams --js-runtimes "node:${nodePath}" ${cookies} "${url}"`;
+          const result = await execPromise(cmd, { timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
+          stdout = result.stdout;
+        }
+      }
       const videoData = JSON.parse(stdout);
+
+      // Extract unique language tracks using the language code field (not format_note which is a quality description)
+      const audioFormats = videoData.formats ? videoData.formats.filter(f => f.vcodec === 'none' && f.acodec !== 'none') : [];
+
+      const langMap = new Map();
+      for (const f of audioFormats) {
+        if (f.language && !langMap.has(f.language)) {
+          // Build a clean display name from format_note (e.g. "English (US) original (default), low" → "English (US)")
+          let name = f.language;
+          if (f.format_note) {
+            name = f.format_note.split(',')[0]
+              .replace(/\s*\(default\)/gi, '')
+              .replace(/\s*original$/gi, '')
+              .trim() || f.language;
+          }
+          langMap.set(f.language, name);
+        }
+      }
+      let languages = [...langMap.entries()].map(([code, name]) => ({ code, name }));
+
+      // If yt-dlp only found one language (or none), run a deeper ffprobe scan to
+      // If yt-dlp found ≤1 language, probe the CDN stream URLs with ffprobe —
+      // no second YouTube request, just reads metadata from the signed DASH URLs.
+      if (languages.length <= 1 && audioFormats.length > 0) {
+        const probed = await probeAudioTracksFromFormats(audioFormats);
+        if (probed.length > languages.length) {
+          languages = probed;
+        }
+      }
 
       // Format the response
       const rawThumbnail = videoData.thumbnail || videoData.thumbnails?.[0]?.url || '';
@@ -107,10 +301,11 @@ app.get('/api/video-info', async (req, res) => {
         views: formatViews(videoData.view_count || 0),
         platform: platform,
         url: url,
-        formats: getAvailableFormatsForPlatform(platform)
+        formats: getAvailableFormatsForPlatform(platform),
+        audioTracks: languages
       };
 
-      console.log('Video info fetched:', responseData.title);
+      console.log('Video info fetched:', responseData.title, '| audio tracks:', languages.length);
       res.json(responseData);
 
     } catch (err) {
@@ -133,7 +328,8 @@ app.get('/api/video-info', async (req, res) => {
             views: formatViews(video.views || 0),
             platform: platform,
             url: url,
-            formats: getAvailableFormats(info)
+            formats: getAvailableFormats(info),
+            audioTracks: ['default']
           };
 
           console.log('Video info fetched (fallback):', videoData.title);
@@ -202,9 +398,39 @@ app.post('/api/admin/config', verifyAdmin, (req, res) => {
   }
 });
 
+// Cookies management — upload, status, delete
+const multer = require('multer');
+const cookiesPath = path.join(__dirname, 'cookies.txt');
+const multerUpload = multer({ dest: path.join(__dirname, 'tmp_uploads') });
+
+app.get('/api/admin/cookies-status', verifyAdmin, (req, res) => {
+  if (!fs.existsSync(cookiesPath)) return res.json({ exists: false });
+  const stat = fs.statSync(cookiesPath);
+  res.json({ exists: true, size: stat.size, modified: stat.mtime });
+});
+
+app.post('/api/admin/upload-cookies', verifyAdmin, multerUpload.single('cookies'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+  try {
+    fs.renameSync(req.file.path, cookiesPath);
+    res.json({ success: true, message: 'cookies.txt saved — all future downloads will use it' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save cookies file' });
+  }
+});
+
+app.delete('/api/admin/cookies', verifyAdmin, (req, res) => {
+  try {
+    if (fs.existsSync(cookiesPath)) fs.unlinkSync(cookiesPath);
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete cookies file' });
+  }
+});
+
 // Download video endpoint using yt-dlp
 app.post('/api/download', async (req, res) => {
-  const { url, quality, format, downloadId } = req.body;
+  const { url, quality, format, downloadId, audioTrack } = req.body;
 
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
@@ -223,92 +449,76 @@ app.post('/api/download', async (req, res) => {
 
     const outputTemplate = path.join(downloadsDir, `video_${timestamp}`);
 
-    // Build yt-dlp command
-    let cmd = `"${getYtDlpPath()}"`;
+    // When a specific audio track is selected, use yt-dlp (all streams) + ffmpeg (track selection).
+    // For default / all-tracks, fall through to the plain yt-dlp path below.
+    if (audioTrack && audioTrack !== 'default' && audioTrack !== 'all') {
+      console.log(`Using ffmpeg track selection for audioTrack="${audioTrack}"`);
+      downloadWithFfmpegTrackSelection(url, quality, format, audioTrack, outputTemplate, activeDownloadId)
+        .catch(err => {
+          console.error('ffmpeg track selection failed:', err.message);
+          downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'Download failed: ' + err.message });
+        });
+      return res.json({ success: true, downloadId: activeDownloadId });
+    }
 
-    // Set output template
+    // Plain yt-dlp path (default audio or all-tracks MKV)
+    const dlNodePath = process.execPath || '/usr/bin/node';
+    const plainCookies = getCookiesFlag();
+    const plainClient = plainCookies ? 'tv' : 'android_vr';
+    let cmd = `"${getYtDlpPath()}" --newline --progress --audio-multistreams ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}" --extractor-args "youtube:player_client=${plainClient}"`;
     cmd += ` -o "${outputTemplate}.%(ext)s"`;
 
-    // Handle audio-only download
     if (quality.startsWith('Audio (') || quality === 'Audio Only') {
-      let audioFormat = 'mp3'; // default
+      let audioFormat = 'mp3';
       if (format.toLowerCase() === 'm4a') audioFormat = 'm4a';
       else if (format.toLowerCase() === 'wav') audioFormat = 'wav';
       else if (format.toLowerCase() === 'flac') audioFormat = 'flac';
       else if (format.toLowerCase() === 'opus') audioFormat = 'opus';
 
-      cmd += ` -x --audio-format ${audioFormat} --audio-quality 0`;
-      cmd += ` --extract-audio`;
+      cmd += ' -f bestaudio';
+      cmd += ` -x --audio-format ${audioFormat} --audio-quality 0 --extract-audio`;
     } else {
-      // Video download with quality selection
-      const qualityMap = {
-        '4K (2160p)': '2160',
-        '2K (1440p)': '1440',
-        '1080p HD': '1080',
-        '720p HD': '720',
-        '480p': '480',
-        '360p': '360',
-        '144p': '144'
-      };
-
+      const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '144p': '144' };
       const maxHeight = qualityMap[quality] || '720';
 
-      // Use best available video and audio that matches criteria, fallback to best overall
-      cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best"`;
-
-      if (maxHeight >= '1440' || maxHeight === '144') {
-        cmd += ' --merge-output-format mp4';
+      if (audioTrack === 'all') {
+        // Download best video + all available audio streams; merge into MKV
+        cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]" --merge-output-format mkv`;
+      } else {
+        cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best"`;
+        if (maxHeight >= '1440' || maxHeight === '144') cmd += ' --merge-output-format mp4';
       }
     }
 
-    // Add URL
     cmd += ` "${url}"`;
-
     console.log('Executing:', cmd);
 
-    // Start yt-dlp in the background and respond immediately to avoid 504 timeout
+    // Run yt-dlp in the background; SSE tracks progress
     exec(cmd, { timeout: 3600000, maxBuffer: 10485760 }, (error, stdout, stderr) => {
       if (error) {
         console.error('yt-dlp error:', error.message);
         let userMessage = 'Download failed';
         if (stderr.includes('Requested format is not available')) userMessage = 'Format not available';
         else if (stderr.includes('Private video')) userMessage = 'Private video';
-        
-        downloadProgressMap.set(activeDownloadId, { 
-          progress: 0, 
-          downloadUrl: null, 
-          error: userMessage 
-        });
+        downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: userMessage });
         return;
       }
 
-      try {
-        const files = fs.readdirSync(downloadsDir);
-        const downloadedFile = files.find(f => f.startsWith(`video_${timestamp}`));
-
-        if (!downloadedFile) {
-          downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'File not found' });
-          return;
-        }
-
-        downloadProgressMap.set(activeDownloadId, { 
-          progress: 100, 
-          downloadUrl: `/api/download/file/${downloadedFile}`, 
-          error: null 
-        });
-      } catch (err) {
-        downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'Cleanup error' });
+      const files = fs.readdirSync(downloadsDir);
+      const downloadedFile = files.find(f => f.startsWith(`video_${timestamp}`));
+      if (!downloadedFile) {
+        downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'File not found' });
+        return;
       }
+      downloadProgressMap.set(activeDownloadId, { progress: 100, downloadUrl: `/api/download/file/${downloadedFile}`, error: null });
     }).stdout.on('data', (data) => {
       const match = data.toString().match(/\[download\]\s+([\d\.]+)%/);
       if (match) {
-        const percent = parseFloat(match[1]);
         const current = downloadProgressMap.get(activeDownloadId) || {};
-        downloadProgressMap.set(activeDownloadId, { ...current, progress: percent });
+        downloadProgressMap.set(activeDownloadId, { ...current, progress: parseFloat(match[1]) });
       }
     });
 
-    // Respond immediately
     return res.json({ success: true, downloadId: activeDownloadId });
   } catch (error) {
     console.error('Download error:', error);
@@ -587,6 +797,7 @@ setInterval(() => {
   }
 }, 15 * 60 * 1000);
 
+// Start the server
 app.listen(PORT, () => {
   console.log(`Next-Videos server running on port ${PORT}`);
   console.log(`Downloads directory: ${downloadsDir}`);

@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Shield, Save, LogOut, ArrowLeft } from 'lucide-react';
+import { Shield, Save, LogOut, ArrowLeft, Cookie, Upload, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -20,10 +20,72 @@ export default function Admin() {
     contactContent: '',
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [cookiesStatus, setCookiesStatus] = useState<{ exists: boolean; size?: number; modified?: string } | null>(null);
+  const [isUploadingCookies, setIsUploadingCookies] = useState(false);
+  const cookiesFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchConfig();
+    if (token) fetchCookiesStatus();
   }, [token]);
+
+  const fetchCookiesStatus = async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/cookies-status`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.status === 401) {
+        // Stale token (server restarted) — force re-login
+        localStorage.removeItem('adminToken');
+        setToken(null);
+        return;
+      }
+      if (res.ok) setCookiesStatus(await res.json());
+    } catch (_) {}
+  };
+
+  const handleCookiesUpload = async () => {
+    const file = cookiesFileRef.current?.files?.[0];
+    if (!file) return toast.error('Select a cookies.txt file first');
+    setIsUploadingCookies(true);
+    try {
+      const form = new FormData();
+      form.append('cookies', file);
+      const res = await fetch(`${API_BASE_URL}/admin/upload-cookies`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: form
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message);
+        fetchCookiesStatus();
+        if (cookiesFileRef.current) cookiesFileRef.current.value = '';
+      } else {
+        toast.error(data.error || 'Upload failed');
+      }
+    } catch (_) {
+      toast.error('Network error');
+    } finally {
+      setIsUploadingCookies(false);
+    }
+  };
+
+  const handleDeleteCookies = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/cookies`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        toast.success('Cookies removed');
+        fetchCookiesStatus();
+      }
+    } catch (_) {
+      toast.error('Failed to remove cookies');
+    }
+  };
 
   const fetchConfig = async () => {
     try {
@@ -243,6 +305,69 @@ export default function Admin() {
                 </Button>
               </div>
             </form>
+
+            {/* YouTube Cookies — separate section, not part of the config form */}
+            <div className="mt-6 space-y-4 shadow-sm p-4 bg-white/5 rounded-xl border border-white/5">
+              <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                <Cookie className="w-5 h-5 text-yellow-400" />
+                <h3 className="text-lg font-semibold text-white">YouTube Cookies</h3>
+              </div>
+
+              <p className="text-sm text-gray-400">
+                Upload your YouTube <code className="bg-white/10 px-1 rounded text-yellow-300">cookies.txt</code> to unlock
+                auto-dubbed audio tracks (Arabic, Hindi, Japanese, etc.). Export it with the
+                <span className="text-white font-medium"> "Get cookies.txt LOCALLY"</span> browser extension while logged into YouTube.
+              </p>
+
+              {/* Status */}
+              <div className="flex items-center gap-2 text-sm">
+                {cookiesStatus?.exists ? (
+                  <>
+                    <CheckCircle className="w-4 h-4 text-green-400 shrink-0" />
+                    <span className="text-green-300 font-medium">Cookies active</span>
+                    <span className="text-gray-500">
+                      — {((cookiesStatus.size || 0) / 1024).toFixed(1)} KB,
+                      saved {cookiesStatus.modified ? new Date(cookiesStatus.modified).toLocaleDateString() : ''}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="w-4 h-4 text-gray-500 shrink-0" />
+                    <span className="text-gray-400">No cookies configured — only default language audio available</span>
+                  </>
+                )}
+              </div>
+
+              {/* Upload */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  ref={cookiesFileRef}
+                  type="file"
+                  accept=".txt,text/plain"
+                  className="flex-1 text-sm text-gray-300 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:bg-white/10 file:text-white hover:file:bg-white/20 cursor-pointer"
+                />
+                <Button
+                  type="button"
+                  onClick={handleCookiesUpload}
+                  disabled={isUploadingCookies}
+                  className="bg-yellow-600 hover:bg-yellow-700 text-white shrink-0"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {isUploadingCookies ? 'Uploading…' : 'Upload cookies.txt'}
+                </Button>
+                {cookiesStatus?.exists && (
+                  <Button
+                    type="button"
+                    onClick={handleDeleteCookies}
+                    variant="outline"
+                    className="border-red-500/40 text-red-400 hover:bg-red-500/10 shrink-0"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Remove
+                  </Button>
+                )}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

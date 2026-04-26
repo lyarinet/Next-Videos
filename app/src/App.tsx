@@ -69,6 +69,7 @@ interface VideoInfo {
   platform: string
   url: string
   formats: DownloadOption[]
+  audioTracks?: Array<{ code: string; name: string } | string>
 }
 
 const platforms: Platform[] = [
@@ -135,6 +136,7 @@ function App() {
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [siteConfig, setSiteConfig] = useState<any>(null)
+  const [selectedAudioTrack, setSelectedAudioTrack] = useState<string>('default')
 
   useEffect(() => {
     fetch(`${API_BASE_URL}/config`)
@@ -185,6 +187,7 @@ function App() {
       
       const data = await response.json()
       setVideoInfo(data)
+      setSelectedAudioTrack('default') // Reset audio track when fetching new video
       toast.success(`Found: ${data.title.substring(0, 50)}...`)
     } catch (err: any) {
       console.error('Error fetching video info:', err)
@@ -246,7 +249,8 @@ function App() {
           url: videoInfo.url,
           quality: option.quality,
           format: option.format,
-          downloadId: progressId
+          downloadId: progressId,
+          audioTrack: selectedAudioTrack
         })
       })
 
@@ -488,6 +492,26 @@ function App() {
                     </div>
                   </div>
 
+                  {/* Audio Track Selector — always visible */}
+                  <div className="mt-6 pt-6 border-t border-white/10">
+                    <p className="text-sm text-gray-400 mb-3">Select Audio Track (Optional):</p>
+                    <select
+                      className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white appearance-none focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                      value={selectedAudioTrack}
+                      onChange={(e) => setSelectedAudioTrack(e.target.value)}
+                    >
+                      <option value="default" className="bg-gray-900">Default Audio (Best)</option>
+                      <option value="all" className="bg-gray-900">All Audio Tracks (Saves as MKV)</option>
+                      {(videoInfo.audioTracks ?? []).map((track) => {
+                        const code = typeof track === 'string' ? track : track.code;
+                        const name = typeof track === 'string' ? track.toUpperCase() : track.name;
+                        return (
+                          <option key={code} value={code} className="bg-gray-900">{name}</option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
                   {/* Download Options */}
                   <div className="mt-6 pt-6 border-t border-white/10">
                     <p className="text-sm text-gray-400 mb-4">Select download format:</p>
@@ -524,7 +548,9 @@ function App() {
                       <div className="mt-4 p-4 rounded-lg bg-white/5 border border-white/10">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-gray-400">
-                            Downloading {selectedOption.quality}...
+                            {downloadProgress === 0 
+                              ? `Initializing ${selectedOption.quality} (Please wait)...` 
+                              : `Downloading ${selectedOption.quality}...`}
                           </span>
                           <span className="text-sm font-medium text-white">
                             {Math.round(downloadProgress)}%
