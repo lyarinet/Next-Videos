@@ -64,72 +64,205 @@ async function probeAudioTracksFromFormats(audioFormats) {
   return tracks;
 }
 
+const normalizeLanguageCode = (value) => String(value || '').trim().toLowerCase().replace(/_/g, '-');
+
+const getNumericFormatValue = (value) => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+};
+
+const getAudioFormatScore = (format) => {
+  return (
+    getNumericFormatValue(format.abr) * 1000 +
+    getNumericFormatValue(format.asr) +
+    getNumericFormatValue(format.tbr)
+  );
+};
+
+const toFfmpegLanguageTag = (value) => {
+  const normalized = normalizeLanguageCode(value);
+  const languageMap = {
+    ar: 'ara',
+    de: 'deu',
+    'de-de': 'deu',
+    en: 'eng',
+    'en-us': 'eng',
+    es: 'spa',
+    'es-us': 'spa',
+    fr: 'fra',
+    'fr-fr': 'fra',
+    hi: 'hin',
+    id: 'ind',
+    it: 'ita',
+    ja: 'jpn',
+    ko: 'kor',
+    nl: 'nld',
+    'nl-nl': 'nld',
+    pl: 'pol',
+    pt: 'por',
+    'pt-br': 'por'
+  };
+
+  return languageMap[normalized] || normalized.slice(0, 3) || 'und';
+};
+
+const getVideoFormatScore = (format) => {
+  return (
+    getNumericFormatValue(format.height) * 1000000 +
+    getNumericFormatValue(format.fps) * 1000 +
+    getNumericFormatValue(format.tbr)
+  );
+};
+
+async function fetchYtDlpMetadata(url) {
+  const nodePath = process.execPath || '/usr/bin/node';
+  const cookies = getCookiesFlag();
+  const hasCookies = !!cookies;
+  const clients = hasCookies ? 'tv' : 'android_vr';
+  let cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams --js-runtimes "node:${nodePath}" ${cookies} --extractor-args "youtube:player_client=${clients}" "${url}"`;
+
+  try {
+    const result = await execPromise(cmd, { timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
+    return JSON.parse(result.stdout);
+  } catch (err) {
+    if (err.stdout && err.stdout.trim().startsWith('{')) {
+      return JSON.parse(err.stdout);
+    }
+
+    console.log(`yt-dlp ${clients} failed (${err.message?.slice(0, 120)}), trying default...`);
+    cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams --js-runtimes "node:${nodePath}" ${cookies} "${url}"`;
+    const result = await execPromise(cmd, { timeout: 120000, maxBuffer: 10 * 1024 * 1024 });
+    return JSON.parse(result.stdout);
+  }
+}
+
+function pickBestVideoFormat(formats, maxHeight) {
+  const limit = getNumericFormatValue(maxHeight);
+  const videoCandidates = (formats || [])
+    .filter((format) =>
+      format &&
+      format.format_id &&
+      format.vcodec &&
+      format.vcodec !== 'none' &&
+      getNumericFormatValue(format.height) > 0 &&
+      getNumericFormatValue(format.height) <= limit
+    )
+    .sort((a, b) => getVideoFormatScore(b) - getVideoFormatScore(a));
+
+  return videoCandidates[0] || null;
+}
+
+function pickPreferredAudioFormats(formats, selectedLanguage) {
+  const targetLanguage = normalizeLanguageCode(selectedLanguage);
+  const audioFormats = (formats || []).filter((format) =>
+    format &&
+    format.format_id &&
+    format.vcodec === 'none' &&
+    format.acodec &&
+    format.acodec !== 'none'
+  );
+
+  if (targetLanguage) {
+    const exactMatches = audioFormats
+      .filter((format) => normalizeLanguageCode(format.language) === targetLanguage)
+      .sort((a, b) => getAudioFormatScore(b) - getAudioFormatScore(a));
+    if (exactMatches.length > 0) return [exactMatches[0]];
+
+    const looseMatches = audioFormats
+      .filter((format) => {
+        const language = normalizeLanguageCode(format.language);
+        return language && (language.startsWith(targetLanguage) || targetLanguage.startsWith(language));
+      })
+      .sort((a, b) => getAudioFormatScore(b) - getAudioFormatScore(a));
+    if (looseMatches.length > 0) return [looseMatches[0]];
+  }
+
+  const bestByLanguage = new Map();
+  for (const format of audioFormats) {
+    const languageKey = normalizeLanguageCode(format.language) || `und-${format.format_id}`;
+    const current = bestByLanguage.get(languageKey);
+    if (!current || getAudioFormatScore(format) > getAudioFormatScore(current)) {
+      bestByLanguage.set(languageKey, format);
+    }
+  }
+
+  return [...bestByLanguage.values()].sort((a, b) => getAudioFormatScore(b) - getAudioFormatScore(a));
+}
+
+const runYtDlpDownload = (command, downloadId, progressStart, progressSpan) => new Promise((resolve, reject) => {
+  const proc = exec(command, { timeout: 3600000, maxBuffer: 10485760 }, (err) => {
+    if (err) reject(new Error('yt-dlp failed: ' + err.message));
+    else resolve();
+  });
+
+  proc.stdout?.on('data', (chunk) => {
+    const m = chunk.toString().match(/\[download\]\s+([\d.]+)%/);
+    if (m && downloadId) {
+      const rawPct = parseFloat(m[1]);
+      const pct = Math.round(progressStart + (rawPct / 100) * progressSpan);
+      downloadProgressMap.set(downloadId, { progress: pct, downloadUrl: null, error: null });
+    }
+  });
+});
+
+function findDownloadedFile(prefix) {
+  const allFiles = fs.readdirSync(downloadsDir);
+  const base = path.basename(prefix);
+  const found = allFiles.find((file) => file.startsWith(base));
+  return found ? path.join(downloadsDir, found) : null;
+}
+
 // When a specific audio track is selected: yt-dlp downloads all streams, ffprobe locates
 // the right stream index, ffmpeg remuxes/transcodes with just that track.
 async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack, outputTemplate, downloadId) {
   const cookies = getCookiesFlag();
   const nodePath = process.execPath || '/usr/bin/node';
   const isAudioOnly = quality.startsWith('Audio (');
-  const tempOutput = outputTemplate + '_all';
+  const tempVideoOutput = outputTemplate + '_video';
+  const tempAudioOutput = outputTemplate + '_audio';
 
   const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '144p': '144' };
   const maxHeight = qualityMap[quality] || '720';
+  const videoData = await fetchYtDlpMetadata(url);
+  const formats = videoData.formats || [];
 
-  // Phase 1 – yt-dlp: download best video + all available audio into a temp MKV
-  // 'tv' client + cookies exposes all dubbed tracks; without cookies fall back to android_vr.
+  // Phase 1 – yt-dlp: download the requested video plus one best audio stream per language
+  // into a temp MKV so ffmpeg can keep only the selected track.
+  const selectedAudioFormats = pickPreferredAudioFormats(formats, audioTrack);
+  if (selectedAudioFormats.length === 0) {
+    throw new Error(`No audio stream found for language "${audioTrack}"`);
+  }
+
   const jsRuntime = `--js-runtimes "node:${nodePath}"`;
   const dlClients = cookies ? 'tv' : 'android_vr';
   const dlClientArg = `--extractor-args "youtube:player_client=${dlClients}"`;
-  let ytCmd;
+  const selectedAudioFormat = selectedAudioFormats[0];
+  let tempVideoPath = null;
+  let tempAudioPath = null;
+
+  const audioDownloadCmd = `"${getYtDlpPath()}" --newline --progress ${cookies} ${jsRuntime} ${dlClientArg} ` +
+    `-f "${selectedAudioFormat.format_id}" -o "${tempAudioOutput}.%(ext)s" "${url}"`;
+
   if (isAudioOnly) {
-    ytCmd = `"${getYtDlpPath()}" --newline --progress --audio-multistreams ${cookies} ${jsRuntime} ${dlClientArg} ` +
-      `-f "bestaudio" -o "${tempOutput}.%(ext)s" "${url}"`;
+    await runYtDlpDownload(audioDownloadCmd, downloadId, 0, 85);
+    tempAudioPath = findDownloadedFile(tempAudioOutput);
+    if (!tempAudioPath) throw new Error('Selected audio file not found');
   } else {
-    ytCmd = `"${getYtDlpPath()}" --newline --progress --audio-multistreams ${cookies} ${jsRuntime} ${dlClientArg} ` +
-      `--merge-output-format mkv ` +
-      `-f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]" ` +
-      `-o "${tempOutput}.%(ext)s" "${url}"`;
-  }
-
-  await new Promise((resolve, reject) => {
-    const proc = exec(ytCmd, { timeout: 3600000, maxBuffer: 10485760 }, (err) => {
-      if (err) reject(new Error('yt-dlp failed: ' + err.message));
-      else resolve();
-    });
-    proc.stdout?.on('data', (chunk) => {
-      const m = chunk.toString().match(/\[download\]\s+([\d.]+)%/);
-      if (m) {
-        const pct = Math.round(parseFloat(m[1]) * 0.80); // phase 1 = 0–80%
-        downloadProgressMap.set(downloadId, { progress: pct, downloadUrl: null, error: null });
-      }
-    });
-  });
-
-  // Locate the downloaded file
-  const allFiles = fs.readdirSync(downloadsDir);
-  const tempBase = path.basename(tempOutput);
-  const tempFile = allFiles.find(f => f.startsWith(tempBase));
-  if (!tempFile) throw new Error('Merged download file not found');
-  const tempPath = path.join(downloadsDir, tempFile);
-
-  downloadProgressMap.set(downloadId, { progress: 83, downloadUrl: null, error: null });
-
-  // Phase 2 – ffprobe: find audio stream index for the selected language
-  let streamIndex = 0;
-  try {
-    const ffprobeCmd = `ffprobe -v quiet -print_format json -show_streams -select_streams a "${tempPath}"`;
-    const { stdout } = await execPromise(ffprobeCmd, { timeout: 15000 });
-    const probeData = JSON.parse(stdout);
-    for (let i = 0; i < (probeData.streams || []).length; i++) {
-      const lang = probeData.streams[i].tags?.language || '';
-      if (lang.toLowerCase() === audioTrack.toLowerCase()) {
-        streamIndex = i;
-        break;
-      }
+    const bestVideoFormat = pickBestVideoFormat(formats, maxHeight);
+    if (!bestVideoFormat) {
+      throw new Error(`No video stream found for quality "${quality}"`);
     }
-    console.log(`Selected audio stream index ${streamIndex} for language "${audioTrack}"`);
-  } catch (e) {
-    console.error('ffprobe error (using stream 0):', e.message);
+
+    const videoDownloadCmd = `"${getYtDlpPath()}" --newline --progress ${cookies} ${jsRuntime} ${dlClientArg} ` +
+      `-f "${bestVideoFormat.format_id}" -o "${tempVideoOutput}.%(ext)s" "${url}"`;
+
+    await runYtDlpDownload(videoDownloadCmd, downloadId, 0, 55);
+    tempVideoPath = findDownloadedFile(tempVideoOutput);
+    if (!tempVideoPath) throw new Error('Video stream file not found');
+
+    await runYtDlpDownload(audioDownloadCmd, downloadId, 55, 25);
+    tempAudioPath = findDownloadedFile(tempAudioOutput);
+    if (!tempAudioPath) throw new Error('Selected audio file not found');
   }
 
   downloadProgressMap.set(downloadId, { progress: 87, downloadUrl: null, error: null });
@@ -137,23 +270,92 @@ async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack
   // Phase 3 – ffmpeg: remux/transcode with only the selected audio track
   const audioCodecMap = { mp3: 'libmp3lame', m4a: 'aac', wav: 'pcm_s16le', flac: 'flac', opus: 'libopus' };
   let outputExt, ffmpegCmd;
+  const ffmpegLanguageTag = toFfmpegLanguageTag(audioTrack);
 
   if (isAudioOnly) {
     outputExt = format.toLowerCase();
     const codec = audioCodecMap[outputExt] || 'libmp3lame';
     const outPath = `${outputTemplate}.${outputExt}`;
-    ffmpegCmd = `ffmpeg -y -i "${tempPath}" -map 0:a:${streamIndex} -c:a ${codec} "${outPath}"`;
+    ffmpegCmd = `ffmpeg -y -i "${tempAudioPath}" -map 0:a:0 -metadata:s:a:0 language=${ffmpegLanguageTag} -c:a ${codec} "${outPath}"`;
   } else {
     outputExt = 'mkv';
     const outPath = `${outputTemplate}.${outputExt}`;
-    ffmpegCmd = `ffmpeg -y -i "${tempPath}" -map 0:v:0 -map 0:a:${streamIndex} -c copy "${outPath}"`;
+    ffmpegCmd = `ffmpeg -y -i "${tempVideoPath}" -i "${tempAudioPath}" -map 0:v:0 -map 1:a:0 -metadata:s:a:0 language=${ffmpegLanguageTag} -c copy "${outPath}"`;
   }
 
   await execPromise(ffmpegCmd, { timeout: 3600000 });
 
-  try { fs.unlinkSync(tempPath); } catch (_) {}
+  try { if (tempVideoPath) fs.unlinkSync(tempVideoPath); } catch (_) {}
+  try { if (tempAudioPath) fs.unlinkSync(tempAudioPath); } catch (_) {}
 
   const outputFileName = `${path.basename(outputTemplate)}.${outputExt}`;
+  downloadProgressMap.set(downloadId, {
+    progress: 100,
+    downloadUrl: `/api/download/file/${outputFileName}`,
+    error: null
+  });
+}
+
+async function downloadWithAllAudioTracks(url, quality, outputTemplate, downloadId) {
+  const cookies = getCookiesFlag();
+  const nodePath = process.execPath || '/usr/bin/node';
+  const jsRuntime = `--js-runtimes "node:${nodePath}"`;
+  const dlClients = cookies ? 'tv' : 'android_vr';
+  const dlClientArg = `--extractor-args "youtube:player_client=${dlClients}"`;
+  const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '144p': '144' };
+  const maxHeight = qualityMap[quality] || '720';
+
+  const videoData = await fetchYtDlpMetadata(url);
+  const formats = videoData.formats || [];
+  const bestVideoFormat = pickBestVideoFormat(formats, maxHeight);
+  const audioFormats = pickPreferredAudioFormats(formats);
+
+  if (!bestVideoFormat || audioFormats.length === 0) {
+    throw new Error('Could not resolve video/audio streams for all-track download');
+  }
+
+  const tempVideoOutput = outputTemplate + '_video';
+  const videoDownloadCmd = `"${getYtDlpPath()}" --newline --progress ${cookies} ${jsRuntime} ${dlClientArg} ` +
+    `-f "${bestVideoFormat.format_id}" -o "${tempVideoOutput}.%(ext)s" "${url}"`;
+
+  await runYtDlpDownload(videoDownloadCmd, downloadId, 0, 45);
+  const tempVideoPath = findDownloadedFile(tempVideoOutput);
+  if (!tempVideoPath) throw new Error('Video stream file not found');
+
+  const downloadedAudioPaths = [];
+  try {
+    for (let index = 0; index < audioFormats.length; index += 1) {
+      const audioFormat = audioFormats[index];
+      const tempAudioOutput = `${outputTemplate}_audio_${index}`;
+      const audioDownloadCmd = `"${getYtDlpPath()}" --newline --progress ${cookies} ${jsRuntime} ${dlClientArg} ` +
+        `-f "${audioFormat.format_id}" -o "${tempAudioOutput}.%(ext)s" "${url}"`;
+      const start = 45 + Math.floor((index / audioFormats.length) * 35);
+      const span = Math.max(1, Math.ceil(35 / audioFormats.length));
+      await runYtDlpDownload(audioDownloadCmd, downloadId, start, span);
+      const tempAudioPath = findDownloadedFile(tempAudioOutput);
+      if (!tempAudioPath) throw new Error(`Audio stream file not found for ${audioFormat.language || audioFormat.format_id}`);
+      downloadedAudioPaths.push({ path: tempAudioPath, language: audioFormat.language });
+    }
+
+    downloadProgressMap.set(downloadId, { progress: 85, downloadUrl: null, error: null });
+
+    const ffmpegInputs = [`-i "${tempVideoPath}"`, ...downloadedAudioPaths.map((item) => `-i "${item.path}"`)].join(' ');
+    const ffmpegMaps = ['-map 0:v:0', ...downloadedAudioPaths.map((_, index) => `-map ${index + 1}:a:0`)].join(' ');
+    const ffmpegMetadata = downloadedAudioPaths
+      .map((item, index) => `-metadata:s:a:${index} language=${toFfmpegLanguageTag(item.language)}`)
+      .join(' ');
+    const outPath = `${outputTemplate}.mkv`;
+    const ffmpegCmd = `ffmpeg -y ${ffmpegInputs} ${ffmpegMaps} ${ffmpegMetadata} -c copy "${outPath}"`;
+
+    await execPromise(ffmpegCmd, { timeout: 3600000 });
+  } finally {
+    try { fs.unlinkSync(tempVideoPath); } catch (_) {}
+    for (const item of downloadedAudioPaths) {
+      try { fs.unlinkSync(item.path); } catch (_) {}
+    }
+  }
+
+  const outputFileName = `${path.basename(outputTemplate)}.mkv`;
   downloadProgressMap.set(downloadId, {
     progress: 100,
     downloadUrl: `/api/download/file/${outputFileName}`,
@@ -449,13 +651,23 @@ app.post('/api/download', async (req, res) => {
 
     const outputTemplate = path.join(downloadsDir, `video_${timestamp}`);
 
-    // When a specific audio track is selected, use yt-dlp (all streams) + ffmpeg (track selection).
-    // For default / all-tracks, fall through to the plain yt-dlp path below.
+    // When a specific audio track is selected, download that exact stream and mux it with video.
+    // When all audio tracks are selected, mux one downloaded audio file per language into a single MKV.
     if (audioTrack && audioTrack !== 'default' && audioTrack !== 'all') {
       console.log(`Using ffmpeg track selection for audioTrack="${audioTrack}"`);
       downloadWithFfmpegTrackSelection(url, quality, format, audioTrack, outputTemplate, activeDownloadId)
         .catch(err => {
           console.error('ffmpeg track selection failed:', err.message);
+          downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'Download failed: ' + err.message });
+        });
+      return res.json({ success: true, downloadId: activeDownloadId });
+    }
+
+    if (audioTrack === 'all' && !(quality.startsWith('Audio (') || quality === 'Audio Only')) {
+      console.log('Using ffmpeg multi-track mux for all audio tracks');
+      downloadWithAllAudioTracks(url, quality, outputTemplate, activeDownloadId)
+        .catch(err => {
+          console.error('ffmpeg all-track mux failed:', err.message);
           downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'Download failed: ' + err.message });
         });
       return res.json({ success: true, downloadId: activeDownloadId });
@@ -481,13 +693,8 @@ app.post('/api/download', async (req, res) => {
       const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '144p': '144' };
       const maxHeight = qualityMap[quality] || '720';
 
-      if (audioTrack === 'all') {
-        // Download best video + all available audio streams; merge into MKV
-        cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]" --merge-output-format mkv`;
-      } else {
-        cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best"`;
-        if (maxHeight >= '1440' || maxHeight === '144') cmd += ' --merge-output-format mp4';
-      }
+      cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best"`;
+      if (maxHeight >= '1440' || maxHeight === '144') cmd += ' --merge-output-format mp4';
     }
 
     cmd += ` "${url}"`;

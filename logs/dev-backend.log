@@ -16,8 +16,3 @@ API endpoints:
   - GET /api/health
   - GET /api/video-info?url=VIDEO_URL
   - POST /api/download
-Fetching info for: https://www.youtube.com/watch?v=lpSE3Bm7iJE
-Video info fetched: ONLY 1% of ARCHITECTS Know these Nano Banana SECRETS | Step-By-Step Walkthrough 🔥 | audio tracks: 12
-Starting download: https://www.youtube.com/watch?v=lpSE3Bm7iJE Quality: 360p Format: MP4
-Using ffmpeg track selection for audioTrack="hi"
-Selected audio stream index 0 for language "hi"
