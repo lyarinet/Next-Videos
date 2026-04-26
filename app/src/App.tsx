@@ -275,6 +275,36 @@ function App() {
     setError(null)
   }
 
+  const getAudioTrackLabel = (trackCode: string) => {
+    if (trackCode === 'default') return 'Default Audio (Best)'
+    if (trackCode === 'all') return 'All Audio Tracks'
+
+    const matchingTrack = (videoInfo?.audioTracks ?? []).find((track) => {
+      const code = typeof track === 'string' ? track : track.code
+      return code === trackCode
+    })
+
+    if (!matchingTrack) return trackCode.toUpperCase()
+    return typeof matchingTrack === 'string' ? matchingTrack.toUpperCase() : matchingTrack.name
+  }
+
+  const getDisplayedFormat = (option: DownloadOption) => {
+    if (!option.quality.startsWith('Audio') && selectedAudioTrack === 'all') return 'MKV'
+    return option.format
+  }
+
+  const getAudioTrackHint = () => {
+    if (selectedAudioTrack === 'all') {
+      return 'Video downloads will be packaged as MKV with every detected language track. This can take longer to build.'
+    }
+
+    if (selectedAudioTrack !== 'default') {
+      return `${getAudioTrackLabel(selectedAudioTrack)} will be the only audio track kept in the final download.`
+    }
+
+    return 'Default Audio uses the platform default track. Choose a language to export just that track.'
+  }
+
   const getPlatformIcon = (platform: string) => {
     switch (platform) {
       case 'YouTube': return <Youtube className="w-4 h-4" style={{ color: '#FF0000' }} />
@@ -510,6 +540,19 @@ function App() {
                         );
                       })}
                     </select>
+                    <div className="mt-3 flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary" className="bg-white/10 text-white border-white/10">
+                        Audio: {getAudioTrackLabel(selectedAudioTrack)}
+                      </Badge>
+                      {selectedAudioTrack === 'all' && (
+                        <Badge variant="secondary" className="bg-orange-500/15 text-orange-300 border-orange-400/20">
+                          Video exports as MKV
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="mt-3 text-xs leading-5 text-gray-500">
+                      {getAudioTrackHint()}
+                    </p>
                   </div>
 
                   {/* Download Options */}
@@ -535,7 +578,7 @@ function App() {
                             </div>
                             <div className="text-left">
                               <p className="font-medium text-white">{option.quality}</p>
-                              <p className="text-xs text-gray-500">{option.format} • {option.size}</p>
+                              <p className="text-xs text-gray-500">{getDisplayedFormat(option)} • {option.size}</p>
                             </div>
                           </div>
                           <Download className="w-4 h-4 text-gray-500 group-hover:text-red-400 transition-colors" />
