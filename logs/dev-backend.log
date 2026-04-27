@@ -16,3 +16,99 @@ API endpoints:
   - GET /api/health
   - GET /api/video-info?url=VIDEO_URL
   - POST /api/download
+Fetching info for: https://www.youtube.com/watch?v=lpSE3Bm7iJE
+Video info fetched: ONLY 1% of ARCHITECTS Know these Nano Banana SECRETS | Step-By-Step Walkthrough 🔥 | audio tracks: 12
+Fetching info for: https://videos1.cdnnow.co/data3/enlishmoviesdub/C/CultHero.2022.HDRip.Dual.mp4
+yt-dlp tv failed (Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-r), trying default...
+Video info fetched: CultHero.2022.HDRip.Dual | audio tracks: 1
+Fetching info for: https://www.instagram.com/reel/DUH_VG8CtMz/?igsh=MWgzY2hocm9jM21rcg==
+yt-dlp tv failed (Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-r), trying default...
+Video info fetched: Video by main_meme_hoon | audio tracks: 1
+Fetching info for: https://www.instagram.com/reel/DUH_VG8CtMz/?igsh=MWgzY2hocm9jM21rcg==
+Video info fetched: Video by main_meme_hoon | audio tracks: 1
+Starting download: https://www.instagram.com/reel/DUH_VG8CtMz/?igsh=MWgzY2hocm9jM21rcg== Quality: 480p Format: MP4
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/480p Lyarinet Print P360.%(ext)s" -f "bestvideo[height<=480]+bestaudio/best[height<=480]/best" --merge-output-format mp4 "https://www.instagram.com/reel/DUH_VG8CtMz/?igsh=MWgzY2hocm9jM21rcg=="
+Auto-Cleaned up old media file: 480p Lyarinet Print P360.mp4
+Fetching info for: https://www.youtube.com/watch?v=Oqe_2fs5RIQ
+Video info fetched: Tera Surroor - Remix Full Song | Aap Kaa Surroor | Himesh Reshammiya | audio tracks: 1
+Starting download: https://www.youtube.com/watch?v=Oqe_2fs5RIQ Quality: 144p Format: 3GP
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/144p Lyarinet Print P360.%(ext)s" -f "bestvideo[height<=144]+bestaudio/best[height<=144]/best" --merge-output-format mp4 "https://www.youtube.com/watch?v=Oqe_2fs5RIQ"
+Starting download: https://www.youtube.com/watch?v=Oqe_2fs5RIQ Quality: 144p Format: 3GP
+Fetching info for: https://www.youtube.com/watch?v=Oqe_2fs5RIQ
+yt-dlp tv failed (Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-r), trying default...
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/144p Lyarinet Print P360.%(ext)s" -f "bestvideo[height<=144]+bestaudio/best[height<=144]/best" --merge-output-format mp4 "https://www.youtube.com/watch?v=Oqe_2fs5RIQ"
+yt-dlp tv failed (Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-r), trying default...
+Fetching info for: https://www.youtube.com/watch?v=Oqe_2fs5RIQ
+yt-dlp info error: Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-runtimes "node:/usr/bin/node" --cookies "/var/www/web/Next-Videos/backend/cookies.txt" "https://www.youtube.com/watch?v=Oqe_2fs5RIQ"
+
+Video info fetched (fallback): Tera Surroor - Remix Full Song | Aap Kaa Surroor | Himesh Reshammiya
+Video info fetched: Tera Surroor - Remix Full Song | Aap Kaa Surroor | Himesh Reshammiya | audio tracks: 1
+Starting download: https://www.youtube.com/watch?v=Oqe_2fs5RIQ Quality: 360p Format: MP4
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/360p Lyarinet Print P360.%(ext)s" -f "bestvideo[height<=360]+bestaudio/best[height<=360]/best" --merge-output-format mp4 "https://www.youtube.com/watch?v=Oqe_2fs5RIQ"
+Fetching info for: https://www.youtube.com/watch?v=qDRXJ6mZthY
+Video info fetched: Dil Lagi | Himash Rashamiya | Dillagi song himesh rasmiya aap ka suroor hd | audio tracks: 1
+Starting download: https://www.youtube.com/watch?v=qDRXJ6mZthY Quality: Audio (MP3) Format: MP3
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/MP3 Audio Lyarinet Print P360.%(ext)s" -f bestaudio -x --audio-format mp3 --audio-quality 0 --extract-audio "https://www.youtube.com/watch?v=qDRXJ6mZthY"
+Starting download: https://www.youtube.com/watch?v=qDRXJ6mZthY Quality: 144p Format: 3GP
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/144p Lyarinet Print P360.%(ext)s" -f "bestvideo[height<=144]+bestaudio/best[height<=144]/best" --merge-output-format mp4 "https://www.youtube.com/watch?v=qDRXJ6mZthY"
+Fetching info for: https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s
+Video info fetched: How to update any WP device to Windows Phone 8.1 Update 2 (GDR2) Fully-Offline | audio tracks: 1
+Starting download: https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s Quality: 1080p HD Format: MP4
+yt-dlp tv failed (Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-r), trying default...
+Could not resolve title for filename: Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-runtimes "node:/usr/bin/node" --cookies "/var/www/web/Next-Videos/backend/cookies.txt" "https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s"
+WARNING: [youtube] [Errno -3] Temporary failure in name resolution. Retrying (1/3)...
+
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/1080p Lyarinet Print P360.%(ext)s" -f "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best" "https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s"
+Auto-Cleaned up old media file: 144p Lyarinet Print P360.mp4
+Auto-Cleaned up old media file: 360p Lyarinet Print P360.mp4
+Starting download: https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s Quality: 720p HD Format: MP4
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/720p Lyarinet Print P360.%(ext)s" -f "bestvideo[height<=720]+bestaudio/best[height<=720]/best" --merge-output-format mp4 "https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s"
+Auto-Cleaned up old media file: MP3 Audio Lyarinet Print P360.mp3
+Fetching info for: https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s
+Video info fetched: How to update any WP device to Windows Phone 8.1 Update 2 (GDR2) Fully-Offline | audio tracks: 1
+Starting download: https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s Quality: 1080p HD Format: MP4
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/1080p Lyarinet Print P360.%(ext)s" -f "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best" "https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s"
+Fetching info for: https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s
+yt-dlp tv failed (Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-r), trying default...
+yt-dlp info error: Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-runtimes "node:/usr/bin/node" --cookies "/var/www/web/Next-Videos/backend/cookies.txt" "https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s"
+WARNING: [youtube] [Errno -3] Temporary failure in name resolution. Retrying (1/3)...
+
+Video info fetched (fallback): How to update any WP device to Windows Phone 8.1 Update 2 (GDR2) Fully-Offline
+Fetching info for: https://www.youtube.com/watch?v=xSK-RiMDenM&t=327s
+yt-dlp tv failed (Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-r), trying default...
+Video info fetched: How to update any WP device to Windows Phone 8.1 Update 2 (GDR2) Fully-Offline | audio tracks: 1
+Auto-Cleaned up old media file: 1080p Lyarinet Print P360.mkv
+Auto-Cleaned up old media file: 720p Lyarinet Print P360.mp4
+Fetching info for: https://www.youtube.com/watch?v=fPctHKwZ138
+yt-dlp tv failed (Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-r), trying default...
+yt-dlp info error: Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-runtimes "node:/usr/bin/node" --cookies "/var/www/web/Next-Videos/backend/cookies.txt" "https://www.youtube.com/watch?v=fPctHKwZ138"
+
+Fetching info for: https://www.youtube.com/watch?v=fPctHKwZ138
+Video info fetched (fallback): Keypad Say (IMEI) Uthao Smart Phone Min Lagao free💯😱|| How To change mobile IMEI || Live Proof 🔴💯
+Video info fetched: Keypad Say (IMEI) Uthao Smart Phone Min Lagao free💯😱|| How To change mobile IMEI || Live Proof 🔴💯 | audio tracks: 1
+Starting download: https://www.youtube.com/watch?v=fPctHKwZ138 Quality: 480p Format: MP4
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/480p Lyarinet Print P360.%(ext)s" -f "bestvideo[height<=480]+bestaudio/best[height<=480]/best" --merge-output-format mp4 "https://www.youtube.com/watch?v=fPctHKwZ138"
+Auto-Cleaned up old media file: 480p Lyarinet Print P360.mp4
+Fetching info for: https://deephot.link/munmun-dutta-bold-indian-actress-midnight-sex-shaved-pussy-ass-hole-licked-video/
+yt-dlp tv failed (Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-r), trying default...
+yt-dlp info error: Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-runtimes "node:/usr/bin/node" --cookies "/var/www/web/Next-Videos/backend/cookies.txt" "https://deephot.link/munmun-dutta-bold-indian-actress-midnight-sex-shaved-pussy-ass-hole-licked-video/"
+ERROR: [generic] Unable to download webpage: [Errno -2] Name or service not known (caused by TransportError('[Errno -2] Name or service not known'))
+
+Fetching info for: https://x.com/i/status/2048284840991342694
+Video info fetched: Aaisha 🇵🇰 - India in Global Indexes: The Reality Check 🇮🇳 | audio tracks: 1
+Fetching info for: https://www.youtube.com/watch?v=sQOT57SwUEw
+Video info fetched: Stromae - Papaoutai (Afro Soul Cover) Official Music Video | audio tracks: 1
+Starting download: https://www.youtube.com/watch?v=sQOT57SwUEw Quality: 360p Format: MP4
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/360p Lyarinet Print P360.%(ext)s" -f "bestvideo[height<=360]+bestaudio/best[height<=360]/best" --merge-output-format mp4 "https://www.youtube.com/watch?v=sQOT57SwUEw"
+Fetching info for: https://www.youtube.com/watch?v=zRtGL0-5rg4
+Video info fetched: Last To Leave Grocery Store, Wins $250,000 | audio tracks: 22
+Thumbnail proxy error: socket hang up
+Starting download: https://www.youtube.com/watch?v=zRtGL0-5rg4 Quality: 480p Format: MP4
+Using ffmpeg track selection for audioTrack="hi"
+Fetching info for: https://www.youtube.com/watch?v=zRtGL0-5rg4
+yt-dlp tv failed (Command failed: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --dump-json --no-download --audio-multistreams --js-r), trying default...
+Fetching info for: https://www.youtube.com/watch?v=zRtGL0-5rg4
+Video info fetched: Last To Leave Grocery Store, Wins $250,000 | audio tracks: 22
+Video info fetched: Last To Leave Grocery Store, Wins $250,000 | audio tracks: 1
+Starting download: https://www.youtube.com/watch?v=zRtGL0-5rg4 Quality: 360p Format: MP4
+Using ffmpeg track selection for audioTrack="hi"

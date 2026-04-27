@@ -3,8 +3,20 @@
 > vite
 
 
-  VITE v7.3.1  ready in 351 ms
+  VITE v7.3.1  ready in 352 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: http://192.168.2.112:5173/
   ➜  Network: http://10.240.150.139:5173/
+The request id "/var/www/web/Next-Videos/app/.env" is outside of Vite serving allow list.
+
+- /var/www/web/Next-Videos/app
+
+Refer to docs https://vite.dev/config/server-options.html#server-fs-allow for configurations and more details.
+
+The request id "/var/www/web/Next-Videos/app/.env" is outside of Vite serving allow list.
+Files in the public directory are served at the root path.
+Instead of /public/.env, use /.env.
+Files in the public directory are served at the root path.
+Instead of /public/.env, use /.env.
+The request id "/var/www/web/Next-Videos/app/.env" is outside of Vite serving allow list.
