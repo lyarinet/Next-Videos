@@ -21,7 +21,8 @@ import {
   User,
   Eye,
   AlertCircle,
-  Loader2
+  Loader2,
+  Settings2
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -361,6 +362,10 @@ function App() {
             </span>
           </div>
           <nav className="hidden sm:flex items-center gap-8">
+            <a href="#/workspace" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
+              Workspace
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
+            </a>
             <a href="#features" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
               Features
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
@@ -374,6 +379,9 @@ function App() {
               <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
             </a>
           </nav>
+          <a href="#/workspace" className="sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white">
+            <Settings2 className="w-4 h-4" />
+          </a>
         </div>
       </header>
 

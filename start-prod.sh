@@ -50,9 +50,17 @@ setup_combined() {
     # Setup combined directory
     cd "$SCRIPT_DIR/combined"
     
-    # Copy files
+    # Copy backend runtime files on every production sync
     cp "$SCRIPT_DIR/backend/server.js" .
     cp "$SCRIPT_DIR/backend/package.json" .
+    if [ -f "$SCRIPT_DIR/backend/package-lock.json" ]; then
+        cp "$SCRIPT_DIR/backend/package-lock.json" .
+    fi
+    if [ -f "$SCRIPT_DIR/backend/users.json" ]; then
+        cp "$SCRIPT_DIR/backend/users.json" .
+    elif [ ! -f "users.json" ]; then
+        printf '{\n  "users": []\n}\n' > users.json
+    fi
     
     # Copy frontend build
     if [ -d "public" ]; then rm -rf public; fi
@@ -73,10 +81,8 @@ setup_combined() {
     print_status "Combined deployment ready"
 }
 
-# Always perform setup if public folder is missing or if build is forced
-if [ ! -d "combined/public" ]; then
-    setup_combined
-fi
+# Always sync combined deployment so backend/frontend changes are picked up
+setup_combined
 
 # Ensure downloads directory exists in combined folder to avoid cron errors
 mkdir -p "$SCRIPT_DIR/combined/downloads"

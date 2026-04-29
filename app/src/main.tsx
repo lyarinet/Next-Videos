@@ -4,6 +4,7 @@ import './index.css'
 import App from './App.tsx'
 import Admin from './Admin.tsx'
 import ContentPage from './ContentPage.tsx'
+import UserWorkspace from './UserWorkspace.tsx'
 import { Toaster } from 'sonner'
 
 function Router() {
@@ -17,6 +18,10 @@ function Router() {
 
   if (route.startsWith('#/admin')) {
     return <Admin />;
+  }
+
+  if (route.startsWith('#/workspace')) {
+    return <UserWorkspace />;
   }
 
   if (route.startsWith('#/terms')) {

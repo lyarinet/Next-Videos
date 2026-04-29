@@ -9,6 +9,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 export default function Admin() {
   const [token, setToken] = useState<string | null>(localStorage.getItem('adminToken'));
+  const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
   const [config, setConfig] = useState<any>({
     siteTitle: '',
@@ -105,7 +106,7 @@ export default function Admin() {
       const res = await fetch(`${API_BASE_URL}/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password })
+        body: JSON.stringify({ username, password })
       });
       const data = await res.json();
       
@@ -173,6 +174,16 @@ export default function Admin() {
             </div>
             
             <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Input
+                  type="text"
+                  placeholder="Enter admin username..."
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
+                  required
+                />
+              </div>
               <div>
                 <Input
                   type="password"

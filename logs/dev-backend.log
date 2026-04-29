@@ -7,6 +7,7 @@ Serving static files from: /var/www/web/Next-Videos/app/dist
 =================================
 🛡️  ADMIN PANEL CONFIGURATION
 URL: /#/admin
+USERNAME: admin
 PASSWORD: admin123
 =================================
 
@@ -16,7 +17,5 @@ API endpoints:
   - GET /api/health
   - GET /api/video-info?url=VIDEO_URL
   - POST /api/download
-Fetching info for: https://www.youtube.com/watch?v=3oL8cDfvYTM
-Video info fetched: Mohabbat Ke- Remix [Full Song] Aksar | audio tracks: 1
-Starting download: https://www.youtube.com/watch?v=3oL8cDfvYTM Quality: 240p (320x240) Format: MP4
-Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/240p unicq-lyarinet-1777484642620854.%(ext)s" -f "bestvideo[height<=240]+bestaudio/best[height<=240]/best" --merge-output-format mp4 "https://www.youtube.com/watch?v=3oL8cDfvYTM"
+Fetching info for: https://www.youtube.com/watch?v=ETbFRFB3krE
+Video info fetched: B/W to Color - Itna Na Mujhse Tu Pyar Badha | Chhaya | Lata, Talat Mahmood |  Asha Parekh,Sunil Dutt | audio tracks: 1

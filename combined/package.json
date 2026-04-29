@@ -7,13 +7,19 @@
     "start": "node server.js",
     "dev": "node server.js"
   },
-  "keywords": ["video", "downloader", "youtube"],
+  "keywords": [
+    "video",
+    "downloader",
+    "youtube"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
     "cors": "^2.8.6",
+    "dotenv": "^16.4.5",
     "express": "^5.2.1",
+    "multer": "^2.1.1",
     "play-dl": "^1.9.7"
   }
 }

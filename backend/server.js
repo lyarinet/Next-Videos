@@ -426,12 +426,127 @@ if (!fs.existsSync(configFilePath)) {
   }, null, 2));
 }
 
+// User workspace storage
+const usersFilePath = path.join(__dirname, 'users.json');
+if (!fs.existsSync(usersFilePath)) {
+  fs.writeFileSync(usersFilePath, JSON.stringify({ users: [] }, null, 2));
+}
+
+const userSessions = new Map();
+
+const defaultWorkspacePreset = () => ({
+  presetName: 'My Default Profile',
+  activeTab: 'video',
+  outputFormat: 'MP4',
+  sizeLimit: 'Off',
+  qualityMode: 'Optimal quality',
+  videoEncode: 'MPEG4 (Xvid)',
+  videoSize: '320x240',
+  bitrate: 'Default',
+  crfCq: '10 (High quality)',
+  audioCodec: 'AAC',
+  noAudio: 'Off',
+  fps: 'Default',
+  aspectRatio: 'Fully Expand',
+  subtitleMode: 'Off',
+  extraMode: 'Other'
+});
+
+const readUsersData = () => {
+  try {
+    const raw = fs.readFileSync(usersFilePath, 'utf8');
+    const parsed = JSON.parse(raw || '{}');
+    if (!Array.isArray(parsed.users)) return { users: [] };
+    return parsed;
+  } catch (_) {
+    return { users: [] };
+  }
+};
+
+const writeUsersData = (data) => {
+  fs.writeFileSync(usersFilePath, JSON.stringify(data, null, 2));
+};
+
+const sanitizeWorkspacePreset = (input) => {
+  const source = input && typeof input === 'object' ? input : {};
+  const fallback = defaultWorkspacePreset();
+  return {
+    presetName: sanitizeFilenamePart(source.presetName || fallback.presetName).slice(0, 60) || fallback.presetName,
+    activeTab: ['video', 'audio', 'subtitle', 'other', 'watermark'].includes(source.activeTab) ? source.activeTab : fallback.activeTab,
+    outputFormat: sanitizeFilenamePart(source.outputFormat || fallback.outputFormat).slice(0, 20) || fallback.outputFormat,
+    sizeLimit: sanitizeFilenamePart(source.sizeLimit || fallback.sizeLimit).slice(0, 40) || fallback.sizeLimit,
+    qualityMode: sanitizeFilenamePart(source.qualityMode || fallback.qualityMode).slice(0, 40) || fallback.qualityMode,
+    videoEncode: sanitizeFilenamePart(source.videoEncode || fallback.videoEncode).slice(0, 60) || fallback.videoEncode,
+    videoSize: sanitizeFilenamePart(source.videoSize || fallback.videoSize).slice(0, 40) || fallback.videoSize,
+    bitrate: sanitizeFilenamePart(source.bitrate || fallback.bitrate).slice(0, 40) || fallback.bitrate,
+    crfCq: sanitizeFilenamePart(source.crfCq || fallback.crfCq).slice(0, 40) || fallback.crfCq,
+    audioCodec: sanitizeFilenamePart(source.audioCodec || fallback.audioCodec).slice(0, 30) || fallback.audioCodec,
+    noAudio: sanitizeFilenamePart(source.noAudio || fallback.noAudio).slice(0, 10) || fallback.noAudio,
+    fps: sanitizeFilenamePart(source.fps || fallback.fps).slice(0, 20) || fallback.fps,
+    aspectRatio: sanitizeFilenamePart(source.aspectRatio || fallback.aspectRatio).slice(0, 40) || fallback.aspectRatio,
+    subtitleMode: sanitizeFilenamePart(source.subtitleMode || fallback.subtitleMode).slice(0, 30) || fallback.subtitleMode,
+    extraMode: sanitizeFilenamePart(source.extraMode || fallback.extraMode).slice(0, 30) || fallback.extraMode
+  };
+};
+
+const hashPassword = (password, salt = crypto.randomBytes(16).toString('hex')) => {
+  const hash = crypto.scryptSync(String(password), salt, 64).toString('hex');
+  return `${salt}:${hash}`;
+};
+
+const verifyPassword = (password, storedHash) => {
+  if (!storedHash || !storedHash.includes(':')) return false;
+  const [salt, originalHash] = storedHash.split(':');
+  const hash = crypto.scryptSync(String(password), salt, 64).toString('hex');
+  return crypto.timingSafeEqual(Buffer.from(hash, 'hex'), Buffer.from(originalHash, 'hex'));
+};
+
+const publicUser = (user) => ({
+  id: user.id,
+  username: user.username,
+  email: user.email,
+  createdAt: user.createdAt
+});
+
+const getUserTokenFromRequest = (req) => req.headers.authorization?.split(' ')[1];
+
+const getUserFromRequest = (req) => {
+  const token = getUserTokenFromRequest(req);
+  if (!token) return null;
+  const userId = userSessions.get(token);
+  if (!userId) return null;
+  const usersData = readUsersData();
+  return usersData.users.find((item) => item.id === userId) || null;
+};
+
+const verifyUser = (req, res, next) => {
+  const user = getUserFromRequest(req);
+  if (!user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  req.user = user;
+  next();
+};
+
+const updateUserRecord = (userId, updater) => {
+  const usersData = readUsersData();
+  const userIndex = usersData.users.findIndex((item) => item.id === userId);
+  if (userIndex === -1) return null;
+  const currentUser = usersData.users[userIndex];
+  const nextUser = updater(currentUser);
+  usersData.users[userIndex] = nextUser;
+  writeUsersData(usersData);
+  return nextUser;
+};
+
 // Admin setup
 const adminToken = crypto.randomBytes(32).toString('hex');
+const adminUsername = process.env.ADMIN_USERNAME || 'admin';
 const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
 console.log('\n=================================');
 console.log('🛡️  ADMIN PANEL CONFIGURATION');
 console.log(`URL: /#/admin`);
+console.log(`USERNAME: ${adminUsername}`);
 console.log(`PASSWORD: ${adminPassword}`);
 console.log('=================================\n');
 
@@ -576,12 +691,102 @@ app.get('/api/config', (req, res) => {
 
 // Admin Authentication API
 app.post('/api/admin/login', (req, res) => {
-  const { password } = req.body;
-  if (password === adminPassword) {
+  const { username, password } = req.body || {};
+  if (username === adminUsername && password === adminPassword) {
     res.json({ token: adminToken });
   } else {
-    res.status(401).json({ error: 'Invalid password' });
+    res.status(401).json({ error: 'Invalid username or password' });
   }
+});
+
+app.post('/api/auth/register', (req, res) => {
+  const { username, email, password } = req.body || {};
+  const cleanUsername = sanitizeFilenamePart(username || '').replace(/\s+/g, '-').slice(0, 40);
+  const cleanEmail = String(email || '').trim().toLowerCase().slice(0, 120);
+  const rawPassword = String(password || '');
+
+  if (!cleanUsername || !cleanEmail || rawPassword.length < 6) {
+    return res.status(400).json({ error: 'Username, email, and password (min 6 chars) are required' });
+  }
+
+  const usersData = readUsersData();
+  const emailExists = usersData.users.some((item) => item.email === cleanEmail);
+  const usernameExists = usersData.users.some((item) => item.username.toLowerCase() === cleanUsername.toLowerCase());
+  if (emailExists || usernameExists) {
+    return res.status(409).json({ error: 'User already exists' });
+  }
+
+  const user = {
+    id: crypto.randomUUID(),
+    username: cleanUsername,
+    email: cleanEmail,
+    passwordHash: hashPassword(rawPassword),
+    createdAt: new Date().toISOString(),
+    preset: defaultWorkspacePreset(),
+    downloadHistory: []
+  };
+
+  usersData.users.push(user);
+  writeUsersData(usersData);
+
+  const token = crypto.randomBytes(32).toString('hex');
+  userSessions.set(token, user.id);
+  res.json({ token, user: publicUser(user), preset: user.preset, downloadHistory: user.downloadHistory });
+});
+
+app.post('/api/auth/login', (req, res) => {
+  const { email, password } = req.body || {};
+  const cleanEmail = String(email || '').trim().toLowerCase();
+  const usersData = readUsersData();
+  const user = usersData.users.find((item) => item.email === cleanEmail);
+
+  if (!user || !verifyPassword(password || '', user.passwordHash)) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
+  const token = crypto.randomBytes(32).toString('hex');
+  userSessions.set(token, user.id);
+  res.json({ token, user: publicUser(user), preset: user.preset || defaultWorkspacePreset(), downloadHistory: user.downloadHistory || [] });
+});
+
+app.post('/api/auth/logout', verifyUser, (req, res) => {
+  const token = getUserTokenFromRequest(req);
+  if (token) userSessions.delete(token);
+  res.json({ success: true });
+});
+
+app.get('/api/auth/me', verifyUser, (req, res) => {
+  res.json({
+    user: publicUser(req.user),
+    preset: req.user.preset || defaultWorkspacePreset(),
+    downloadHistory: req.user.downloadHistory || []
+  });
+});
+
+app.get('/api/user/workspace', verifyUser, (req, res) => {
+  res.json({
+    user: publicUser(req.user),
+    preset: req.user.preset || defaultWorkspacePreset(),
+    downloadHistory: req.user.downloadHistory || []
+  });
+});
+
+app.post('/api/user/preset', verifyUser, (req, res) => {
+  const nextPreset = sanitizeWorkspacePreset(req.body);
+  const updatedUser = updateUserRecord(req.user.id, (currentUser) => ({
+    ...currentUser,
+    preset: nextPreset
+  }));
+
+  if (!updatedUser) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  res.json({ success: true, preset: updatedUser.preset });
+});
+
+app.get('/api/user/downloads', verifyUser, (req, res) => {
+  res.json({ downloadHistory: req.user.downloadHistory || [] });
 });
 
 const verifyAdmin = (req, res, next) => {
@@ -644,6 +849,7 @@ app.post('/api/download', async (req, res) => {
 
   try {
     console.log('Starting download:', url, 'Quality:', quality, 'Format:', format);
+    const workspaceUser = getUserFromRequest(req);
 
     // Detect platform
     const platform = detectPlatform(url);
@@ -667,15 +873,52 @@ app.post('/api/download', async (req, res) => {
       timestamp
     });
     const outputTemplate = path.join(downloadsDir, outputBaseName);
+    const historyEntryId = crypto.randomUUID();
+
+    if (workspaceUser) {
+      updateUserRecord(workspaceUser.id, (currentUser) => ({
+        ...currentUser,
+        downloadHistory: [
+          {
+            id: historyEntryId,
+            url,
+            title: resolvedTitle,
+            quality,
+            format,
+            audioTrack: audioTrack || 'default',
+            platform,
+            status: 'processing',
+            fileName: `${outputBaseName}.${(quality.startsWith('Audio (') || quality === 'Audio Only') ? String(format || 'mp3').toLowerCase() : 'mp4'}`,
+            createdAt: new Date().toISOString(),
+            preset: currentUser.preset || defaultWorkspacePreset()
+          },
+          ...(currentUser.downloadHistory || [])
+        ].slice(0, 25)
+      }));
+    }
+
+    const updateWorkspaceDownload = (patch) => {
+      if (!workspaceUser) return;
+      updateUserRecord(workspaceUser.id, (currentUser) => ({
+        ...currentUser,
+        downloadHistory: (currentUser.downloadHistory || []).map((entry) =>
+          entry.id === historyEntryId ? { ...entry, ...patch } : entry
+        )
+      }));
+    };
 
     // When a specific audio track is selected, download that exact stream and mux it with video.
     // When all audio tracks are selected, mux one downloaded audio file per language into a single MKV.
     if (audioTrack && audioTrack !== 'default' && audioTrack !== 'all') {
       console.log(`Using ffmpeg track selection for audioTrack="${audioTrack}"`);
       downloadWithFfmpegTrackSelection(url, quality, format, audioTrack, outputTemplate, activeDownloadId)
+        .then(() => {
+          updateWorkspaceDownload({ status: 'completed', fileName: `${outputBaseName}.mkv`, completedAt: new Date().toISOString() });
+        })
         .catch(err => {
           console.error('ffmpeg track selection failed:', err.message);
           downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'Download failed: ' + err.message });
+          updateWorkspaceDownload({ status: 'failed', error: err.message, completedAt: new Date().toISOString() });
         });
       return res.json({ success: true, downloadId: activeDownloadId });
     }
@@ -683,9 +926,13 @@ app.post('/api/download', async (req, res) => {
     if (audioTrack === 'all' && !(quality.startsWith('Audio (') || quality === 'Audio Only')) {
       console.log('Using ffmpeg multi-track mux for all audio tracks');
       downloadWithAllAudioTracks(url, quality, outputTemplate, activeDownloadId)
+        .then(() => {
+          updateWorkspaceDownload({ status: 'completed', fileName: `${outputBaseName}.mkv`, completedAt: new Date().toISOString() });
+        })
         .catch(err => {
           console.error('ffmpeg all-track mux failed:', err.message);
           downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'Download failed: ' + err.message });
+          updateWorkspaceDownload({ status: 'failed', error: err.message, completedAt: new Date().toISOString() });
         });
       return res.json({ success: true, downloadId: activeDownloadId });
     }
@@ -725,6 +972,7 @@ app.post('/api/download', async (req, res) => {
         if (stderr.includes('Requested format is not available')) userMessage = 'Format not available';
         else if (stderr.includes('Private video')) userMessage = 'Private video';
         downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: userMessage });
+        updateWorkspaceDownload({ status: 'failed', error: userMessage, completedAt: new Date().toISOString() });
         return;
       }
 
@@ -733,9 +981,11 @@ app.post('/api/download', async (req, res) => {
       const downloadedFile = files.find(f => f.startsWith(templateBase));
       if (!downloadedFile) {
         downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'File not found' });
+        updateWorkspaceDownload({ status: 'failed', error: 'File not found', completedAt: new Date().toISOString() });
         return;
       }
       downloadProgressMap.set(activeDownloadId, { progress: 100, downloadUrl: `/api/download/file/${downloadedFile}`, error: null });
+      updateWorkspaceDownload({ status: 'completed', fileName: downloadedFile, completedAt: new Date().toISOString() });
     }).stdout.on('data', (data) => {
       const match = data.toString().match(/\[download\]\s+([\d\.]+)%/);
       if (match) {

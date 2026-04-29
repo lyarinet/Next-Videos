@@ -1,0 +1,78 @@
+{
+  "users": [
+    {
+      "id": "56901dda-8675-46f2-b659-3050e159da81",
+      "username": "asifagaria",
+      "email": "asifagaria@gmail.com",
+      "passwordHash": "aaf4414965f6e5cb2adc37cfdc845d10:d6f111edff384621ab7da07d0e4f4c5d5ec7feb6ce0eb5c90a7113d201524113cd33924479b2e4df20d16a7e762d8d3880838b08b88bb25c35b36270ee972f65",
+      "createdAt": "2026-04-29T18:05:31.070Z",
+      "preset": {
+        "presetName": "My Default Profile",
+        "activeTab": "watermark",
+        "sizeLimit": "Off",
+        "videoEncode": "MPEG4 (Xvid)",
+        "videoSize": "320x240",
+        "bitrate": "Default",
+        "crfCq": "10 (High quality)",
+        "fps": "Default",
+        "aspectRatio": "Fully Expand",
+        "subtitleMode": "Off",
+        "extraMode": "Other"
+      },
+      "downloadHistory": [
+        {
+          "id": "ad68b398-7ef6-45fe-8edd-f3a752ece96b",
+          "url": "https://www.youtube.com/watch?v=ETbFRFB3krE",
+          "title": "B/W to Color - Itna Na Mujhse Tu Pyar Badha | Chhaya | Lata, Talat Mahmood |  Asha Parekh,Sunil Dutt",
+          "quality": "240p (320x240)",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "YouTube",
+          "status": "completed",
+          "fileName": "240p unicq-lyarinet-1777486214839990.mp4",
+          "createdAt": "2026-04-29T18:10:19.314Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "watermark",
+            "sizeLimit": "Off",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-04-29T18:10:29.300Z"
+        },
+        {
+          "id": "c6c3b17c-c50d-4cde-ac40-7b6197032c4d",
+          "url": "https://www.youtube.com/watch?v=ETbFRFB3krE",
+          "title": "B/W to Color - Itna Na Mujhse Tu Pyar Badha | Chhaya | Lata, Talat Mahmood |  Asha Parekh,Sunil Dutt",
+          "quality": "240p (320x240)",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "YouTube",
+          "status": "completed",
+          "fileName": "240p unicq-lyarinet-1777486048426445.mp4",
+          "createdAt": "2026-04-29T18:07:32.397Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "watermark",
+            "sizeLimit": "Off",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-04-29T18:07:43.468Z"
+        }
+      ]
+    }
+  ]
+}
