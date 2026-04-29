@@ -73,6 +73,62 @@
           "completedAt": "2026-04-29T18:07:43.468Z"
         }
       ]
+    },
+    {
+      "id": "3c7128b6-2a80-4acb-bebb-3cf2f063f281",
+      "username": "funlyari",
+      "email": "funlyari@gmail.com",
+      "passwordHash": "11f7264e576502b137cb0d344aca3ffb:23d41c480b73c1403e1227b52e5ce8b664ff121900567af779036d6f807f79281a653e3ff516f699fe8411bcd4783045f45b01ce1a1822b4011547a5245a2339",
+      "createdAt": "2026-04-29T20:18:32.727Z",
+      "preset": {
+        "presetName": "My Default Profile",
+        "activeTab": "video",
+        "outputFormat": "MP4",
+        "sizeLimit": "Off",
+        "qualityMode": "Optimal quality",
+        "videoEncode": "MPEG4 (Xvid)",
+        "videoSize": "320x240",
+        "bitrate": "Default",
+        "crfCq": "10 (High quality)",
+        "audioCodec": "AAC",
+        "noAudio": "Off",
+        "fps": "Default",
+        "aspectRatio": "Fully Expand",
+        "subtitleMode": "Off",
+        "extraMode": "Other"
+      },
+      "downloadHistory": [
+        {
+          "id": "60b37f21-bb28-4c82-8713-6fdd6ebafa09",
+          "url": "https://www.youtube.com/watch?v=zRtGL0-5rg4",
+          "title": "Last To Leave Grocery Store, Wins $250,000",
+          "quality": "1080p HD",
+          "format": "MP4",
+          "audioTrack": "hi",
+          "platform": "YouTube",
+          "status": "completed",
+          "fileName": "1080p unicq-lyarinet-1777494014926181.mkv",
+          "createdAt": "2026-04-29T20:20:19.799Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "video",
+            "outputFormat": "MP4",
+            "sizeLimit": "Off",
+            "qualityMode": "Optimal quality",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "audioCodec": "AAC",
+            "noAudio": "Off",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-04-29T20:22:11.700Z"
+        }
+      ]
     }
   ]
 }

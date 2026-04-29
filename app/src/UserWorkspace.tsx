@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-
+import Converter from './components/Converter'
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const USER_TOKEN_KEY = 'workspaceUserToken'
 
@@ -84,6 +84,7 @@ const defaultPreset: WorkspacePreset = {
 }
 
 const tabOptions = ['video', 'audio', 'subtitle', 'other', 'watermark']
+const outputFormatOptions = ['3G2', '3GP', 'AVI', 'FLV', 'MKV', 'MOV', 'MP4', 'MPG', 'OGV', 'WEBM', 'WMV']
 
 const parseVideoSizeToQuality = (videoSize: string) => {
   if (videoSize === '320x240') return '240p (320x240)'
@@ -107,11 +108,13 @@ const estimateOutputSize = (preset: WorkspacePreset) => {
   return base
 }
 
+const getOutputFormatLabel = (format: string) => `Convert to ${format}`
+
 export default function UserWorkspace() {
   const [token, setToken] = useState<string | null>(localStorage.getItem(USER_TOKEN_KEY))
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [authForm, setAuthForm] = useState({ username: '', email: '', password: '' })
-  const [user, setUser] = useState<WorkspaceUser | null>(null)
+  const [user, setUser] = useState<WorkspaceUser | null>({ id: 'guest', username: 'Guest User', email: '', createdAt: new Date().toISOString() })
   const [preset, setPreset] = useState<WorkspacePreset>(defaultPreset)
   const [downloadHistory, setDownloadHistory] = useState<DownloadHistoryItem[]>([])
   const [isSavingPreset, setIsSavingPreset] = useState(false)
@@ -291,7 +294,7 @@ export default function UserWorkspace() {
         body: JSON.stringify({
           url: videoInfo.url,
           quality: option.quality,
-          format: option.format,
+          format: option.format || 'MP4',
           downloadId: progressId,
           audioTrack: selectedAudioTrack
         })
@@ -308,11 +311,14 @@ export default function UserWorkspace() {
 
   const handleQuickPresetDownload = () => {
     if (!videoInfo) return
-    const preferred = videoInfo.formats.find((item) => item.quality === recommendedQuality) || videoInfo.formats[0]
+    const preferred = videoInfo.formats.find((item) => item.quality === recommendedQuality && item.format.toUpperCase() === preset.outputFormat.toUpperCase())
+      || videoInfo.formats.find((item) => item.quality === recommendedQuality)
+      || videoInfo.formats.find((item) => item.format.toUpperCase() === preset.outputFormat.toUpperCase())
+      || videoInfo.formats[0]
     if (preferred) handleDownload(preferred)
   }
 
-  if (!token || !user) {
+  if (!token) {
     return (
       <div className="min-h-screen bg-slate-950 text-white px-4 py-10">
         <div className="max-w-md mx-auto">
@@ -392,7 +398,7 @@ export default function UserWorkspace() {
             </div>
             <div>
               <h1 className="text-3xl font-bold">My Workspace</h1>
-              <p className="text-gray-400">Logged in as {user.username}</p>
+              <p className="text-gray-400">Logged in as {user?.username || 'Guest'}</p>
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -434,11 +440,9 @@ export default function UserWorkspace() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <Input value={preset.presetName} onChange={(e) => setPreset((prev) => ({ ...prev, presetName: e.target.value }))} className="bg-white/5 border-white/10 text-white" placeholder="Preset name" />
                 <select value={preset.outputFormat} onChange={(e) => setPreset((prev) => ({ ...prev, outputFormat: e.target.value }))} className="h-10 rounded-md border border-white/10 bg-white/5 px-3 text-white">
-                  <option className="bg-slate-900">MP4</option>
-                  <option className="bg-slate-900">AVI</option>
-                  <option className="bg-slate-900">MKV</option>
-                  <option className="bg-slate-900">MOV</option>
-                  <option className="bg-slate-900">WEBM</option>
+                  {outputFormatOptions.map((format) => (
+                    <option key={format} value={format} className="bg-slate-900">{getOutputFormatLabel(format)}</option>
+                  ))}
                 </select>
                 <select value={preset.sizeLimit} onChange={(e) => setPreset((prev) => ({ ...prev, sizeLimit: e.target.value }))} className="h-10 rounded-md border border-white/10 bg-white/5 px-3 text-white">
                   <option className="bg-slate-900">Off</option>
@@ -509,6 +513,10 @@ export default function UserWorkspace() {
 
               <div className="grid gap-4 lg:grid-cols-3">
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4">
+                  <div className="text-sm text-gray-400 mb-2">Target output format</div>
+                  <div className="text-2xl font-semibold">{preset.outputFormat}</div>
+                </div>
+                <div className="rounded-xl border border-white/10 bg-white/5 p-4">
                   <div className="text-sm text-gray-400 mb-2">Estimated output file size</div>
                   <div className="text-2xl font-semibold">{estimatedOutputSize}</div>
                 </div>
@@ -528,7 +536,7 @@ export default function UserWorkspace() {
             <CardContent className="p-6 space-y-5">
               <div>
                 <h2 className="text-xl font-semibold flex items-center gap-2"><Download className="w-5 h-5 text-orange-400" /> Analyze And Download</h2>
-                <p className="text-sm text-gray-400">Use your preset as a quick recommendation, then download.</p>
+                <p className="text-sm text-gray-400">Use your preset as a quick recommendation, including preferred output format.</p>
               </div>
 
               <div className="flex flex-col gap-3">
@@ -537,7 +545,7 @@ export default function UserWorkspace() {
                   <Button onClick={fetchVideoInfo} className="bg-red-500 hover:bg-red-600 text-white">Fetch URL</Button>
                   {videoInfo && (
                     <Button variant="outline" className="border-white/10 bg-white/5 text-white" onClick={handleQuickPresetDownload}>
-                      Quick Download ({recommendedQuality || 'best'})
+                      Quick Download ({preset.outputFormat} · {recommendedQuality || 'best'})
                     </Button>
                   )}
                 </div>
@@ -573,16 +581,16 @@ export default function UserWorkspace() {
                   <div className="grid gap-2">
                     {videoInfo.formats.map((option) => (
                       <button
-                        key={`${option.quality}-${option.format}`}
+                        key={`${option.quality}-${option.format || 'unknown'}`}
                         onClick={() => handleDownload(option)}
                         disabled={isDownloading}
-                        className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition ${recommendedQuality === option.quality ? 'border-orange-400/30 bg-orange-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                        className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition ${recommendedQuality === option.quality || (option.format && option.format.toUpperCase() === preset.outputFormat.toUpperCase()) ? 'border-orange-400/30 bg-orange-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
                       >
                         <div>
                           <div className="font-medium">{option.quality}</div>
-                          <div className="text-sm text-gray-400">{option.format} · {option.size}</div>
+                          <div className="text-sm text-gray-400">{option.format || 'Unknown'} · {option.size}</div>
                         </div>
-                        {recommendedQuality === option.quality && <Badge variant="secondary" className="bg-orange-500/15 text-orange-200 border-orange-400/20">Preset</Badge>}
+                        {(recommendedQuality === option.quality || (option.format && option.format.toUpperCase() === preset.outputFormat.toUpperCase())) && <Badge variant="secondary" className="bg-orange-500/15 text-orange-200 border-orange-400/20">Preset</Badge>}
                       </button>
                     ))}
                   </div>
@@ -603,6 +611,8 @@ export default function UserWorkspace() {
             </CardContent>
           </Card>
         </div>
+
+        <Converter token={token} />
 
         <Card className="bg-slate-900/50 border-white/10 backdrop-blur-xl">
           <CardContent className="p-6">

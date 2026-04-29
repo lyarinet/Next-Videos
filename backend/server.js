@@ -1223,6 +1223,111 @@ function getAvailableFormatsForPlatform(platform) {
   return formats;
 }
 
+// Video Converter Feature
+const conversionJobs = new Map();
+
+app.get('/api/convert/files', (req, res) => {
+  try {
+    const files = fs.readdirSync(downloadsDir)
+      .filter(file => !file.startsWith('.') && fs.statSync(path.join(downloadsDir, file)).isFile());
+    res.json({ files });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to list files' });
+  }
+});
+
+app.post('/api/convert', (req, res) => {
+  const { sourceFile, profile, options } = req.body;
+  if (!sourceFile) return res.status(400).json({ error: 'Source file is required' });
+  
+  const sourcePath = path.join(downloadsDir, sourceFile);
+  if (!fs.existsSync(sourcePath)) return res.status(404).json({ error: 'Source file not found' });
+  
+  const jobId = crypto.randomUUID();
+  const timestamp = Date.now();
+  
+  let outExt = 'mp4';
+  if (options && options.format) {
+    outExt = options.format.toLowerCase();
+  } else if (profile && profile.includes('HLS')) {
+    outExt = 'm3u8';
+  }
+  
+  const safeSourceFile = sanitizeFilenamePart(path.basename(sourceFile, path.extname(sourceFile)));
+  const outputBaseName = `converted_${timestamp}_${safeSourceFile}`;
+  const outputPath = path.join(downloadsDir, `${outputBaseName}.${outExt}`);
+  
+  let ffmpegCmd = `ffmpeg -y -i "${sourcePath}"`;
+  
+  if (options && options.custom) {
+    if (options.vcodec) ffmpegCmd += ` -c:v ${options.vcodec}`;
+    if (options.acodec) ffmpegCmd += ` -c:a ${options.acodec}`;
+    if (options.bitrate) ffmpegCmd += ` -b:v ${options.bitrate}`;
+    if (options.fps) ffmpegCmd += ` -r ${options.fps}`;
+    if (options.resolution) ffmpegCmd += ` -vf scale=${options.resolution}`;
+    if (options.trimStart) ffmpegCmd += ` -ss ${options.trimStart}`;
+    if (options.trimEnd) ffmpegCmd += ` -to ${options.trimEnd}`;
+  } else if (profile) {
+    if (profile === 'Mobile Low') {
+      ffmpegCmd += ' -vf scale=-2:240 -c:v libx264 -b:v 400k -c:a aac -b:a 64k';
+    } else if (profile === 'Mobile Medium') {
+      ffmpegCmd += ' -vf scale=-2:480 -c:v libx264 -b:v 1000k -c:a aac -b:a 128k';
+    } else if (profile === 'Mobile High') {
+      ffmpegCmd += ' -vf scale=-2:720 -c:v libx264 -b:v 2500k -c:a aac -b:a 192k';
+    } else if (profile === 'Console PlayStation') {
+      ffmpegCmd += ' -c:v libx264 -preset fast -profile:v high -level 4.1 -b:v 4000k -c:a aac -b:a 256k';
+    } else if (profile === 'Console Xbox') {
+      ffmpegCmd += ' -c:v libx264 -preset fast -profile:v main -level 4.1 -b:v 4000k -c:a aac -b:a 256k';
+    } else if (profile === 'Web HLS') {
+      ffmpegCmd += ' -c:v libx264 -c:a aac -f hls -hls_time 10 -hls_list_size 0';
+    } else if (profile === 'Web DASH') {
+      ffmpegCmd += ' -c:v libx264 -c:a aac -f dash';
+    } else if (profile === 'Web Optimized MP4') {
+      ffmpegCmd += ' -c:v libx264 -c:a aac -movflags +faststart';
+    }
+  }
+  
+  ffmpegCmd += ` "${outputPath}"`;
+  console.log('Running conversion:', ffmpegCmd);
+  
+  conversionJobs.set(jobId, { status: 'Processing', progress: 0, resultUrl: null, error: null });
+  
+  const proc = exec(ffmpegCmd, { timeout: 7200000 });
+  
+  let totalDurationSec = 0;
+  proc.stderr.on('data', (data) => {
+    const output = data.toString();
+    const durationMatch = output.match(/Duration: (\d{2}):(\d{2}):(\d{2}\.\d+)/);
+    if (durationMatch) {
+      totalDurationSec = parseInt(durationMatch[1]) * 3600 + parseInt(durationMatch[2]) * 60 + parseFloat(durationMatch[3]);
+    }
+    const timeMatch = output.match(/time=(\d{2}):(\d{2}):(\d{2}\.\d+)/);
+    if (timeMatch && totalDurationSec > 0) {
+      const currentSec = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseFloat(timeMatch[3]);
+      const progress = Math.min(100, Math.round((currentSec / totalDurationSec) * 100));
+      const job = conversionJobs.get(jobId);
+      if (job) conversionJobs.set(jobId, { ...job, progress });
+    }
+  });
+  
+  proc.on('close', (code) => {
+    if (code === 0) {
+      conversionJobs.set(jobId, { status: 'Completed', progress: 100, resultUrl: `/api/download/file/${path.basename(outputPath)}`, error: null });
+    } else {
+      conversionJobs.set(jobId, { status: 'Failed', progress: 0, resultUrl: null, error: 'FFmpeg process failed with code ' + code });
+    }
+  });
+  
+  res.json({ jobId, message: 'Conversion started' });
+});
+
+app.get('/api/convert/status/:id', (req, res) => {
+  const id = req.params.id;
+  const job = conversionJobs.get(id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  res.json(job);
+});
+
 // Error handling
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
