@@ -157,6 +157,7 @@ const getQualityLabel = (quality, format, audioTrack) => {
   if (quality === '720p HD') return '720p';
   if (quality === '480p') return '480p';
   if (quality === '360p') return '360p';
+  if (quality === '240p (320x240)') return '240p';
   if (quality === '144p') return '144p';
 
   if (quality.startsWith('Audio (') || quality === 'Audio Only') {
@@ -271,7 +272,7 @@ async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack
   const tempVideoOutput = outputTemplate + '_video';
   const tempAudioOutput = outputTemplate + '_audio';
 
-  const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '144p': '144' };
+  const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '240p (320x240)': '240', '144p': '144' };
   const maxHeight = qualityMap[quality] || '720';
   const videoData = await fetchYtDlpMetadata(url);
   const formats = videoData.formats || [];
@@ -347,7 +348,7 @@ async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack
 }
 
 async function downloadWithAllAudioTracks(url, quality, outputTemplate, downloadId) {
-  const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '144p': '144' };
+  const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '240p (320x240)': '240', '144p': '144' };
   const maxHeight = qualityMap[quality] || '720';
 
   const videoData = await fetchYtDlpMetadata(url);
@@ -706,7 +707,7 @@ app.post('/api/download', async (req, res) => {
       cmd += ' -f bestaudio';
       cmd += ` -x --audio-format ${audioFormat} --audio-quality 0 --extract-audio`;
     } else {
-      const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '144p': '144' };
+      const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '240p (320x240)': '240', '144p': '144' };
       const maxHeight = qualityMap[quality] || '720';
 
       cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best"`;
@@ -917,6 +918,7 @@ function mapQuality(quality) {
     '720p HD': 720,
     '480p': 480,
     '360p': 360,
+    '240p (320x240)': 240,
     'Audio Only': 0
   };
   return qualityMap[quality] || 720;
@@ -933,6 +935,7 @@ function getAvailableFormats(info) {
     { quality: '720p HD', format: 'MP4', size: '~65 MB' },
     { quality: '480p', format: 'MP4', size: '~35 MB' },
     { quality: '360p', format: 'MP4', size: '~20 MB' },
+    { quality: '240p (320x240)', format: 'MP4', size: '~14 MB' },
     { quality: '144p', format: '3GP', size: '~10 MB' }
   );
 
@@ -958,6 +961,7 @@ function getAvailableFormatsForPlatform(platform) {
     { quality: '720p HD', format: 'MP4', size: '~65 MB' },
     { quality: '480p', format: 'MP4', size: '~35 MB' },
     { quality: '360p', format: 'MP4', size: '~20 MB' },
+    { quality: '240p (320x240)', format: 'MP4', size: '~14 MB' },
     { quality: '144p', format: '3GP', size: '~10 MB' },
     { quality: 'Audio (MP3)', format: 'MP3', size: '~8 MB' },
     { quality: 'Audio (M4A)', format: 'M4A', size: '~8 MB' },
