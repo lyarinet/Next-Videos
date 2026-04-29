@@ -144,10 +144,9 @@ const sanitizeFilenamePart = (value) => {
     .trim();
 };
 
-const shortenDownloadTitle = (title) => {
-  const safeTitle = sanitizeFilenamePart(title);
-  if (!safeTitle) return 'Lyarinet Print P360';
-  return 'Lyarinet Print P360';
+const buildUniqueDownloadLabel = (timestamp) => {
+  const uniqueNumber = `${timestamp}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+  return `unicq-lyarinet-${uniqueNumber}`;
 };
 
 const getQualityLabel = (quality, format, audioTrack) => {
@@ -168,8 +167,8 @@ const getQualityLabel = (quality, format, audioTrack) => {
   return sanitizeFilenamePart(quality);
 };
 
-const buildDownloadBaseName = ({ title, quality, format, audioTrack, timestamp }) => {
-  const safeTitle = shortenDownloadTitle(title);
+const buildDownloadBaseName = ({ quality, format, audioTrack, timestamp }) => {
+  const safeTitle = buildUniqueDownloadLabel(timestamp);
   const safeQuality = getQualityLabel(quality, format, audioTrack);
   const parts = [safeQuality, safeTitle].filter(Boolean);
   let baseName = parts.join(' ');
@@ -661,7 +660,6 @@ app.post('/api/download', async (req, res) => {
     }
 
     const outputBaseName = buildDownloadBaseName({
-      title: resolvedTitle,
       quality,
       format,
       audioTrack,
