@@ -3,12 +3,8 @@
 > vite
 
 
-  VITE v7.3.1  ready in 359 ms
+  VITE v7.3.1  ready in 1987 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: http://192.168.0.208:5173/
   ➜  Network: http://10.240.150.139:5173/
-8:32:18 PM [vite] (client) hmr update /src/components/Converter.tsx, /src/index.css
-8:32:31 PM [vite] (client) hmr update /src/UserWorkspace.tsx, /src/index.css
-8:32:44 PM [vite] (client) hmr update /src/components/Converter.tsx, /src/index.css
-8:32:55 PM [vite] (client) hmr update /src/components/Converter.tsx, /src/index.css

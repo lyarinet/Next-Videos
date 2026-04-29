@@ -1228,8 +1228,22 @@ const conversionJobs = new Map();
 
 app.get('/api/convert/files', (req, res) => {
   try {
-    const files = fs.readdirSync(downloadsDir)
-      .filter(file => !file.startsWith('.') && fs.statSync(path.join(downloadsDir, file)).isFile());
+    const user = getUserFromRequest(req);
+    let files = [];
+    
+    if (user && user.downloadHistory) {
+      // Extract file names from completed downloads in user's history
+      const userFiles = user.downloadHistory
+        .filter(entry => entry.status === 'completed' && entry.fileName)
+        .map(entry => entry.fileName);
+      
+      // Only include files that actually still exist on disk
+      files = userFiles.filter(file => fs.existsSync(path.join(downloadsDir, file)));
+    }
+    
+    // De-duplicate just in case
+    files = [...new Set(files)];
+    
     res.json({ files });
   } catch (error) {
     res.status(500).json({ error: 'Failed to list files' });

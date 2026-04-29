@@ -584,13 +584,13 @@ export default function UserWorkspace() {
                         key={`${option.quality}-${option.format || 'unknown'}`}
                         onClick={() => handleDownload(option)}
                         disabled={isDownloading}
-                        className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition ${recommendedQuality === option.quality || (option.format && option.format.toUpperCase() === preset.outputFormat.toUpperCase()) ? 'border-orange-400/30 bg-orange-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                        className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition ${recommendedQuality === option.quality || (option.format && preset?.outputFormat && option.format.toUpperCase() === preset.outputFormat.toUpperCase()) ? 'border-orange-400/30 bg-orange-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
                       >
                         <div>
                           <div className="font-medium">{option.quality}</div>
                           <div className="text-sm text-gray-400">{option.format || 'Unknown'} · {option.size}</div>
                         </div>
-                        {(recommendedQuality === option.quality || (option.format && option.format.toUpperCase() === preset.outputFormat.toUpperCase())) && <Badge variant="secondary" className="bg-orange-500/15 text-orange-200 border-orange-400/20">Preset</Badge>}
+                        {(recommendedQuality === option.quality || (option.format && preset?.outputFormat && option.format.toUpperCase() === preset.outputFormat.toUpperCase())) && <Badge variant="secondary" className="bg-orange-500/15 text-orange-200 border-orange-400/20">Preset</Badge>}
                       </button>
                     ))}
                   </div>

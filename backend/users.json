@@ -21,6 +21,32 @@
       },
       "downloadHistory": [
         {
+          "id": "91924476-83f1-4e10-a3af-2e22ce16bde7",
+          "url": "https://www.instagram.com/reel/DXokImCEmi4/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==",
+          "title": "Video by wehxkavuif",
+          "quality": "720p HD",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "Instagram",
+          "status": "completed",
+          "fileName": "720p unicq-lyarinet-1777495335311320.mp4",
+          "createdAt": "2026-04-29T20:42:16.732Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "watermark",
+            "sizeLimit": "Off",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-04-29T20:42:18.625Z"
+        },
+        {
           "id": "ad68b398-7ef6-45fe-8edd-f3a752ece96b",
           "url": "https://www.youtube.com/watch?v=ETbFRFB3krE",
           "title": "B/W to Color - Itna Na Mujhse Tu Pyar Badha | Chhaya | Lata, Talat Mahmood |  Asha Parekh,Sunil Dutt",
@@ -98,6 +124,36 @@
         "extraMode": "Other"
       },
       "downloadHistory": [
+        {
+          "id": "26886333-5d7f-4d86-b7b1-0faa1d4b2788",
+          "url": "https://www.youtube.com/shorts/GKC6ppEY-U8",
+          "title": "Funny trainee#fanlinastar #douyin #funnyvideos 😂",
+          "quality": "240p (320x240)",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "YouTube",
+          "status": "completed",
+          "fileName": "240p unicq-lyarinet-1777494966342392.mp4",
+          "createdAt": "2026-04-29T20:36:10.062Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "video",
+            "outputFormat": "MP4",
+            "sizeLimit": "Off",
+            "qualityMode": "Optimal quality",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "audioCodec": "AAC",
+            "noAudio": "Off",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-04-29T20:36:14.292Z"
+        },
         {
           "id": "60b37f21-bb28-4c82-8713-6fdd6ebafa09",
           "url": "https://www.youtube.com/watch?v=zRtGL0-5rg4",
