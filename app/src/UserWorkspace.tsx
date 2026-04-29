@@ -557,7 +557,7 @@ export default function UserWorkspace() {
               {videoInfo && (
                 <div className="space-y-4">
                   <div className="rounded-2xl overflow-hidden border border-white/10 bg-white/5">
-                    <img src={videoInfo.thumbnail} alt={videoInfo.title} className="w-full aspect-video object-cover" />
+                    <img src={videoInfo.thumbnail} alt={videoInfo.title} className="w-full h-48 object-cover" />
                     <div className="p-4 space-y-2">
                       <div className="flex flex-wrap gap-2 items-center">
                         <Badge variant="secondary" className="bg-green-500/10 text-green-300 border-green-400/20"><CheckCircle2 className="w-3 h-3 mr-1" /> {videoInfo.platform}</Badge>
@@ -578,7 +578,7 @@ export default function UserWorkspace() {
                     })}
                   </select>
 
-                  <div className="grid gap-2">
+                  <div className="grid gap-2 max-h-64 overflow-y-auto pr-2">
                     {videoInfo.formats.map((option) => (
                       <button
                         key={`${option.quality}-${option.format || 'unknown'}`}

@@ -24,3 +24,5 @@ Video info fetched: Last To Leave Grocery Store, Wins $250,000 | audio tracks: 2
 Starting download: https://www.youtube.com/watch?v=zRtGL0-5rg4 Quality: 1080p HD Format: MP4
 Using ffmpeg track selection for audioTrack="hi"
 Running conversion: ffmpeg -y -i "/var/www/web/Next-Videos/backend/downloads/1080p unicq-lyarinet-1777494014926181.mkv" -vf scale=-2:240 -c:v libx264 -b:v 400k -c:a aac -b:a 64k "/var/www/web/Next-Videos/backend/downloads/converted_1777494154512_1080p unicq-lyarinet-1777494014926181.mp4"
+Fetching info for: https://www.youtube.com/shorts/GKC6ppEY-U8
+Video info fetched: Funny trainee#fanlinastar #douyin #funnyvideos 😂 | audio tracks: 1

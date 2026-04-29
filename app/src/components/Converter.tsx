@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { FileVideo, Settings, Play, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { FileVideo, Play, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
@@ -51,7 +50,7 @@ export default function Converter({ token }: { token: string | null }) {
   }, [token])
 
   useEffect(() => {
-    let interval: NodeJS.Timeout
+    let interval: ReturnType<typeof setInterval>
     if (activeJobId && (!jobStatus || jobStatus.status === 'Processing')) {
       interval = setInterval(async () => {
         try {
@@ -105,7 +104,7 @@ export default function Converter({ token }: { token: string | null }) {
       <CardContent className="p-6 space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold flex items-center gap-2"><FileVideo className="w-5 h-5 text-blue-400" /> Video Converter</h2>
+            <h2 className="text-xl font-semibold flex items-center gap-2"><FileVideo className="w-5 h-5 text-orange-400" /> Video Converter</h2>
             <p className="text-sm text-gray-400">Convert downloaded videos to other formats using preset profiles or custom FFmpeg options.</p>
           </div>
         </div>
@@ -132,14 +131,14 @@ export default function Converter({ token }: { token: string | null }) {
             <button 
               type="button" 
               onClick={() => setIsCustom(false)} 
-              className={`px-4 py-2 rounded-lg text-sm transition-colors ${!isCustom ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30' : 'bg-white/5 text-gray-400 border border-transparent hover:bg-white/10'}`}
+              className={`px-4 py-2 rounded-lg text-sm transition-colors ${!isCustom ? 'bg-red-500/20 text-red-300 border border-red-400/30' : 'bg-white/5 text-gray-400 border border-transparent hover:bg-white/10'}`}
             >
               Preset Profiles
             </button>
             <button 
               type="button" 
               onClick={() => setIsCustom(true)} 
-              className={`px-4 py-2 rounded-lg text-sm transition-colors ${isCustom ? 'bg-blue-500/20 text-blue-300 border border-blue-400/30' : 'bg-white/5 text-gray-400 border border-transparent hover:bg-white/10'}`}
+              className={`px-4 py-2 rounded-lg text-sm transition-colors ${isCustom ? 'bg-red-500/20 text-red-300 border border-red-400/30' : 'bg-white/5 text-gray-400 border border-transparent hover:bg-white/10'}`}
             >
               Custom Settings
             </button>
@@ -155,7 +154,7 @@ export default function Converter({ token }: { token: string | null }) {
                 <button
                   key={p}
                   onClick={() => setProfile(p)}
-                  className={`p-3 rounded-lg text-left border transition-colors ${profile === p ? 'bg-blue-500/10 border-blue-400/40 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                  className={`p-3 rounded-lg text-left border transition-colors ${profile === p ? 'bg-red-500/10 border-red-400/40 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
                 >
                   <div className="font-medium text-sm">{p}</div>
                 </button>
@@ -208,7 +207,7 @@ export default function Converter({ token }: { token: string | null }) {
             <Button 
               onClick={handleConvert} 
               disabled={!sourceFile || (jobStatus && jobStatus.status === 'Processing')}
-              className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto"
+              className="bg-red-500 hover:bg-red-600 text-white w-full sm:w-auto"
             >
               <Play className="w-4 h-4 mr-2" /> Start Conversion
             </Button>
@@ -218,19 +217,19 @@ export default function Converter({ token }: { token: string | null }) {
             <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {jobStatus.status === 'Processing' && <Loader2 className="w-4 h-4 text-blue-400 animate-spin" />}
+                  {jobStatus.status === 'Processing' && <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />}
                   {jobStatus.status === 'Completed' && <CheckCircle2 className="w-4 h-4 text-green-400" />}
                   {jobStatus.status === 'Failed' && <XCircle className="w-4 h-4 text-red-400" />}
                   <span className="font-medium text-white">{jobStatus.status}</span>
                 </div>
                 {jobStatus.status === 'Processing' && (
-                  <span className="text-sm font-medium text-blue-400">{jobStatus.progress}%</span>
+                  <span className="text-sm font-medium text-orange-400">{jobStatus.progress}%</span>
                 )}
               </div>
               
               {jobStatus.status === 'Processing' && (
                 <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full bg-blue-500 transition-all duration-300" style={{ width: `${jobStatus.progress}%` }} />
+                  <div className="h-full bg-red-500 transition-all duration-300" style={{ width: `${jobStatus.progress}%` }} />
                 </div>
               )}
 
