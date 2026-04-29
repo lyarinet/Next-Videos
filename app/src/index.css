@@ -129,3 +129,82 @@
 ::-webkit-scrollbar-thumb {
   @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
 }
+
+/* Premium Theme Overrides */
+body.theme-premium {
+  --bg: #07111f;
+  --panel: rgba(8, 19, 35, 0.86);
+  --panel-strong: rgba(11, 24, 43, 0.96);
+  --line: rgba(255, 255, 255, 0.09);
+  --soft: #8b9ab0;
+  --text: #eef4ff;
+  --accent: #ff6b2c;
+  --accent-2: #ffb347;
+  --success: #34d399;
+  --chip: rgba(255, 255, 255, 0.06);
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+  
+  background: radial-gradient(circle at top left, rgba(255, 107, 44, 0.22), transparent 28%),
+              radial-gradient(circle at top right, rgba(255, 179, 71, 0.18), transparent 26%),
+              linear-gradient(180deg, #0a1527 0%, #07111f 48%, #050d18 100%) !important;
+  color: var(--text) !important;
+  min-height: 100vh;
+}
+
+body.theme-premium .bg-slate-950,
+body.theme-premium .bg-slate-900,
+body.theme-premium .bg-slate-900\/50,
+body.theme-premium .bg-slate-950\/50 {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+body.theme-premium .from-slate-950,
+body.theme-premium .via-slate-900,
+body.theme-premium .to-slate-950,
+body.theme-premium .to-slate-900 {
+  background-image: none !important;
+}
+
+body.theme-premium .glass-card {
+  background: var(--panel) !important;
+  border-color: var(--line) !important;
+  box-shadow: var(--shadow) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+body.theme-premium .glass-card-hover:hover {
+  background: var(--panel-strong) !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+body.theme-premium .bg-white\/5 {
+  background-color: var(--chip) !important;
+}
+
+body.theme-premium .border-white\/10 {
+  border-color: var(--line) !important;
+}
+
+body.theme-premium .text-red-500 {
+  color: var(--accent) !important;
+}
+body.theme-premium .text-red-400 {
+  color: var(--accent-2) !important;
+}
+body.theme-premium .from-red-500 {
+  --tw-gradient-from: var(--accent) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 107, 44, 0)) !important;
+}
+body.theme-premium .to-orange-500 {
+  --tw-gradient-to: var(--accent-2) !important;
+}
+body.theme-premium .bg-red-500 {
+  background-color: var(--accent) !important;
+}
+body.theme-premium .hover\:bg-red-600:hover {
+  background-color: var(--accent-2) !important;
+}
+body.theme-premium .ring-red-500\/50 {
+  --tw-ring-color: rgba(255, 107, 44, 0.5) !important;
+}

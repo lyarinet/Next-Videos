@@ -142,7 +142,7 @@ function App() {
   const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
-    fetch(`${API_BASE_URL}/config`)
+    fetch(`${API_BASE_URL}/config?t=${Date.now()}`)
       .then(res => res.json())
       .then(data => {
         if (!data.error) {

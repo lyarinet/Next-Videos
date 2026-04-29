@@ -19,6 +19,7 @@ export default function Admin() {
     termsContent: '',
     privacyContent: '',
     contactContent: '',
+    theme: 'default',
   });
   const [isSaving, setIsSaving] = useState(false);
   const [cookiesStatus, setCookiesStatus] = useState<{ exists: boolean; size?: number; modified?: string } | null>(null);
@@ -90,7 +91,7 @@ export default function Admin() {
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/config`);
+      const res = await fetch(`${API_BASE_URL}/config?t=${Date.now()}`);
       const data = await res.json();
       if (!data.error) {
         setConfig(data);
@@ -244,6 +245,18 @@ export default function Admin() {
                     className="bg-slate-950 border-white/10 text-white"
                   />
                   <p className="text-xs text-gray-500 mt-1">Appears in the header logo space and browser title.</p>
+                </div>
+                <div className="pt-2">
+                  <label className="block text-sm font-medium text-gray-400 mb-1">Site Theme</label>
+                  <select
+                    value={config.theme || 'default'}
+                    onChange={e => setConfig({...config, theme: e.target.value})}
+                    className="w-full flex rounded-md border border-white/10 bg-slate-950 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-red-500/50 outline-none"
+                  >
+                    <option value="default">Default (Slate & Red)</option>
+                    <option value="premium">Premium (Navy & Orange Glass)</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">Changes the global color scheme of the application. Requires page refresh.</p>
                 </div>
               </div>
 

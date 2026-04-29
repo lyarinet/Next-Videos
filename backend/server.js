@@ -59,7 +59,7 @@ async function probeAudioTracksFromFormats(audioFormats) {
           .trim() || code.toUpperCase();
         tracks.push({ code, name });
       }
-    } catch (_) {}
+    } catch (_) { }
   }
   return tracks;
 }
@@ -146,7 +146,7 @@ const sanitizeFilenamePart = (value) => {
 
 const buildUniqueDownloadLabel = (timestamp) => {
   const uniqueNumber = `${timestamp}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
-  return `unicq-lyarinet-${uniqueNumber}`;
+  return `ln-lyarinet-${uniqueNumber}`;
 };
 
 const getQualityLabel = (quality, format, audioTrack) => {
@@ -291,7 +291,7 @@ async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack
   let tempVideoPath = null;
   let tempAudioPath = null;
 
-  const audioDownloadCmd = `"${getYtDlpPath()}" --newline --progress ${cookies} ${jsRuntime} ${dlClientArg} ` +
+  const audioDownloadCmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${cookies} ${jsRuntime} ${dlClientArg} ` +
     `-f "${selectedAudioFormat.format_id}" -o "${tempAudioOutput}.%(ext)s" "${url}"`;
 
   if (isAudioOnly) {
@@ -304,7 +304,7 @@ async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack
       throw new Error(`No video stream found for quality "${quality}"`);
     }
 
-    const videoDownloadCmd = `"${getYtDlpPath()}" --newline --progress ${cookies} ${jsRuntime} ${dlClientArg} ` +
+    const videoDownloadCmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${cookies} ${jsRuntime} ${dlClientArg} ` +
       `-f "${bestVideoFormat.format_id}" -o "${tempVideoOutput}.%(ext)s" "${url}"`;
 
     await runYtDlpDownload(videoDownloadCmd, downloadId, 0, 55);
@@ -336,8 +336,8 @@ async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack
 
   await execPromise(ffmpegCmd, { timeout: 3600000 });
 
-  try { if (tempVideoPath) fs.unlinkSync(tempVideoPath); } catch (_) {}
-  try { if (tempAudioPath) fs.unlinkSync(tempAudioPath); } catch (_) {}
+  try { if (tempVideoPath) fs.unlinkSync(tempVideoPath); } catch (_) { }
+  try { if (tempAudioPath) fs.unlinkSync(tempAudioPath); } catch (_) { }
 
   const outputFileName = `${path.basename(outputTemplate)}.${outputExt}`;
   downloadProgressMap.set(downloadId, {
@@ -682,9 +682,9 @@ app.get('/api/config', (req, res) => {
     res.json(configData);
   } catch (err) {
     console.error('Error reading config file:', err.message);
-    res.status(500).json({ 
-      error: 'Failed to read config', 
-      message: err.message 
+    res.status(500).json({
+      error: 'Failed to read config',
+      message: err.message
     });
   }
 });
@@ -941,7 +941,7 @@ app.post('/api/download', async (req, res) => {
     const dlNodePath = process.execPath || '/usr/bin/node';
     const plainCookies = getCookiesFlag();
     const plainClient = plainCookies ? 'tv' : 'android_vr';
-    let cmd = `"${getYtDlpPath()}" --newline --progress --audio-multistreams ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}" --extractor-args "youtube:player_client=${plainClient}"`;
+    let cmd = `"${getYtDlpPath()}" --newline --progress --no-mtime --audio-multistreams ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}" --extractor-args "youtube:player_client=${plainClient}"`;
     cmd += ` -o "${outputTemplate}.%(ext)s"`;
 
     if (quality.startsWith('Audio (') || quality === 'Audio Only') {
@@ -1230,20 +1230,20 @@ app.get('/api/convert/files', (req, res) => {
   try {
     const user = getUserFromRequest(req);
     let files = [];
-    
+
     if (user && user.downloadHistory) {
       // Extract file names from completed downloads in user's history
       const userFiles = user.downloadHistory
         .filter(entry => entry.status === 'completed' && entry.fileName)
         .map(entry => entry.fileName);
-      
+
       // Only include files that actually still exist on disk
       files = userFiles.filter(file => fs.existsSync(path.join(downloadsDir, file)));
     }
-    
+
     // De-duplicate just in case
     files = [...new Set(files)];
-    
+
     res.json({ files });
   } catch (error) {
     res.status(500).json({ error: 'Failed to list files' });
@@ -1253,26 +1253,26 @@ app.get('/api/convert/files', (req, res) => {
 app.post('/api/convert', (req, res) => {
   const { sourceFile, profile, options } = req.body;
   if (!sourceFile) return res.status(400).json({ error: 'Source file is required' });
-  
+
   const sourcePath = path.join(downloadsDir, sourceFile);
   if (!fs.existsSync(sourcePath)) return res.status(404).json({ error: 'Source file not found' });
-  
+
   const jobId = crypto.randomUUID();
   const timestamp = Date.now();
-  
+
   let outExt = 'mp4';
   if (options && options.format) {
     outExt = options.format.toLowerCase();
   } else if (profile && profile.includes('HLS')) {
     outExt = 'm3u8';
   }
-  
+
   const safeSourceFile = sanitizeFilenamePart(path.basename(sourceFile, path.extname(sourceFile)));
   const outputBaseName = `converted_${timestamp}_${safeSourceFile}`;
   const outputPath = path.join(downloadsDir, `${outputBaseName}.${outExt}`);
-  
+
   let ffmpegCmd = `ffmpeg -y -i "${sourcePath}"`;
-  
+
   if (options && options.custom) {
     if (options.vcodec) ffmpegCmd += ` -c:v ${options.vcodec}`;
     if (options.acodec) ffmpegCmd += ` -c:a ${options.acodec}`;
@@ -1300,14 +1300,14 @@ app.post('/api/convert', (req, res) => {
       ffmpegCmd += ' -c:v libx264 -c:a aac -movflags +faststart';
     }
   }
-  
+
   ffmpegCmd += ` "${outputPath}"`;
   console.log('Running conversion:', ffmpegCmd);
-  
+
   conversionJobs.set(jobId, { status: 'Processing', progress: 0, resultUrl: null, error: null });
-  
+
   const proc = exec(ffmpegCmd, { timeout: 7200000 });
-  
+
   let totalDurationSec = 0;
   proc.stderr.on('data', (data) => {
     const output = data.toString();
@@ -1323,7 +1323,7 @@ app.post('/api/convert', (req, res) => {
       if (job) conversionJobs.set(jobId, { ...job, progress });
     }
   });
-  
+
   proc.on('close', (code) => {
     if (code === 0) {
       conversionJobs.set(jobId, { status: 'Completed', progress: 100, resultUrl: `/api/download/file/${path.basename(outputPath)}`, error: null });
@@ -1331,7 +1331,7 @@ app.post('/api/convert', (req, res) => {
       conversionJobs.set(jobId, { status: 'Failed', progress: 0, resultUrl: null, error: 'FFmpeg process failed with code ' + code });
     }
   });
-  
+
   res.json({ jobId, message: 'Conversion started' });
 });
 

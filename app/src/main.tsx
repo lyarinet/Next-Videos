@@ -16,6 +16,20 @@ function Router() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  useEffect(() => {
+    const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+    fetch(`${API_BASE_URL}/config?t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error && data.theme === 'premium') {
+          document.body.classList.add('theme-premium');
+        } else {
+          document.body.classList.remove('theme-premium');
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   if (route.startsWith('#/admin')) {
     return <Admin />;
   }
