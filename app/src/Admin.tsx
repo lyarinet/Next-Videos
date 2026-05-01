@@ -20,6 +20,7 @@ export default function Admin() {
     privacyContent: '',
     contactContent: '',
     theme: 'default',
+    enableWasmConversion: false,
   });
   const [isSaving, setIsSaving] = useState(false);
   const [cookiesStatus, setCookiesStatus] = useState<{ exists: boolean; size?: number; modified?: string } | null>(null);
@@ -257,6 +258,24 @@ export default function Admin() {
                     <option value="premium">Premium (Navy & Orange Glass)</option>
                   </select>
                   <p className="text-xs text-gray-500 mt-1">Changes the global color scheme of the application. Requires page refresh.</p>
+                </div>
+                
+                <div className="pt-4 mt-2 border-t border-white/5 flex items-center justify-between">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-1">Enable Browser Video Converter (WASM)</label>
+                    <p className="text-xs text-gray-500">Allows users to convert downloaded videos entirely in their browser using ffmpeg.wasm, saving server CPU resources.</p>
+                  </div>
+                  <div className="ml-4 flex items-center">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={!!config.enableWasmConversion}
+                        onChange={(e) => setConfig({...config, enableWasmConversion: e.target.checked})}
+                      />
+                      <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
 

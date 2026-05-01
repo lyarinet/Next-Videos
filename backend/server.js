@@ -7,6 +7,7 @@ const fs = require('fs');
 const https = require('https');
 const http = require('http');
 const crypto = require('crypto');
+const QRCode = require('qrcode');
 
 // Find yt-dlp path (prefer venv)
 const getYtDlpPath = () => {
@@ -1115,6 +1116,253 @@ app.get('/api/progress/:id', (req, res) => {
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// === Mobile QR Handoff: pair desktop and phone via short-lived session ===
+// Desktop creates a session, opens an SSE listener, and renders a QR.
+// Phone scans the QR -> hits the mobile page -> submits a URL ->
+// backend pushes the URL down the SSE stream -> desktop auto-loads it.
+const PAIR_SESSION_TTL_MS = 15 * 60 * 1000;
+const pairSessions = new Map();
+
+const buildPublicBaseUrl = (req) => {
+  const proto = req.headers['x-forwarded-proto'] || req.protocol || 'http';
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  return `${proto}://${host}`;
+};
+
+const cleanupPairSessions = () => {
+  const now = Date.now();
+  for (const [id, session] of pairSessions) {
+    if (session.expiresAt < now) {
+      try { session.listener && session.listener.end(); } catch (_) {}
+      pairSessions.delete(id);
+    }
+  }
+};
+setInterval(cleanupPairSessions, 60 * 1000);
+
+app.post('/api/pair/create', (req, res) => {
+  cleanupPairSessions();
+  const sessionId = crypto.randomBytes(8).toString('hex');
+  const token = crypto.randomBytes(16).toString('hex');
+  const expiresAt = Date.now() + PAIR_SESSION_TTL_MS;
+  pairSessions.set(sessionId, { token, expiresAt, listener: null });
+
+  let base = buildPublicBaseUrl(req);
+  const requestedBase = req.body && typeof req.body.baseUrl === 'string' ? req.body.baseUrl : '';
+  if (requestedBase) {
+    try {
+      const parsed = new URL(requestedBase);
+      base = `${parsed.protocol}//${parsed.host}`;
+    } catch (_) { /* fall back to request-derived base */ }
+  }
+  const mobileUrl = `${base}/m/${sessionId}#${token}`;
+
+  QRCode.toString(mobileUrl, { type: 'svg', margin: 1, width: 256, color: { dark: '#0f172a', light: '#ffffff' } })
+    .then((qrSvg) => {
+      res.json({ sessionId, token, mobileUrl, qrSvg, expiresAt });
+    })
+    .catch((err) => {
+      console.error('QR generation failed:', err);
+      res.status(500).json({ error: 'qr_generation_failed' });
+    });
+});
+
+app.get('/api/pair/listen/:id', (req, res) => {
+  const id = req.params.id;
+  const session = pairSessions.get(id);
+  if (!session) {
+    return res.status(404).end();
+  }
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream',
+    'Cache-Control': 'no-cache',
+    'Connection': 'keep-alive',
+    'Access-Control-Allow-Origin': '*',
+    'X-Accel-Buffering': 'no'
+  });
+
+  res.write(`data: ${JSON.stringify({ type: 'ready' })}\n\n`);
+  session.listener = res;
+
+  const heartbeat = setInterval(() => {
+    try { res.write(': hb\n\n'); } catch (_) {}
+  }, 20000);
+
+  req.on('close', () => {
+    clearInterval(heartbeat);
+    if (session.listener === res) session.listener = null;
+  });
+});
+
+app.post('/api/pair/submit/:id', (req, res) => {
+  const id = req.params.id;
+  const { url, token } = req.body || {};
+  const session = pairSessions.get(id);
+  if (!session) return res.status(404).json({ error: 'session_not_found' });
+  if (session.expiresAt < Date.now()) {
+    pairSessions.delete(id);
+    return res.status(410).json({ error: 'session_expired' });
+  }
+  if (!token || token !== session.token) {
+    return res.status(403).json({ error: 'invalid_token' });
+  }
+  if (!url || typeof url !== 'string') {
+    return res.status(400).json({ error: 'invalid_url' });
+  }
+  try { new URL(url); } catch { return res.status(400).json({ error: 'invalid_url' }); }
+  if (!session.listener) {
+    return res.status(409).json({ error: 'desktop_offline' });
+  }
+  try {
+    session.listener.write(`data: ${JSON.stringify({ type: 'url', url })}\n\n`);
+  } catch (e) {
+    return res.status(500).json({ error: 'push_failed' });
+  }
+  res.json({ ok: true });
+});
+
+// Mobile pairing page — minimal HTML, no SPA dependency, works on any phone.
+app.get('/m/:id', (req, res) => {
+  const id = req.params.id;
+  const session = pairSessions.get(id);
+  const expired = !session || session.expiresAt < Date.now();
+  const submitEndpoint = `/api/pair/submit/${encodeURIComponent(id)}`;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Send to Desktop · Next-Videos</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100svh;
+    background: radial-gradient(circle at top, #1e1b3a, #0b0b14 60%);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .card {
+    width: 100%; max-width: 420px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px; padding: 24px;
+    backdrop-filter: blur(8px);
+  }
+  h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; background: linear-gradient(90deg,#f87171,#fb923c,#fbbf24); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  p.lead { margin: 0 0 20px; color: #cbd5e1; font-size: 14px; }
+  label { display: block; font-size: 13px; color: #94a3b8; margin-bottom: 6px; }
+  textarea {
+    width: 100%; min-height: 92px; padding: 12px;
+    background: rgba(0,0,0,0.35); color: #fff;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 12px; font-size: 16px; resize: none;
+    -webkit-user-select: text; user-select: text;
+  }
+  textarea:focus { outline: none; border-color: rgba(248,113,113,0.6); box-shadow: 0 0 0 4px rgba(248,113,113,0.15); }
+  .row { display: flex; gap: 8px; margin-top: 12px; }
+  button {
+    flex: 1; height: 48px; border: 0; border-radius: 12px; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: transform 0.05s, opacity 0.2s;
+  }
+  button:active { transform: scale(0.98); }
+  .primary { background: linear-gradient(90deg,#ef4444,#f97316); color: #fff; }
+  .secondary { background: rgba(255,255,255,0.08); color: #fff; }
+  .status { margin-top: 16px; min-height: 22px; font-size: 14px; text-align: center; }
+  .status.ok { color: #4ade80; }
+  .status.err { color: #fca5a5; }
+  .expired { text-align: center; color: #fca5a5; }
+  .footer { margin-top: 18px; font-size: 12px; color: #64748b; text-align: center; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>📱 → 💻 Send to Desktop</h1>
+    <p class="lead">Paste a video link and it will appear instantly on your desktop's Next-Videos.</p>
+    ${expired ? `
+      <div class="expired">⚠️ This pairing has expired.<br/>Go back to your desktop and scan a new QR code.</div>
+    ` : `
+      <label for="url">Video URL</label>
+      <textarea id="url" placeholder="https://…" autocapitalize="off" autocorrect="off" spellcheck="false"></textarea>
+      <div class="row">
+        <button class="secondary" id="paste">Paste</button>
+        <button class="primary" id="send">Send →</button>
+      </div>
+      <div id="status" class="status"></div>
+    `}
+    <div class="footer">One-tap handoff · token ${expired ? 'expired' : 'active for 15 min'}</div>
+  </div>
+${expired ? '' : `
+<script>
+(function () {
+  var token = (location.hash || '').slice(1);
+  var endpoint = ${JSON.stringify(submitEndpoint)};
+  var urlEl = document.getElementById('url');
+  var statusEl = document.getElementById('status');
+  var sendBtn = document.getElementById('send');
+  var pasteBtn = document.getElementById('paste');
+
+  // Auto-prefill from clipboard if available and looks like a URL
+  if (navigator.clipboard && navigator.clipboard.readText) {
+    navigator.clipboard.readText().then(function (txt) {
+      if (txt && /^https?:\\/\\//i.test(txt.trim())) urlEl.value = txt.trim();
+    }).catch(function(){});
+  }
+
+  pasteBtn.addEventListener('click', function () {
+    if (navigator.clipboard && navigator.clipboard.readText) {
+      navigator.clipboard.readText().then(function (txt) {
+        if (txt) urlEl.value = txt.trim();
+      }).catch(function () {
+        urlEl.focus();
+      });
+    } else {
+      urlEl.focus();
+    }
+  });
+
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg || '';
+    statusEl.className = 'status ' + (kind || '');
+  }
+
+  sendBtn.addEventListener('click', function () {
+    var url = (urlEl.value || '').trim();
+    if (!url) { setStatus('Paste a URL first.', 'err'); return; }
+    try { new URL(url); } catch (_) { setStatus('That doesn\\'t look like a valid URL.', 'err'); return; }
+
+    sendBtn.disabled = true;
+    setStatus('Sending…', '');
+    fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: url, token: token })
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        sendBtn.disabled = false;
+        if (res.ok) {
+          setStatus('✅ Sent to desktop!', 'ok');
+          urlEl.value = '';
+        } else {
+          var msg = (res.j && res.j.error) || 'send_failed';
+          if (msg === 'desktop_offline') setStatus('Desktop is offline. Reopen the QR on desktop.', 'err');
+          else if (msg === 'session_expired' || msg === 'session_not_found') setStatus('Session expired. Scan a new QR.', 'err');
+          else if (msg === 'invalid_token') setStatus('Token invalid. Scan a new QR.', 'err');
+          else setStatus('Error: ' + msg, 'err');
+        }
+      })
+      .catch(function () { sendBtn.disabled = false; setStatus('Network error.', 'err'); });
+  });
+})();
+</script>`}
+</body>
+</html>`);
 });
 
 // Helper functions

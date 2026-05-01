@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import Converter from './components/Converter'
+import WasmConverter from './components/WasmConverter'
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const USER_TOKEN_KEY = 'workspaceUserToken'
 
@@ -127,7 +128,17 @@ export default function UserWorkspace() {
   const [selectedOption, setSelectedOption] = useState<DownloadOption | null>(null)
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
+  const [siteConfig, setSiteConfig] = useState<any>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/config?t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => {
+        if (!data.error) setSiteConfig(data)
+      })
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (token) {
@@ -613,6 +624,7 @@ export default function UserWorkspace() {
         </div>
 
         <Converter token={token} />
+        {siteConfig?.enableWasmConversion && <WasmConverter token={token} />}
 
         <Card className="bg-slate-900/50 border-white/10 backdrop-blur-xl">
           <CardContent className="p-6">

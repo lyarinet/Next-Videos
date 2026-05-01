@@ -17,3 +17,6 @@ API endpoints:
   - GET /api/health
   - GET /api/video-info?url=VIDEO_URL
   - POST /api/download
+Fetching info for: https://www.youtube.com/shorts/DejBk24AtMo
+Video info fetched: How to make it?#shorts #shortsfeed #diy #craft #diycrafts #handmade #howto #bracelet #fashion #knot | audio tracks: 1
+Terminated

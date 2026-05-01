@@ -26,6 +26,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { PhoneHandoff } from '@/components/PhoneHandoff'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -775,6 +776,11 @@ function App() {
           </div>
         </div>
       </footer>
+
+      <PhoneHandoff onUrlReceived={(receivedUrl) => {
+        setUrl(receivedUrl)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      }} />
     </div>
   )
 }
