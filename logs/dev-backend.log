@@ -17,6 +17,7 @@ API endpoints:
   - GET /api/health
   - GET /api/video-info?url=VIDEO_URL
   - POST /api/download
-Fetching info for: https://www.youtube.com/shorts/DejBk24AtMo
-Video info fetched: How to make it?#shorts #shortsfeed #diy #craft #diycrafts #handmade #howto #bracelet #fashion #knot | audio tracks: 1
-Terminated
+Fetching info for: https://www.youtube.com/shorts/m-19HH3w52U
+Video info fetched: chuvannamannu Aquaduct, Palakkad | audio tracks: 1
+Starting download: https://www.youtube.com/shorts/m-19HH3w52U Quality: 360p Format: MP4
+Executing: "/var/www/web/Next-Videos/backend/venv/bin/yt-dlp" --newline --progress --no-mtime --audio-multistreams --cookies "/var/www/web/Next-Videos/backend/cookies.txt" --embed-metadata --js-runtimes "node:/usr/bin/node" --extractor-args "youtube:player_client=tv" -o "/var/www/web/Next-Videos/backend/downloads/360p ln-lyarinet-1777662866489991.%(ext)s" -f "bestvideo[height<=360]+bestaudio/best[height<=360]/best" --merge-output-format mp4 "https://www.youtube.com/shorts/m-19HH3w52U"

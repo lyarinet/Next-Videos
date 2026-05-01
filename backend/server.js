@@ -1118,6 +1118,27 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Generic QR generator — encodes any URL as an SVG. Used by the
+// "Send to Phone" flow on the desktop to share a finished download.
+app.get('/api/qr', (req, res) => {
+  const data = typeof req.query.data === 'string' ? req.query.data : '';
+  if (!data || data.length > 2048) {
+    return res.status(400).json({ error: 'invalid_data' });
+  }
+  QRCode.toString(data, {
+    type: 'svg',
+    margin: 1,
+    width: 256,
+    color: { dark: '#0f172a', light: '#ffffff' }
+  })
+    .then((svg) => {
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=300');
+      res.send(svg);
+    })
+    .catch(() => res.status(500).json({ error: 'qr_failed' }));
+});
+
 // === Mobile QR Handoff: pair desktop and phone via short-lived session ===
 // Desktop creates a session, opens an SSE listener, and renders a QR.
 // Phone scans the QR -> hits the mobile page -> submits a URL ->

@@ -27,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PhoneHandoff } from '@/components/PhoneHandoff'
+import { SendToPhone } from '@/components/SendToPhone'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -139,6 +140,7 @@ function App() {
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [siteConfig, setSiteConfig] = useState<any>(null)
   const [selectedAudioTrack, setSelectedAudioTrack] = useState<string>('default')
+  const [lastDownloadUrl, setLastDownloadUrl] = useState<string | null>(null)
   const activeRequestRef = useRef(0)
   const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -238,6 +240,7 @@ function App() {
     setSelectedOption(option)
     setIsDownloading(true)
     setDownloadProgress(0)
+    setLastDownloadUrl(null)
 
     const progressId = Date.now().toString()
     let sse: EventSource | null = null;
@@ -260,6 +263,7 @@ function App() {
 
           if (data.downloadUrl) {
             const downloadLink = `${API_BASE_URL.replace(/\/api$/, '')}${data.downloadUrl}`
+            setLastDownloadUrl(downloadLink)
             window.open(downloadLink, '_blank')
             toast.success('Download completed!')
             if (sse) sse.close()
@@ -307,6 +311,7 @@ function App() {
     setUrl('')
     setVideoInfo(null)
     setError(null)
+    setLastDownloadUrl(null)
   }
 
   const getAudioTrackLabel = (trackCode: string) => {
@@ -632,8 +637,8 @@ function App() {
                       <div className="mt-4 p-4 rounded-lg bg-white/5 border border-white/10">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm text-gray-400">
-                            {downloadProgress === 0 
-                              ? `Initializing ${selectedOption.quality} (Please wait)...` 
+                            {downloadProgress === 0
+                              ? `Initializing ${selectedOption.quality} (Please wait)...`
                               : `Downloading ${selectedOption.quality}...`}
                           </span>
                           <span className="text-sm font-medium text-white">
@@ -646,6 +651,17 @@ function App() {
                             style={{ width: `${Math.min(downloadProgress, 100)}%` }}
                           />
                         </div>
+                      </div>
+                    )}
+
+                    {/* Post-download: send file to phone via QR */}
+                    {!isDownloading && lastDownloadUrl && (
+                      <div className="mt-4 p-4 rounded-lg bg-green-500/5 border border-green-500/20 flex items-center justify-between gap-3 flex-wrap">
+                        <div className="flex items-center gap-2 text-sm text-green-300">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span>Download ready. Want it on your phone too?</span>
+                        </div>
+                        <SendToPhone fileUrl={lastDownloadUrl} label="Send to Phone" />
                       </div>
                     )}
                   </div>

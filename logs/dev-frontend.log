@@ -3,22 +3,8 @@
 > vite
 
 
-  VITE v7.3.2  ready in 382 ms
+  VITE v7.3.2  ready in 390 ms
 
   ➜  Local:   http://localhost:5173/
   ➜  Network: http://192.168.0.208:5173/
   ➜  Network: http://10.240.150.139:5173/
-6:56:22 PM [vite] .env changed, restarting server...
-6:56:22 PM [vite] server restarted.
-6:56:23 PM [vite] http proxy error: /api/config?t=1777661783535
-Error: connect ECONNREFUSED 127.0.0.1:3001
-    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
-6:56:23 PM [vite] http proxy error: /api/config?t=1777661783534
-Error: connect ECONNREFUSED 127.0.0.1:3001
-    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
-6:56:23 PM [vite] http proxy error: /api/config?t=1777661783536
-Error: connect ECONNREFUSED 127.0.0.1:3001
-    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
-6:56:23 PM [vite] http proxy error: /api/config?t=1777661783536
-Error: connect ECONNREFUSED 127.0.0.1:3001
-    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1611:16)
