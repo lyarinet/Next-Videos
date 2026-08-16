@@ -20,7 +20,9 @@ import {
   Eye,
   AlertCircle,
   Loader2,
-  Settings2
+  Settings2,
+  Scissors,
+  LayoutDashboard
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -451,17 +453,17 @@ function App() {
             </span>
           </div>
           <div className="flex items-center gap-3 sm:gap-6">
-            <nav className="hidden sm:flex items-center gap-6">
-              <a href="#/workspace" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
+            <nav className="hidden sm:flex items-center gap-5">
+              <a href="#/workspace" className="text-sm font-semibold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1.5 bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20 shadow-sm">
+                <LayoutDashboard className="w-3.5 h-3.5" />
                 Workspace
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
+              </a>
+              <a href="#/admin" className="text-sm font-semibold text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1.5 bg-purple-500/10 px-3 py-1.5 rounded-lg border border-purple-500/20 shadow-sm">
+                <Shield className="w-3.5 h-3.5" />
+                Admin
               </a>
               <a href="#features" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
                 Features
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
-              </a>
-              <a href="#how-it-works" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
-                How It Works
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
               </a>
               <a href="#platforms" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
@@ -472,15 +474,20 @@ function App() {
 
             <ThemeSwitcher />
 
-            <a href="#/workspace" className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 border border-white/10 text-white">
-              <Settings2 className="w-4 h-4" />
-            </a>
+            <div className="flex sm:hidden items-center gap-1.5">
+              <a href="#/workspace" className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400" title="Workspace">
+                <LayoutDashboard className="w-4 h-4" />
+              </a>
+              <a href="#/admin" className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-purple-500/15 border border-purple-500/30 text-purple-400" title="Admin">
+                <Shield className="w-4 h-4" />
+              </a>
+            </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative pt-16 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative pt-12 pb-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
         {/* Background Effects */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-red-600/20 rounded-full blur-[120px] animate-blob" />
@@ -489,10 +496,34 @@ function App() {
         </div>
 
         <div className="relative max-w-4xl mx-auto text-center">
-          <Badge variant="secondary" className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20">
-            <Sparkles className="w-3 h-3 mr-1" />
-            Free & Unlimited Downloads
-          </Badge>
+          {/* Quick Access Desktop Control Hub */}
+          <div className="flex flex-wrap items-center justify-center gap-2.5 mb-6">
+            <a
+              href="#/workspace"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-orange-500/15 via-red-500/15 to-orange-500/15 hover:from-orange-500/25 hover:to-red-500/25 border border-orange-500/30 text-orange-300 text-xs font-semibold transition-all hover:scale-105 shadow-md shadow-orange-500/10"
+            >
+              <Scissors className="w-3.5 h-3.5 text-orange-400" />
+              <span>Video Splitter & Trimmer</span>
+              <span className="bg-orange-500/30 text-[10px] px-1.5 py-0.2 rounded font-mono">WORKSPACE</span>
+            </a>
+
+            <a
+              href="#/workspace"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-blue-500/15 via-indigo-500/15 to-cyan-500/15 hover:from-blue-500/25 hover:to-indigo-500/25 border border-blue-500/30 text-blue-300 text-xs font-semibold transition-all hover:scale-105 shadow-md shadow-blue-500/10"
+            >
+              <Settings2 className="w-3.5 h-3.5 text-blue-400" />
+              <span>Video Transcoder (GPU)</span>
+            </a>
+
+            <a
+              href="#/admin"
+              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-500/15 via-fuchsia-500/15 to-pink-500/15 hover:from-purple-500/25 hover:to-pink-500/25 border border-purple-500/30 text-purple-300 text-xs font-semibold transition-all hover:scale-105 shadow-md shadow-purple-500/10"
+            >
+              <Shield className="w-3.5 h-3.5 text-purple-400" />
+              <span>Admin Panel & Storage Purge</span>
+              <span className="bg-purple-500/30 text-[10px] px-1.5 py-0.2 rounded font-mono">ADMIN</span>
+            </a>
+          </div>
 
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold mb-8 leading-[1.1] tracking-tight">
             {siteConfig?.heroPrimaryText ? (
@@ -897,7 +928,9 @@ function App() {
               </p>
             </div>
 
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 sm:gap-6 flex-wrap justify-center">
+              <a href="#/workspace" className="text-sm font-medium text-orange-400 hover:text-orange-300 transition-colors">Workspace</a>
+              <a href="#/admin" className="text-sm font-medium text-purple-400 hover:text-purple-300 transition-colors">Admin Panel</a>
               <a href="#/terms" className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Terms</a>
               <a href="#/privacy" className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Privacy</a>
               <a href="#/contact" className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Contact</a>
