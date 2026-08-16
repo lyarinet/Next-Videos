@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PhoneHandoff } from '@/components/PhoneHandoff'
 import { SendToPhone } from '@/components/SendToPhone'
+import { ThemeSwitcher } from '@/components/ThemeSwitcher'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -373,27 +374,32 @@ function App() {
               {siteConfig?.siteTitle || 'Next-Videos'}
             </span>
           </div>
-          <nav className="hidden sm:flex items-center gap-8">
-            <a href="#/workspace" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
-              Workspace
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
+          <div className="flex items-center gap-3 sm:gap-6">
+            <nav className="hidden sm:flex items-center gap-6">
+              <a href="#/workspace" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
+                Workspace
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
+              </a>
+              <a href="#features" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
+                Features
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
+              </a>
+              <a href="#how-it-works" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
+                How It Works
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
+              </a>
+              <a href="#platforms" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
+                Platforms
+                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
+              </a>
+            </nav>
+
+            <ThemeSwitcher />
+
+            <a href="#/workspace" className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-xl bg-white/5 border border-white/10 text-white">
+              <Settings2 className="w-4 h-4" />
             </a>
-            <a href="#features" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
-              Features
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
-            </a>
-            <a href="#how-it-works" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
-              How It Works
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
-            </a>
-            <a href="#platforms" className="text-sm font-medium text-gray-400 hover:text-white transition-colors relative group">
-              Platforms
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-red-500 transition-all group-hover:w-full" />
-            </a>
-          </nav>
-          <a href="#/workspace" className="sm:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-white">
-            <Settings2 className="w-4 h-4" />
-          </a>
+          </div>
         </div>
       </header>
 

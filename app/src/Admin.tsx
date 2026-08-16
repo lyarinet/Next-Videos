@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Shield, Save, LogOut, ArrowLeft, Cookie, Upload, Trash2, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { ThemeSwitcher } from './components/ThemeSwitcher';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -166,6 +167,9 @@ export default function Admin() {
   if (!token) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center px-4 text-white">
+        <div className="w-full max-w-md mb-4 flex justify-end">
+          <ThemeSwitcher />
+        </div>
         <Card className="bg-slate-900 border-white/10" style={{ width: '100%', maxWidth: '400px' }}>
           <CardContent className="pt-6">
             <div className="flex flex-col items-center mb-6">
@@ -221,7 +225,8 @@ export default function Admin() {
             </h1>
             <p className="text-gray-400">Manage global website settings and text</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-3">
+            <ThemeSwitcher />
             <Button variant="outline" className="border-white/10 bg-white/5 text-white hover:bg-white/10" onClick={() => window.location.hash = '#/'}>
               View Site
             </Button>

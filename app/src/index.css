@@ -130,81 +130,214 @@
   @apply bg-white/10 rounded-full hover:bg-white/20 transition-colors;
 }
 
-/* Premium Theme Overrides */
-body.theme-premium {
-  --bg: #07111f;
-  --panel: rgba(8, 19, 35, 0.86);
-  --panel-strong: rgba(11, 24, 43, 0.96);
-  --line: rgba(255, 255, 255, 0.09);
-  --soft: #8b9ab0;
-  --text: #eef4ff;
-  --accent: #ff6b2c;
-  --accent-2: #ffb347;
-  --success: #34d399;
-  --chip: rgba(255, 255, 255, 0.06);
-  --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
-  
-  background: radial-gradient(circle at top left, rgba(255, 107, 44, 0.22), transparent 28%),
-              radial-gradient(circle at top right, rgba(255, 179, 71, 0.18), transparent 26%),
-              linear-gradient(180deg, #0a1527 0%, #07111f 48%, #050d18 100%) !important;
-  color: var(--text) !important;
-  min-height: 100vh;
+/* ========================================================
+   MULTI-THEME MODERN SYSTEM STYLES
+   ======================================================== */
+
+/* 1. Cyber Horizon (Dark Sunset / Default) */
+body.theme-cyber-dark,
+.theme-cyber-dark {
+  --theme-bg: #050811;
+  --theme-panel: rgba(10, 15, 29, 0.75);
+  --theme-panel-hover: rgba(15, 23, 42, 0.9);
+  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-accent-1: #ef4444;
+  --theme-accent-2: #f97316;
+  --theme-accent-3: #eab308;
+  --theme-glow: rgba(249, 115, 22, 0.35);
+
+  background: radial-gradient(circle at 10% 20%, rgba(239, 68, 68, 0.15), transparent 40%),
+              radial-gradient(circle at 90% 10%, rgba(249, 115, 22, 0.18), transparent 45%),
+              radial-gradient(circle at 50% 80%, rgba(234, 179, 8, 0.08), transparent 50%),
+              linear-gradient(180deg, #050811 0%, #080d1a 50%, #03050a 100%) !important;
+  color: #f8fafc !important;
 }
 
-body.theme-premium .bg-slate-950,
-body.theme-premium .bg-slate-900,
-body.theme-premium .bg-slate-900\/50,
-body.theme-premium .bg-slate-950\/50 {
-  background-color: transparent !important;
-  background-image: none !important;
+/* 2. Neon Cyber-Glass (Cosmic Purple & Electric Cyan) */
+body.theme-neon-violet,
+.theme-neon-violet {
+  --theme-bg: #070514;
+  --theme-panel: rgba(15, 11, 35, 0.75);
+  --theme-panel-hover: rgba(24, 18, 56, 0.9);
+  --theme-border: rgba(168, 85, 247, 0.2);
+  --theme-accent-1: #a855f7;
+  --theme-accent-2: #ec4899;
+  --theme-accent-3: #06b6d4;
+  --theme-glow: rgba(168, 85, 247, 0.4);
+
+  background: radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.22), transparent 40%),
+              radial-gradient(circle at 85% 20%, rgba(236, 72, 153, 0.2), transparent 45%),
+              radial-gradient(circle at 50% 85%, rgba(6, 182, 212, 0.15), transparent 50%),
+              linear-gradient(180deg, #070514 0%, #0e0926 50%, #05030d 100%) !important;
+  color: #f8fafc !important;
 }
 
-body.theme-premium .from-slate-950,
-body.theme-premium .via-slate-900,
-body.theme-premium .to-slate-950,
-body.theme-premium .to-slate-900 {
-  background-image: none !important;
+body.theme-neon-violet .text-red-500,
+body.theme-neon-violet .text-orange-400 {
+  color: #c084fc !important;
+}
+body.theme-neon-violet .from-red-500 {
+  --tw-gradient-from: #a855f7 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(168, 85, 247, 0)) !important;
+}
+body.theme-neon-violet .via-orange-500 {
+  --tw-gradient-stops: var(--tw-gradient-from), #ec4899, var(--tw-gradient-to, rgba(236, 72, 153, 0)) !important;
+}
+body.theme-neon-violet .to-orange-500,
+body.theme-neon-violet .to-yellow-500 {
+  --tw-gradient-to: #06b6d4 !important;
+}
+body.theme-neon-violet .bg-red-500,
+body.theme-neon-violet .bg-gradient-to-r {
+  box-shadow: 0 0 25px rgba(168, 85, 247, 0.35);
 }
 
-body.theme-premium .glass-card {
-  background: var(--panel) !important;
-  border-color: var(--line) !important;
-  box-shadow: var(--shadow) !important;
-  backdrop-filter: blur(20px) !important;
+/* 3. Emerald Matrix (Deep Tech Slate & Mint) */
+body.theme-emerald-matrix,
+.theme-emerald-matrix {
+  --theme-bg: #03100c;
+  --theme-panel: rgba(6, 26, 20, 0.75);
+  --theme-panel-hover: rgba(10, 42, 32, 0.9);
+  --theme-border: rgba(16, 185, 129, 0.2);
+  --theme-accent-1: #10b981;
+  --theme-accent-2: #059669;
+  --theme-accent-3: #14b8a6;
+  --theme-glow: rgba(16, 185, 129, 0.4);
+
+  background: radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.2), transparent 40%),
+              radial-gradient(circle at 85% 20%, rgba(20, 184, 166, 0.2), transparent 45%),
+              radial-gradient(circle at 50% 85%, rgba(52, 211, 153, 0.12), transparent 50%),
+              linear-gradient(180deg, #03100c 0%, #071f17 50%, #020907 100%) !important;
+  color: #f8fafc !important;
 }
 
-body.theme-premium .glass-card-hover:hover {
-  background: var(--panel-strong) !important;
-  border-color: rgba(255, 255, 255, 0.15) !important;
+body.theme-emerald-matrix .text-red-500,
+body.theme-emerald-matrix .text-orange-400 {
+  color: #34d399 !important;
+}
+body.theme-emerald-matrix .from-red-500 {
+  --tw-gradient-from: #10b981 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(16, 185, 129, 0)) !important;
+}
+body.theme-emerald-matrix .via-orange-500 {
+  --tw-gradient-stops: var(--tw-gradient-from), #059669, var(--tw-gradient-to, rgba(5, 150, 105, 0)) !important;
+}
+body.theme-emerald-matrix .to-orange-500,
+body.theme-emerald-matrix .to-yellow-500 {
+  --tw-gradient-to: #14b8a6 !important;
 }
 
-body.theme-premium .bg-white\/5 {
-  background-color: var(--chip) !important;
+/* 4. Sapphire Midnight (Royal Navy & Electric Sky) */
+body.theme-sapphire-blue,
+.theme-sapphire-blue {
+  --theme-bg: #040a1c;
+  --theme-panel: rgba(8, 20, 48, 0.75);
+  --theme-panel-hover: rgba(14, 32, 75, 0.9);
+  --theme-border: rgba(59, 130, 246, 0.2);
+  --theme-accent-1: #3b82f6;
+  --theme-accent-2: #0ea5e9;
+  --theme-accent-3: #6366f1;
+  --theme-glow: rgba(59, 130, 246, 0.4);
+
+  background: radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.22), transparent 40%),
+              radial-gradient(circle at 85% 20%, rgba(14, 165, 233, 0.2), transparent 45%),
+              radial-gradient(circle at 50% 85%, rgba(99, 102, 241, 0.15), transparent 50%),
+              linear-gradient(180deg, #040a1c 0%, #0a1738 50%, #030612 100%) !important;
+  color: #f8fafc !important;
 }
 
-body.theme-premium .border-white\/10 {
-  border-color: var(--line) !important;
+body.theme-sapphire-blue .text-red-500,
+body.theme-sapphire-blue .text-orange-400 {
+  color: #60a5fa !important;
+}
+body.theme-sapphire-blue .from-red-500 {
+  --tw-gradient-from: #3b82f6 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(59, 130, 246, 0)) !important;
+}
+body.theme-sapphire-blue .via-orange-500 {
+  --tw-gradient-stops: var(--tw-gradient-from), #0ea5e9, var(--tw-gradient-to, rgba(14, 165, 233, 0)) !important;
+}
+body.theme-sapphire-blue .to-orange-500,
+body.theme-sapphire-blue .to-yellow-500 {
+  --tw-gradient-to: #6366f1 !important;
 }
 
-body.theme-premium .text-red-500 {
-  color: var(--accent) !important;
+/* 5. Luxe Light Frost (Clean Modern Light Mode) */
+body.theme-pure-light,
+.theme-pure-light {
+  --theme-bg: #f8fafc;
+  --theme-panel: rgba(255, 255, 255, 0.85);
+  --theme-panel-hover: #ffffff;
+  --theme-border: rgba(226, 232, 240, 0.9);
+  --theme-accent-1: #6366f1;
+  --theme-accent-2: #8b5cf6;
+  --theme-accent-3: #3b82f6;
+  --theme-glow: rgba(99, 102, 241, 0.25);
+
+  background: radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.12), transparent 35%),
+              radial-gradient(circle at 90% 15%, rgba(139, 92, 246, 0.1), transparent 40%),
+              radial-gradient(circle at 50% 90%, rgba(59, 130, 246, 0.08), transparent 45%),
+              linear-gradient(180deg, #f8fafc 0%, #edf2f7 50%, #e2e8f0 100%) !important;
+  color: #0f172a !important;
 }
-body.theme-premium .text-red-400 {
-  color: var(--accent-2) !important;
+
+body.theme-pure-light .bg-slate-950,
+body.theme-pure-light .bg-slate-900,
+body.theme-pure-light .bg-slate-900\/50,
+body.theme-pure-light .bg-slate-950\/50 {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  color: #0f172a !important;
+  border-color: rgba(203, 213, 225, 0.7) !important;
 }
-body.theme-premium .from-red-500 {
-  --tw-gradient-from: var(--accent) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 107, 44, 0)) !important;
+
+body.theme-pure-light .glass-card {
+  background: rgba(255, 255, 255, 0.82) !important;
+  border-color: rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06) !important;
+  color: #0f172a !important;
 }
-body.theme-premium .to-orange-500 {
-  --tw-gradient-to: var(--accent-2) !important;
+
+body.theme-pure-light .glass-card-hover:hover {
+  background: #ffffff !important;
+  box-shadow: 0 15px 35px rgba(15, 23, 42, 0.1) !important;
 }
-body.theme-premium .bg-red-500 {
-  background-color: var(--accent) !important;
+
+body.theme-pure-light .text-gray-400,
+body.theme-pure-light .text-gray-500 {
+  color: #64748b !important;
 }
-body.theme-premium .hover\:bg-red-600:hover {
-  background-color: var(--accent-2) !important;
+
+body.theme-pure-light .text-white {
+  color: #0f172a !important;
 }
-body.theme-premium .ring-red-500\/50 {
-  --tw-ring-color: rgba(255, 107, 44, 0.5) !important;
+
+body.theme-pure-light .border-white\/10,
+body.theme-pure-light .border-white\/5 {
+  border-color: rgba(203, 213, 225, 0.6) !important;
+}
+
+body.theme-pure-light .bg-white\/5,
+body.theme-pure-light .bg-white\/10 {
+  background-color: rgba(241, 245, 249, 0.9) !important;
+}
+
+body.theme-pure-light .from-red-500 {
+  --tw-gradient-from: #6366f1 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(99, 102, 241, 0)) !important;
+}
+body.theme-pure-light .via-orange-500 {
+  --tw-gradient-stops: var(--tw-gradient-from), #8b5cf6, var(--tw-gradient-to, rgba(139, 92, 246, 0)) !important;
+}
+body.theme-pure-light .to-orange-500,
+body.theme-pure-light .to-yellow-500 {
+  --tw-gradient-to: #3b82f6 !important;
+}
+body.theme-pure-light input {
+  color: #0f172a !important;
+  background-color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Universal Smooth Transition on Theme Switch */
+body, .glass-card, header, footer, button, input {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
 }

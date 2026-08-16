@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import Converter from './components/Converter'
 import WasmConverter from './components/WasmConverter'
+import { ThemeSwitcher } from './components/ThemeSwitcher'
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const USER_TOKEN_KEY = 'workspaceUserToken'
 
@@ -342,6 +343,9 @@ export default function UserWorkspace() {
     return (
       <div className="min-h-screen bg-slate-950 text-white px-4 py-10">
         <div className="max-w-md mx-auto">
+          <div className="flex justify-end mb-4">
+            <ThemeSwitcher />
+          </div>
           <Card className="bg-slate-900/70 border-white/10 backdrop-blur-xl">
             <CardContent className="p-8">
               <div className="flex items-center gap-3 mb-6">
@@ -421,7 +425,8 @@ export default function UserWorkspace() {
               <p className="text-gray-400">Logged in as {user?.username || 'Guest'}</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <ThemeSwitcher />
             <Button variant="outline" className="border-white/10 bg-white/5 text-white" onClick={() => window.location.hash = '#/'}>
               <ArrowLeft className="w-4 h-4 mr-2" /> Downloader
             </Button>

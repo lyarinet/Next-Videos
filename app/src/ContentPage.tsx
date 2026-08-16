@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download } from 'lucide-react';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -39,14 +40,17 @@ export default function ContentPage({ title, field }: ContentPageProps) {
               {siteTitle}
             </span>
           </div>
-          <Button 
-            variant="ghost" 
-            className="text-gray-400 hover:text-white hover:bg-white/5"
-            onClick={() => window.location.hash = '#/'}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Home
-          </Button>
+          <div className="flex items-center gap-3">
+            <ThemeSwitcher />
+            <Button 
+              variant="ghost" 
+              className="text-gray-400 hover:text-white hover:bg-white/5"
+              onClick={() => window.location.hash = '#/'}
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Home
+            </Button>
+          </div>
         </div>
       </header>
 
