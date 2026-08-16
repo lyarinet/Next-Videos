@@ -16,7 +16,7 @@
   A high-performance full-stack video downloader, media converter, multi-language audio extractor, and mobile-to-desktop handoff suite.
 </p>
 
-![Next-Videos Dashboard](image.png)
+![Next-Videos Dashboard](image/Next-Videos.png)
 
 </div>
 
