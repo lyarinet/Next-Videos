@@ -50,7 +50,9 @@
 
 * **📡 1000+ Platforms Universal Support:** Powered by `yt-dlp` and `ffmpeg` to download from YouTube, Facebook, Instagram, TikTok, X (Twitter), LinkedIn, Reddit, Twitch, Vimeo, Bilibili, Dailymotion, and 1000+ more.
 * **📊 Real-Time Progress Engine:** Sub-second frame-sync live percentage progress bar using **Server-Sent Events (SSE)**.
-* **🔊 Multi-Language Dubbed Audio Downloads:** Detects multi-language audio tracks on YouTube (English, Spanish, Hindi, French, Japanese, Korean, Arabic, etc.). Download specific tracks or build a single **MKV** containing every detected audio track with correct ISO language metadata tags.
+* **🔊 Multi-Language Dubbed Audio Extraction & MKV Merging:** Full support for YouTube's Multi-Language Audio (MLA) tracks (Hindi, Spanish, English, Urdu, French, Japanese, etc.). Download individual dubbed tracks in MP4 or download **All Audio Tracks** merged into a single multi-track **MKV** container with proper ISO language tags.
+* **🎨 Real Format Badge System:** Branded visual badge icons for all media containers (**MP4**, **MKV**, **3GP**, **MP3**, **M4A**) with dynamic real-time format switching across Web App, User Workspace, and Chrome Extension.
+* **⚡ GPU Hardware Acceleration:** Opt-in GPU-accelerated transcoding (NVIDIA NVENC, Intel QuickSync, AMD AMF) with automatic detection and seamless CPU fallback.
 * **🔄 Dual-Engine Video Converter:**
   * **Server-Side FFmpeg Engine:** Encode to Mobile (240p/480p/720p), PlayStation, Xbox, Web HLS (`m3u8`), Web DASH, and Web Optimized FastStart MP4.
   * **Client-Side WebAssembly FFmpeg Engine:** Converts videos locally inside the browser using `@ffmpeg/core` with zero server CPU consumption.
@@ -60,7 +62,7 @@
 * **👤 User Workspace & Custom Presets:** User authentication with `scrypt` password hashing, personal download history, and customizable video encoding presets (bitrate, codecs, CRF/CQ, FPS, aspect ratios).
 * **🛡️ Admin Control Panel (`/#/admin`):** Secure dashboard to edit site titles, hero messages, disclaimer, theme options, and upload `cookies.txt` for restricted or member-only videos.
 * **🖼️ Smart Thumbnail Proxy:** Bypass Instagram/Facebook CORS and `403 Forbidden` restrictions with server-side proxy headers.
-* **🧩 Official Chrome Browser Extension (Manifest V3):** 1-click video downloader popup with active tab auto-URL capture and direct right-click context menu downloading.
+* **🧩 Official Chrome Browser Extension (Manifest V3):** Persistent background downloading (continues smoothly even if you switch tabs or close the popup), active tab auto-URL capture, and right-click context menu downloading.
 * **🪟 Native Windows `.exe` Setup & Standalone Launcher:** Graphical Setup Wizard (`Setup-Next-Videos.exe`) and Dedicated App Launcher (`Next-Videos.exe`) with official brand icon.
 
 ---
@@ -70,9 +72,10 @@
 Next-Videos comes with an official **Manifest V3 Chrome Browser Extension** located in the [`extension/`](extension/) directory.
 
 ### ✨ Extension Capabilities:
+* **Persistent Background Worker:** Downloads are managed by a Manifest V3 Service Worker — your downloads continue without interruption even if you switch tabs, navigate away, or close the popup!
 * **Automatic Tab URL Detection:** Open any video on YouTube, TikTok, Instagram Reels, Facebook, X (Twitter), or Vimeo, and click the Next-Videos toolbar icon — the video URL is instantly analyzed.
 * **Right-Click Context Menu:** Right-click on any video link, web video player, or web page and select **"Download Video with Next-Videos"**.
-* **Quality & Audio Track Selector:** Pick 4K, 1080p, 720p, or MP3 Audio directly inside the popup.
+* **Real Format Badges & Audio Track Selector:** Pick 4K, 1080p, 720p, MKV multi-audio, or MP3 Audio directly inside the popup with sleek format badge indicators.
 * **Live SSE Progress Tracking:** Real-time percentage progress bar synced with the Next-Videos backend.
 * **Smart Local/Remote Server Support:** Configurable backend server URL (defaults to `http://localhost:3005`).
 
@@ -81,6 +84,7 @@ Next-Videos comes with an official **Manifest V3 Chrome Browser Extension** loca
 2. Toggle **Developer mode** to **ON** in the top-right corner.
 3. Click **Load unpacked** (top-left) and select the `Next-Videos-main/extension` folder.
 4. Pin the **Next-Videos Downloader** icon to your Chrome toolbar.
+*(Alternatively, drag and drop `dist-extension/Next-Videos-Chrome-Extension-v1.0.0.crx` directly into Chrome extensions)*.
 
 ---
 
@@ -280,12 +284,26 @@ Next-Videos gives you two ways to convert videos:
 
 ---
 
-## 🎧 Multi-Language Audio Extraction
+## 🎧 Multi-Language Audio Extraction & MKV Container
 
-For videos with multiple dubbed languages (e.g. YouTube multi-track audio):
-* **Default Audio:** Downloads the default stream.
-* **Select Audio Track:** Downloads the chosen language (e.g., Hindi, Spanish, French) and muxes it with the video.
-* **All Audio Tracks:** Downloads every detected language track and packages them into a single **MKV** container with proper ISO language tags (`eng`, `spa`, `hin`, `fra`, etc.) for VLC/mpv.
+For videos with multiple dubbed languages (e.g. YouTube Multi-Language Audio / MLA):
+* **⭐ Default / Original Audio:** Downloads the default stream with selected video resolution in **MP4**.
+* **🎙️ Individual Language Selection:** Pick any dubbed track (Hindi, Spanish, Urdu, French, German, Japanese, etc.) and it automatically merges into an **MP4** video stream with high audio clarity.
+* **🎵 All Audio Tracks (MKV):** Downloads every single detected audio track simultaneously and merges them using `mergeall` into an **MKV** file. All audio channels are tagged with their ISO language codes, allowing media players (VLC, mpv, TV media players) to switch audio tracks seamlessly.
+* **🛡️ Network Resilience & Retries:** Built-in 20-retry fragment streaming logic and prioritized AAC/M4A streams ensure high stability against YouTube rate limits.
+
+---
+
+## 🎨 Real Format Badges & Visual Design
+
+Next-Videos incorporates branded format badge styling across the entire suite:
+* 🟦 **MP4 Badge**: Cyan / Blue gradient container with bold **MP4** tag (`VIDEO`)
+* 🟧 **MKV Badge**: Amber / Orange gradient container with bold **MKV** tag (`VIDEO`)
+* 🟩 **3GP Badge**: Emerald gradient container with bold **3GP** tag (`MOBILE`)
+* 🟪 **MP3 Badge**: Purple / Fuchsia gradient with bold **MP3** tag (`AUDIO`)
+* 🟦 **M4A Badge**: Indigo / Sky gradient with bold **M4A** tag (`AUDIO`)
+
+*Dynamic Switch*: When selecting **"All Audio Tracks (MKV)"**, the interface automatically updates format cards from MP4 to MKV badges in real-time.
 
 ---
 
