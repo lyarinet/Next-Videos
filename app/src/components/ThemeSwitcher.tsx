@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Palette, Check, Sparkles, Sun, Flame, Zap, Compass } from 'lucide-react';
+import { useState, useEffect, type ReactNode, type FC } from 'react';
+import { Palette, Check, Sparkles, Sun, Flame, Zap, Compass, Sliders } from 'lucide-react';
 import { Button } from './ui/button';
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
 } from './ui/dropdown-menu';
 
 export type ThemeId =
+  | 'theme-sober-minimal'
   | 'theme-cyber-dark'
   | 'theme-neon-violet'
   | 'theme-emerald-matrix'
@@ -21,13 +22,21 @@ export interface ThemeOption {
   id: ThemeId;
   name: string;
   description: string;
-  icon: React.ReactNode;
+  icon: ReactNode;
   previewGradient: string;
   accentColor: string;
   isLight?: boolean;
 }
 
 export const THEMES: ThemeOption[] = [
+  {
+    id: 'theme-sober-minimal',
+    name: 'Sober Studio (Minimal)',
+    description: 'Ultra-clean sober slate, refined metallic typography & subtle hairline borders',
+    icon: <Sliders className="w-4 h-4 text-slate-300" />,
+    previewGradient: 'linear-gradient(135deg, #f8fafc, #94a3b8, #334155)',
+    accentColor: '#cbd5e1',
+  },
   {
     id: 'theme-cyber-dark',
     name: 'Cyber Horizon',
@@ -75,7 +84,7 @@ export function useTheme() {
   const [currentTheme, setCurrentTheme] = useState<ThemeId>(() => {
     const saved = localStorage.getItem('next_videos_theme') as ThemeId;
     if (saved && THEMES.some(t => t.id === saved)) return saved;
-    return 'theme-cyber-dark';
+    return 'theme-sober-minimal';
   });
 
   const applyTheme = (themeId: ThemeId) => {
@@ -105,7 +114,7 @@ export function useTheme() {
   return { currentTheme, applyTheme };
 }
 
-export const ThemeSwitcher: React.FC<{ compact?: boolean }> = ({ compact = false }) => {
+export const ThemeSwitcher: FC<{ compact?: boolean }> = ({ compact = false }) => {
   const { currentTheme, applyTheme } = useTheme();
   const activeTheme = THEMES.find(t => t.id === currentTheme) || THEMES[0];
 

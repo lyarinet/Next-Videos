@@ -367,8 +367,8 @@ function App() {
       <header className="sticky top-0 z-50 w-full py-4 px-4 sm:px-6 lg:px-8 border-b border-white/10 bg-slate-950/50 backdrop-blur-md">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-red-500/20">
-              <Download className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center group-hover:scale-105 transition-transform duration-300 shadow-lg shadow-red-500/20 border border-white/10 bg-slate-900/60 p-1">
+              <img src="/logo.png" alt="Next-Videos Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-white via-white to-gray-500 bg-clip-text text-transparent">
               {siteConfig?.siteTitle || 'Next-Videos'}
@@ -780,8 +780,8 @@ function App() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-8">
             <div className="flex items-center gap-3 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg shadow-red-500/10">
-                <Download className="w-5 h-5 text-white" />
+              <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center shadow-lg shadow-red-500/10 border border-white/10 bg-slate-900/60 p-1">
+                <img src="/logo.png" alt="Next-Videos Logo" className="w-full h-full object-contain" />
               </div>
               <span className="text-xl font-bold">{siteConfig?.siteTitle || 'Next-Videos'}</span>
             </div>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Download } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -33,8 +33,8 @@ export default function ContentPage({ title, field }: ContentPageProps) {
       <header className="w-full py-4 px-4 sm:px-6 lg:px-8 border-b border-white/10">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.location.hash = '#/'}>
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-              <Download className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center border border-white/10 bg-slate-900/60 p-1">
+              <img src="/logo.png" alt="Next-Videos Logo" className="w-full h-full object-contain" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
               {siteTitle}

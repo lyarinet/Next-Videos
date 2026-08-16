@@ -1076,8 +1076,8 @@ app.post('/api/download', async (req, res) => {
   }
 });
 
-// Serve downloaded files
-app.get('/api/download/file/:filename', (req, res) => {
+// Serve downloaded files (supports both /api/download/file and /download/file)
+app.get(['/api/download/file/:filename', '/download/file/:filename'], (req, res) => {
   const filename = req.params.filename;
   const filepath = path.join(downloadsDir, filename);
 

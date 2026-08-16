@@ -131,45 +131,198 @@
 }
 
 /* ========================================================
-   MULTI-THEME MODERN SYSTEM STYLES
+   MULTI-THEME ARCHITECTURAL & AESTHETIC SYSTEM STYLES
    ======================================================== */
 
-/* 1. Cyber Horizon (Dark Sunset / Default) */
+/* 1. SOBER STUDIO / MINIMALIST LUXURY (Ultra-Clean, Sober, Refined) */
+body.theme-sober-minimal,
+.theme-sober-minimal {
+  --theme-bg: #090d16;
+  --theme-panel: rgba(15, 23, 42, 0.7);
+  --theme-panel-hover: rgba(30, 41, 59, 0.8);
+  --theme-border: rgba(148, 163, 184, 0.14);
+  --theme-accent-1: #cbd5e1;
+  --theme-accent-2: #94a3b8;
+  --theme-accent-3: #64748b;
+  --theme-glow: rgba(148, 163, 184, 0.1);
+
+  background: radial-gradient(circle at 50% 0%, rgba(30, 41, 59, 0.45) 0%, rgba(9, 13, 22, 0.98) 70%), #090d16 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Sober Studio structural adjustments */
+body.theme-sober-minimal .animate-blob {
+  opacity: 0 !important;
+  display: none !important;
+}
+
+body.theme-sober-minimal .glass-card,
+body.theme-sober-minimal .bg-slate-900\/50,
+body.theme-sober-minimal .bg-slate-950\/50 {
+  background: rgba(15, 23, 42, 0.65) !important;
+  border: 1px solid rgba(148, 163, 184, 0.14) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+body.theme-sober-minimal .glass-card-hover:hover {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.5) !important;
+  transform: translateY(-2px) !important;
+}
+
+body.theme-sober-minimal header {
+  background: rgba(9, 13, 22, 0.85) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important;
+  backdrop-filter: blur(16px) !important;
+}
+
+body.theme-sober-minimal header .bg-gradient-to-br,
+body.theme-sober-minimal footer .bg-gradient-to-br {
+  background: linear-gradient(135deg, #334155 0%, #1e293b 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3) !important;
+  border-radius: 10px !important;
+}
+
+body.theme-sober-minimal .from-red-500 {
+  --tw-gradient-from: #ffffff !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255, 255, 255, 0)) !important;
+}
+body.theme-sober-minimal .via-orange-500 {
+  --tw-gradient-stops: var(--tw-gradient-from), #cbd5e1, var(--tw-gradient-to, #94a3b8) !important;
+}
+body.theme-sober-minimal .to-yellow-500,
+body.theme-sober-minimal .to-orange-500 {
+  --tw-gradient-to: #94a3b8 !important;
+}
+
+body.theme-sober-minimal .bg-white\/10 {
+  background-color: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  color: #e2e8f0 !important;
+}
+
+body.theme-sober-minimal input {
+  background-color: rgba(15, 23, 42, 0.75) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  border-radius: 12px !important;
+  color: #f8fafc !important;
+}
+
+body.theme-sober-minimal input:focus {
+  border-color: rgba(148, 163, 184, 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.1) !important;
+}
+
+body.theme-sober-minimal #platforms .rounded-full {
+  border-radius: 10px !important;
+  background: rgba(15, 23, 42, 0.5) !important;
+  border: 1px solid rgba(148, 163, 184, 0.12) !important;
+}
+body.theme-sober-minimal #platforms .rounded-full:hover {
+  background: rgba(30, 41, 59, 0.6) !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+}
+
+body.theme-sober-minimal #how-it-works .rounded-2xl {
+  background: linear-gradient(135deg, #1e293b, #0f172a) !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+  border-radius: 14px !important;
+  color: #f8fafc !important;
+}
+
+body.theme-sober-minimal #how-it-works .bg-gradient-to-r {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.2), transparent) !important;
+}
+
+body.theme-sober-minimal .from-red-600.to-orange-700 {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+  border: 1px solid rgba(148, 163, 184, 0.2) !important;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+  border-radius: 1.5rem !important;
+}
+
+body.theme-sober-minimal .from-red-600.to-orange-700 button {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-radius: 12px !important;
+}
+
+body.theme-sober-minimal .text-red-500,
+body.theme-sober-minimal .text-orange-400 {
+  color: #cbd5e1 !important;
+}
+body.theme-sober-minimal .bg-red-500 {
+  background-color: #64748b !important;
+}
+body.theme-sober-minimal .bg-red-500\/20 {
+  background-color: rgba(148, 163, 184, 0.15) !important;
+  color: #f1f5f9 !important;
+}
+
+/* 2. Cyber Horizon (Dark Sunset Neon / High Impact) */
 body.theme-cyber-dark,
 .theme-cyber-dark {
   --theme-bg: #050811;
   --theme-panel: rgba(10, 15, 29, 0.75);
   --theme-panel-hover: rgba(15, 23, 42, 0.9);
-  --theme-border: rgba(255, 255, 255, 0.08);
+  --theme-border: rgba(249, 115, 22, 0.25);
   --theme-accent-1: #ef4444;
   --theme-accent-2: #f97316;
   --theme-accent-3: #eab308;
   --theme-glow: rgba(249, 115, 22, 0.35);
 
-  background: radial-gradient(circle at 10% 20%, rgba(239, 68, 68, 0.15), transparent 40%),
-              radial-gradient(circle at 90% 10%, rgba(249, 115, 22, 0.18), transparent 45%),
-              radial-gradient(circle at 50% 80%, rgba(234, 179, 8, 0.08), transparent 50%),
+  background: radial-gradient(circle at 10% 20%, rgba(239, 68, 68, 0.18), transparent 40%),
+              radial-gradient(circle at 90% 10%, rgba(249, 115, 22, 0.2), transparent 45%),
+              radial-gradient(circle at 50% 80%, rgba(234, 179, 8, 0.1), transparent 50%),
               linear-gradient(180deg, #050811 0%, #080d1a 50%, #03050a 100%) !important;
   color: #f8fafc !important;
 }
 
-/* 2. Neon Cyber-Glass (Cosmic Purple & Electric Cyan) */
+body.theme-cyber-dark .glass-card {
+  border-radius: 20px !important;
+  border-color: rgba(249, 115, 22, 0.18) !important;
+  box-shadow: 0 10px 35px -5px rgba(249, 115, 22, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+body.theme-cyber-dark #platforms .rounded-full {
+  border-radius: 9999px !important;
+}
+
+/* 3. Neon Cyber-Glass (Cosmic Purple & Electric Cyan) */
 body.theme-neon-violet,
 .theme-neon-violet {
   --theme-bg: #070514;
   --theme-panel: rgba(15, 11, 35, 0.75);
   --theme-panel-hover: rgba(24, 18, 56, 0.9);
-  --theme-border: rgba(168, 85, 247, 0.2);
+  --theme-border: rgba(168, 85, 247, 0.25);
   --theme-accent-1: #a855f7;
   --theme-accent-2: #ec4899;
   --theme-accent-3: #06b6d4;
   --theme-glow: rgba(168, 85, 247, 0.4);
 
-  background: radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.22), transparent 40%),
-              radial-gradient(circle at 85% 20%, rgba(236, 72, 153, 0.2), transparent 45%),
-              radial-gradient(circle at 50% 85%, rgba(6, 182, 212, 0.15), transparent 50%),
+  background: radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.25), transparent 40%),
+              radial-gradient(circle at 85% 20%, rgba(236, 72, 153, 0.22), transparent 45%),
+              radial-gradient(circle at 50% 85%, rgba(6, 182, 212, 0.18), transparent 50%),
               linear-gradient(180deg, #070514 0%, #0e0926 50%, #05030d 100%) !important;
   color: #f8fafc !important;
+}
+
+body.theme-neon-violet .glass-card {
+  border-radius: 24px !important;
+  border-color: rgba(168, 85, 247, 0.25) !important;
+  box-shadow: 0 12px 40px -5px rgba(168, 85, 247, 0.2), 0 0 0 1px rgba(236, 72, 153, 0.15) !important;
+  backdrop-filter: blur(24px) !important;
+}
+
+body.theme-neon-violet header .bg-gradient-to-br,
+body.theme-neon-violet footer .bg-gradient-to-br {
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%) !important;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.4) !important;
 }
 
 body.theme-neon-violet .text-red-500,
@@ -187,18 +340,21 @@ body.theme-neon-violet .to-orange-500,
 body.theme-neon-violet .to-yellow-500 {
   --tw-gradient-to: #06b6d4 !important;
 }
-body.theme-neon-violet .bg-red-500,
-body.theme-neon-violet .bg-gradient-to-r {
-  box-shadow: 0 0 25px rgba(168, 85, 247, 0.35);
+body.theme-neon-violet .bg-red-500 {
+  background-color: #a855f7 !important;
+}
+body.theme-neon-violet .from-red-600.to-orange-700 {
+  background: linear-gradient(135deg, #7e22ce 0%, #be185d 100%) !important;
+  box-shadow: 0 20px 50px rgba(168, 85, 247, 0.3) !important;
 }
 
-/* 3. Emerald Matrix (Deep Tech Slate & Mint) */
+/* 4. Emerald Matrix (Deep Tech Slate & Mint) */
 body.theme-emerald-matrix,
 .theme-emerald-matrix {
   --theme-bg: #03100c;
   --theme-panel: rgba(6, 26, 20, 0.75);
   --theme-panel-hover: rgba(10, 42, 32, 0.9);
-  --theme-border: rgba(16, 185, 129, 0.2);
+  --theme-border: rgba(16, 185, 129, 0.22);
   --theme-accent-1: #10b981;
   --theme-accent-2: #059669;
   --theme-accent-3: #14b8a6;
@@ -209,6 +365,18 @@ body.theme-emerald-matrix,
               radial-gradient(circle at 50% 85%, rgba(52, 211, 153, 0.12), transparent 50%),
               linear-gradient(180deg, #03100c 0%, #071f17 50%, #020907 100%) !important;
   color: #f8fafc !important;
+}
+
+body.theme-emerald-matrix .glass-card {
+  border-radius: 12px !important;
+  border-color: rgba(16, 185, 129, 0.22) !important;
+  box-shadow: 0 8px 30px -4px rgba(16, 185, 129, 0.15) !important;
+}
+
+body.theme-emerald-matrix header .bg-gradient-to-br,
+body.theme-emerald-matrix footer .bg-gradient-to-br {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3) !important;
 }
 
 body.theme-emerald-matrix .text-red-500,
@@ -226,14 +394,21 @@ body.theme-emerald-matrix .to-orange-500,
 body.theme-emerald-matrix .to-yellow-500 {
   --tw-gradient-to: #14b8a6 !important;
 }
+body.theme-emerald-matrix .bg-red-500 {
+  background-color: #10b981 !important;
+}
+body.theme-emerald-matrix .from-red-600.to-orange-700 {
+  background: linear-gradient(135deg, #065f46 0%, #047857 100%) !important;
+  box-shadow: 0 20px 50px rgba(16, 185, 129, 0.25) !important;
+}
 
-/* 4. Sapphire Midnight (Royal Navy & Electric Sky) */
+/* 5. Sapphire Midnight (Royal Navy & Electric Sky) */
 body.theme-sapphire-blue,
 .theme-sapphire-blue {
   --theme-bg: #040a1c;
   --theme-panel: rgba(8, 20, 48, 0.75);
   --theme-panel-hover: rgba(14, 32, 75, 0.9);
-  --theme-border: rgba(59, 130, 246, 0.2);
+  --theme-border: rgba(59, 130, 246, 0.22);
   --theme-accent-1: #3b82f6;
   --theme-accent-2: #0ea5e9;
   --theme-accent-3: #6366f1;
@@ -244,6 +419,18 @@ body.theme-sapphire-blue,
               radial-gradient(circle at 50% 85%, rgba(99, 102, 241, 0.15), transparent 50%),
               linear-gradient(180deg, #040a1c 0%, #0a1738 50%, #030612 100%) !important;
   color: #f8fafc !important;
+}
+
+body.theme-sapphire-blue .glass-card {
+  border-radius: 16px !important;
+  border-color: rgba(59, 130, 246, 0.2) !important;
+  box-shadow: 0 10px 30px -4px rgba(59, 130, 246, 0.15) !important;
+}
+
+body.theme-sapphire-blue header .bg-gradient-to-br,
+body.theme-sapphire-blue footer .bg-gradient-to-br {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.35) !important;
 }
 
 body.theme-sapphire-blue .text-red-500,
@@ -261,8 +448,15 @@ body.theme-sapphire-blue .to-orange-500,
 body.theme-sapphire-blue .to-yellow-500 {
   --tw-gradient-to: #6366f1 !important;
 }
+body.theme-sapphire-blue .bg-red-500 {
+  background-color: #3b82f6 !important;
+}
+body.theme-sapphire-blue .from-red-600.to-orange-700 {
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 20px 50px rgba(59, 130, 246, 0.3) !important;
+}
 
-/* 5. Luxe Light Frost (Clean Modern Light Mode) */
+/* 6. Luxe Light Frost (Clean Modern Light Mode) */
 body.theme-pure-light,
 .theme-pure-light {
   --theme-bg: #f8fafc;
@@ -285,14 +479,15 @@ body.theme-pure-light .bg-slate-950,
 body.theme-pure-light .bg-slate-900,
 body.theme-pure-light .bg-slate-900\/50,
 body.theme-pure-light .bg-slate-950\/50 {
-  background-color: rgba(255, 255, 255, 0.75) !important;
+  background-color: rgba(255, 255, 255, 0.85) !important;
   color: #0f172a !important;
   border-color: rgba(203, 213, 225, 0.7) !important;
 }
 
 body.theme-pure-light .glass-card {
-  background: rgba(255, 255, 255, 0.82) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
   border-color: rgba(226, 232, 240, 0.9) !important;
+  border-radius: 18px !important;
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06) !important;
   color: #0f172a !important;
 }
@@ -321,23 +516,48 @@ body.theme-pure-light .bg-white\/10 {
   background-color: rgba(241, 245, 249, 0.9) !important;
 }
 
+body.theme-pure-light header .bg-gradient-to-br,
+body.theme-pure-light footer .bg-gradient-to-br {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%) !important;
+  color: #ffffff !important;
+}
+body.theme-pure-light header .bg-gradient-to-br svg,
+body.theme-pure-light footer .bg-gradient-to-br svg {
+  color: #ffffff !important;
+}
+
 body.theme-pure-light .from-red-500 {
-  --tw-gradient-from: #6366f1 !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(99, 102, 241, 0)) !important;
+  --tw-gradient-from: #4f46e5 !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(79, 70, 229, 0)) !important;
 }
 body.theme-pure-light .via-orange-500 {
-  --tw-gradient-stops: var(--tw-gradient-from), #8b5cf6, var(--tw-gradient-to, rgba(139, 92, 246, 0)) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), #7c3aed, var(--tw-gradient-to, rgba(124, 58, 237, 0)) !important;
 }
 body.theme-pure-light .to-orange-500,
 body.theme-pure-light .to-yellow-500 {
-  --tw-gradient-to: #3b82f6 !important;
+  --tw-gradient-to: #2563eb !important;
 }
+
 body.theme-pure-light input {
   color: #0f172a !important;
-  background-color: rgba(255, 255, 255, 0.9) !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-color: rgba(203, 213, 225, 0.8) !important;
+}
+
+body.theme-pure-light .from-red-600.to-orange-700 {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  color: #ffffff !important;
+}
+body.theme-pure-light .from-red-600.to-orange-700 h2,
+body.theme-pure-light .from-red-600.to-orange-700 p {
+  color: #ffffff !important;
+}
+body.theme-pure-light .from-red-600.to-orange-700 button {
+  background: #ffffff !important;
+  color: #4f46e5 !important;
 }
 
 /* Universal Smooth Transition on Theme Switch */
 body, .glass-card, header, footer, button, input {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, border-radius 0.3s ease, transform 0.2s ease;
 }
