@@ -4,6 +4,8 @@ backend/venv/
 backend/bin/
 bin/
 *.exe
+!Setup-Next-Videos.exe
+!Next-Videos.exe
 *.zip
 app/dist/
 combined/

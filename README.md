@@ -24,12 +24,15 @@
 
 ## 📑 Table of Contents
 - [✨ Key Features](#-key-features)
+- [🧩 Google Chrome Browser Extension](#-google-chrome-browser-extension)
+- [🪟 Windows Desktop Executable (.exe) Suite](#-windows-desktop-executable-exe-suite)
 - [🏗️ System Architecture](#️-system-architecture)
 - [📁 Project Structure](#-project-structure)
 - [🚦 Quick Start](#-quick-start)
-  - [🪟 Windows (1-Click & PowerShell)](#-windows)
-  - [🐧 Linux & 🍎 macOS](#-linux--macos)
+  - [🪟 Windows Desktop Setup](#-windows-desktop-setup)
+  - [🐧 Linux & 🍎 macOS Setup](#-linux--macos-setup)
   - [📦 Universal npm Scripts](#-universal-npm-scripts)
+- [🌐 Production Deployment & Hosting Guide](#-production-deployment--hosting-guide)
 - [🌐 Access Points & Default Credentials](#-access-points--default-credentials)
 - [🎛️ Dual-Engine Video Converter](#️-dual-engine-video-converter)
 - [📱 Mobile QR Handoff Ecosystem](#-mobile-qr-handoff-ecosystem)
@@ -57,7 +60,47 @@
 * **👤 User Workspace & Custom Presets:** User authentication with `scrypt` password hashing, personal download history, and customizable video encoding presets (bitrate, codecs, CRF/CQ, FPS, aspect ratios).
 * **🛡️ Admin Control Panel (`/#/admin`):** Secure dashboard to edit site titles, hero messages, disclaimer, theme options, and upload `cookies.txt` for restricted or member-only videos.
 * **🖼️ Smart Thumbnail Proxy:** Bypass Instagram/Facebook CORS and `403 Forbidden` restrictions with server-side proxy headers.
-* **🪟 100% Multi-Platform OS Support:** Native one-click launchers for **Windows (`.bat`, `.ps1`)**, **Linux (`.sh`)**, and **macOS**.
+* **🧩 Official Chrome Browser Extension (Manifest V3):** 1-click video downloader popup with active tab auto-URL capture and direct right-click context menu downloading.
+* **🪟 Native Windows `.exe` Setup & Standalone Launcher:** Graphical Setup Wizard (`Setup-Next-Videos.exe`) and Dedicated App Launcher (`Next-Videos.exe`) with official brand icon.
+
+---
+
+## 🧩 Google Chrome Browser Extension
+
+Next-Videos comes with an official **Manifest V3 Chrome Browser Extension** located in the [`extension/`](extension/) directory.
+
+### ✨ Extension Capabilities:
+* **Automatic Tab URL Detection:** Open any video on YouTube, TikTok, Instagram Reels, Facebook, X (Twitter), or Vimeo, and click the Next-Videos toolbar icon — the video URL is instantly analyzed.
+* **Right-Click Context Menu:** Right-click on any video link, web video player, or web page and select **"Download Video with Next-Videos"**.
+* **Quality & Audio Track Selector:** Pick 4K, 1080p, 720p, or MP3 Audio directly inside the popup.
+* **Live SSE Progress Tracking:** Real-time percentage progress bar synced with the Next-Videos backend.
+* **Smart Local/Remote Server Support:** Configurable backend server URL (defaults to `http://localhost:3005`).
+
+### 🚀 How to Install in Chrome (Under 30 Seconds):
+1. In Google Chrome, go to `chrome://extensions` (or 3 dots menu $\to$ **Extensions** $\to$ **Manage Extensions**).
+2. Toggle **Developer mode** to **ON** in the top-right corner.
+3. Click **Load unpacked** (top-left) and select the `Next-Videos-main/extension` folder.
+4. Pin the **Next-Videos Downloader** icon to your Chrome toolbar.
+
+---
+
+## 🪟 Windows Desktop Executable (.exe) Suite
+
+Next-Videos includes native compiled Windows executables with embedded brand icons (`image/logo.ico`):
+
+1. **`Setup-Next-Videos.exe` (Windows Graphical Installer Wizard):**
+   * Automatically checks for Node.js (and triggers silent winget install if missing).
+   * Automatically downloads & extracts the latest **FFmpeg**, **FFprobe**, and **yt-dlp** binaries into `backend/bin/`.
+   * Automatically installs all NPM packages and builds the optimized frontend bundle.
+   * Creates a **Desktop Shortcut** (`Next-Videos.lnk`) with the official brand icon.
+   * Automatically launches Chrome with `chrome://extensions` and an interactive onboarding guide.
+
+2. **`Next-Videos.exe` (Standalone Windows App Launcher):**
+   * Launches the backend server silently in the background (no ugly black CMD window).
+   * Opens Next-Videos in dedicated standalone app window mode with custom icon and taskbar branding.
+
+3. **`installer/InnoSetup.iss`:**
+   * Ready-to-compile Inno Setup script for generating a single distribution setup executable (`Next-Videos-Setup-v1.0.0.exe`).
 
 ---
 
@@ -120,13 +163,18 @@
 
 ## 🚦 Quick Start
 
-### 🪟 Windows Setup
+### 🪟 Windows Desktop Setup
 
-#### Method 1: 1-Click Scripts (Recommended)
-1. Double-click **`install.bat`** (or run `powershell ./install.ps1`) to set up dependencies.
-2. Double-click **`start.bat`** (or run `powershell ./start.ps1`) to launch both backend and frontend.
+#### Method 1: Native Windows `.exe` Setup & Launcher (Recommended)
+1. Double-click **`Setup-Next-Videos.exe`** (or `Setup-Next-Videos.bat`) to run the graphical dependency installer:
+   - Automatically detects and installs Node.js
+   - Automatically downloads **FFmpeg**, **FFprobe**, and **yt-dlp** directly into `backend/bin/`
+   - Installs all NPM dependencies and builds the production web application
+   - Creates a **Desktop Shortcut** with the official brand icon (`logo.ico`)
+   - Automatically opens Google Chrome at `chrome://extensions` with an interactive setup guide
+2. Double-click **`Next-Videos.exe`** (or your desktop shortcut) to launch the app directly in dedicated window mode!
 
-#### Method 2: npm Command
+#### Method 2: Command Line (npm)
 ```cmd
 npm run install:all
 npm run dev
@@ -160,6 +208,39 @@ From the root folder on **any operating system**:
 | `npm run install:all` | Installs dependencies for root, backend, and frontend |
 | `npm run build` | Packages the optimized frontend production bundle |
 | `npm start` | Launches the backend production server |
+
+---
+
+## 🌐 Production Deployment & Hosting Guide
+
+Because Next-Videos performs real-time video downloading, multi-language audio extraction, and heavy FFmpeg encoding, choosing the right hosting environment is important:
+
+### 🏆 Recommended: Cloud VPS (Hetzner / DigitalOcean / Linode / AWS EC2)
+* **Best performance, unlimited processing timeouts, and full disk write access.**
+1. Install Node.js (18+), Python, FFmpeg, and yt-dlp:
+   ```bash
+   sudo apt update && sudo apt install -y nodejs npm ffmpeg python3 python3-pip
+   sudo pip3 install yt-dlp
+   ```
+2. Clone repository & install dependencies:
+   ```bash
+   git clone https://github.com/lyarinet/Next-Videos.git
+   cd Next-Videos
+   npm run install:all
+   npm run build
+   ```
+3. Run as background service using **systemd** (template provided in [`next-videos.service`](next-videos.service)):
+   ```bash
+   sudo cp next-videos.service /etc/systemd/system/
+   sudo systemctl enable --now next-videos
+   ```
+
+### 🐳 PaaS / Docker Container (Render / Railway / Fly.io)
+* Deploy backend using Docker or Node runtime with custom start command `npm start`.
+
+### ⚠️ Note on Serverless Platforms (Netlify / Vercel)
+* **Frontend Only:** You can host the frontend (`app/dist`) on Netlify or Vercel for free.
+* **Backend Requirement:** Serverless functions have strict execution timeouts (10-25s) and cannot execute long video processing jobs or install persistent FFmpeg. The frontend must point its `VITE_API_URL` to a backend hosted on a VPS or container.
 
 ---
 

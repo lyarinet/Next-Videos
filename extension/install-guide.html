@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Next-Videos - Chrome Extension Setup Guide</title>
+  <link rel="icon" type="image/png" href="../image/logo.png">
+  <style>
+    :root {
+      --bg-dark: #070b14;
+      --card-bg: rgba(15, 23, 42, 0.75);
+      --card-border: rgba(148, 163, 184, 0.15);
+      --blue-main: #0047BA;
+      --cyan-main: #0099DE;
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(0, 71, 186, 0.15) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(0, 153, 222, 0.12) 0px, transparent 50%);
+      color: var(--text-white);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 780px;
+      width: 100%;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+    .logo-badge {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px rgba(0, 71, 186, 0.3);
+      padding: 10px;
+    }
+    .logo-badge img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    .brand-title {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .brand-blue { color: var(--blue-main); }
+    .brand-dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      margin: 0 3px;
+      border-radius: 50%;
+      background: linear-gradient(90deg, #0047BA 0%, #0047BA 50%, #0099DE 50%, #0099DE 100%);
+      transform: translateY(-2px);
+    }
+    .brand-cyan { color: var(--cyan-main); }
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 16px;
+    }
+    .success-alert {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #34d399;
+      font-weight: 600;
+      font-size: 15px;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    }
+    .card h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .step-item {
+      display: flex;
+      gap: 18px;
+      align-items: flex-start;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 18px 20px;
+      border-radius: 14px;
+    }
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue-main), var(--cyan-main));
+      color: white;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .step-content h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #f1f5f9;
+    }
+    .step-content p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .path-box {
+      margin-top: 10px;
+      background: #020617;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      word-break: break-all;
+    }
+    .copy-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: white;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      margin-left: 10px;
+    }
+    .copy-btn:hover {
+      background: var(--blue-main);
+    }
+    .btn-row {
+      margin-top: 28px;
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue-main), var(--cyan-main));
+      color: white;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 8px 20px rgba(0, 71, 186, 0.35);
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.07);
+      color: white;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+      padding: 14px 24px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo-badge">
+        <img src="../image/logo.png" alt="Next-Videos Logo">
+      </div>
+      <div class="brand-title">
+        <span class="brand-blue">Next</span><span class="brand-dot"></span><span class="brand-cyan">Video</span>
+      </div>
+      <p class="subtitle">Windows Desktop Setup Completed Successfully!</p>
+    </div>
+
+    <div class="success-alert">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span>FFmpeg, yt-dlp, Node dependencies, and Desktop shortcuts are fully installed.</span>
+    </div>
+
+    <div class="card">
+      <h2>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0099DE" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        Install Next-Videos Chrome Extension
+      </h2>
+
+      <div class="steps">
+        <div class="step-item">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <h3>Open Chrome Extensions Page</h3>
+            <p>Google Chrome address bar mein yeh link enter karein ya neeche button click karein:</p>
+            <div class="path-box">
+              <span>chrome://extensions</span>
+              <button class="copy-btn" onclick="navigator.clipboard.writeText('chrome://extensions')">Copy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <h3>Enable Developer Mode</h3>
+            <p>Chrome Extensions page ke top-right corner par <strong>Developer mode</strong> toggle ko <strong>ON</strong> kar dein.</p>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <h3>Click "Load unpacked" & Select Folder</h3>
+            <p>Top-left par <strong>Load unpacked</strong> button par click karein aur is extension folder ko select karein:</p>
+            <div class="path-box">
+              <span id="extensionFolderPath">C:\Users\IAHQ-agaria\Desktop\Next-Videos-main\Next-Videos-main\extension</span>
+              <button class="copy-btn" onclick="navigator.clipboard.writeText(document.getElementById('extensionFolderPath').innerText)">Copy Path</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-item">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <h3>Pin the Downloader</h3>
+            <p>Chrome toolbar mein Extensions (🧩) icon par click karke <strong>Next-Videos Downloader</strong> ko <strong>Pin 📌</strong> karein.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-primary" onclick="window.location.href='http://localhost:3005'">
+          🚀 Launch Next-Videos App
+        </button>
+        <button class="btn-secondary" onclick="window.close()">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
