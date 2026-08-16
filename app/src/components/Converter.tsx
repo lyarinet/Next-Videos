@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { FileVideo, Play, CheckCircle2, XCircle, Loader2 } from 'lucide-react'
+import { FileVideo, Play, CheckCircle2, XCircle, Loader2, Zap, Cpu } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { toast } from 'sonner'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
@@ -12,6 +13,24 @@ export default function Converter({ token }: { token: string | null }) {
   const [sourceFile, setSourceFile] = useState('')
   const [profile, setProfile] = useState('Mobile High')
   
+  // Hardware Acceleration State (Default: Off / CPU)
+  const [hwaccel, setHwaccel] = useState<string>('off')
+  const [gpuCapabilities, setGpuCapabilities] = useState<{
+    available: boolean
+    nvenc: boolean
+    qsv: boolean
+    amf: boolean
+    videotoolbox: boolean
+    recommended: string
+  }>({
+    available: false,
+    nvenc: false,
+    qsv: false,
+    amf: false,
+    videotoolbox: false,
+    recommended: 'off'
+  })
+
   const [isCustom, setIsCustom] = useState(false)
   const [options, setOptions] = useState({
     format: 'MP4',
@@ -45,8 +64,19 @@ export default function Converter({ token }: { token: string | null }) {
     }
   }
 
+  const fetchGpuCapabilities = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/system/gpu-capabilities`)
+      if (res.ok) {
+        const data = await res.json()
+        setGpuCapabilities(data)
+      }
+    } catch (_) {}
+  }
+
   useEffect(() => {
     fetchFiles()
+    fetchGpuCapabilities()
   }, [token])
 
   useEffect(() => {
@@ -81,7 +111,9 @@ export default function Converter({ token }: { token: string | null }) {
     }
     try {
       setJobStatus({ status: 'Pending', progress: 0 })
-      const payload = isCustom ? { sourceFile, options: { ...options, custom: true } } : { sourceFile, profile }
+      const payload = isCustom 
+        ? { sourceFile, hwaccel, options: { ...options, hwaccel, custom: true } } 
+        : { sourceFile, profile, hwaccel }
       
       const res = await authorizedFetch(`${API_BASE_URL}/convert`, {
         method: 'POST',
@@ -92,7 +124,7 @@ export default function Converter({ token }: { token: string | null }) {
       if (!res.ok) throw new Error(data.error || 'Conversion failed to start')
       
       setActiveJobId(data.jobId)
-      toast.success('Conversion job started')
+      toast.success(`Conversion job started (${hwaccel === 'off' ? 'CPU Mode' : `GPU Accel: ${hwaccel.toUpperCase()}`})`)
     } catch (err: any) {
       toast.error(err.message || 'Error starting conversion')
       setJobStatus(null)
@@ -104,8 +136,12 @@ export default function Converter({ token }: { token: string | null }) {
       <CardContent className="p-6 space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold flex items-center gap-2"><FileVideo className="w-5 h-5 text-orange-400" /> Video Converter</h2>
-            <p className="text-sm text-gray-400">Convert downloaded videos to other formats using preset profiles or custom FFmpeg options.</p>
+            <h2 className="text-xl font-semibold flex items-center gap-2">
+              <FileVideo className="w-5 h-5 text-orange-400" /> Video Converter & Transcoder
+            </h2>
+            <p className="text-sm text-gray-400">
+              Convert downloaded videos to any format with optional GPU Hardware Acceleration.
+            </p>
           </div>
         </div>
 
@@ -124,6 +160,42 @@ export default function Converter({ token }: { token: string | null }) {
                 ))}
               </select>
               <Button variant="outline" onClick={fetchFiles} className="border-white/10 bg-white/5 text-white">Refresh</Button>
+            </div>
+          </div>
+
+          {/* Hardware Acceleration Control (User Configurable - Default Off) */}
+          <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {hwaccel === 'off' ? <Cpu className="w-4 h-4 text-blue-400" /> : <Zap className="w-4 h-4 text-amber-400" />}
+                <span className="text-sm font-semibold text-white">Hardware Acceleration (GPU)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {gpuCapabilities.nvenc && <Badge variant="outline" className="text-xs text-green-400 border-green-400/30">NVIDIA Detected</Badge>}
+                {gpuCapabilities.qsv && <Badge variant="outline" className="text-xs text-blue-400 border-blue-400/30">Intel QSV Detected</Badge>}
+                {gpuCapabilities.amf && <Badge variant="outline" className="text-xs text-red-400 border-red-400/30">AMD AMF Detected</Badge>}
+              </div>
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div>
+                <select 
+                  value={hwaccel} 
+                  onChange={e => setHwaccel(e.target.value)}
+                  className="h-10 w-full rounded-md border border-white/10 bg-slate-900 px-3 text-sm text-white focus:outline-none focus:border-amber-400/60"
+                >
+                  <option value="off">⚡ Disabled (Software CPU / libx264 - Default)</option>
+                  <option value="nvenc">🚀 NVIDIA NVENC (GeForce / RTX / GTX)</option>
+                  <option value="qsv">🔵 Intel QuickSync (Intel UHD / Iris / Arc)</option>
+                  <option value="amf">🔴 AMD AMF (Radeon RX / Ryzen APU)</option>
+                  <option value="videotoolbox">🍎 Apple VideoToolbox (Mac Silicon)</option>
+                </select>
+              </div>
+              <div className="text-xs text-gray-400 flex items-center">
+                {hwaccel === 'off' 
+                  ? 'Standard CPU encoding active. 100% stable and compatible across all machines.'
+                  : `GPU Acceleration active via ${hwaccel.toUpperCase()}. Higher speed, lower CPU usage.`}
+              </div>
             </div>
           </div>
 

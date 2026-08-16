@@ -34,7 +34,7 @@ We are constantly evolving to provide the fastest, cleanest, and most versatile 
 - [ ] **Safari Extension:** macOS and iOS Safari Web Extension companion.
 - [ ] **macOS Package (`.dmg`):** Universal Apple Silicon (M1/M2/M3/M4) and Intel binary with native dark mode support.
 - [ ] **Linux Suite (`.deb`, `.rpm`, `.AppImage`):** Open-source packaging with CLI and GUI modes.
-- [ ] **Hardware Acceleration:** GPU-accelerated transcoding (NVIDIA NVENC / Intel QuickSync / AMD AMF).
+- [x] **Hardware Acceleration:** GPU-accelerated transcoding (NVIDIA NVENC / Intel QuickSync / AMD AMF) with user opt-in control and automatic CPU fallback.
 
 #### 3. 📱 Native Mobile Applications
 - [ ] **Android Native App (`.apk`):** Native Android downloader powered by Kotlin/React Native with background worker downloads, local media vault, and picture-in-picture player.

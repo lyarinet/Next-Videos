@@ -1563,8 +1563,63 @@ function getAvailableFormatsForPlatform(platform) {
   return formats;
 }
 
-// Video Converter Feature
+// Video Converter & Hardware Acceleration
 const conversionJobs = new Map();
+
+// Helper to determine hardware-accelerated video encoder
+function resolveVideoEncoder(hwaccelMode, customCodec) {
+  if (customCodec && customCodec !== 'libx264' && customCodec !== 'auto') {
+    return { vcodec: customCodec, extraFlags: '' };
+  }
+
+  switch (hwaccelMode) {
+    case 'nvenc':
+    case 'nvidia':
+      return { vcodec: 'h264_nvenc', extraFlags: '-preset p4 -rc vbr -cq 23' };
+    case 'qsv':
+    case 'intel':
+      return { vcodec: 'h264_qsv', extraFlags: '-global_quality 23' };
+    case 'amf':
+    case 'amd':
+      return { vcodec: 'h264_amf', extraFlags: '-quality balanced' };
+    case 'videotoolbox':
+    case 'apple':
+      return { vcodec: 'h264_videotoolbox', extraFlags: '-q:v 65' };
+    default:
+      return { vcodec: 'libx264', extraFlags: '' };
+  }
+}
+
+// Endpoint to probe GPU hardware acceleration capabilities
+app.get('/api/system/gpu-capabilities', (req, res) => {
+  const ffmpeg = getFfmpegPath();
+  exec(`"${ffmpeg}" -encoders`, (err, stdout) => {
+    if (err) {
+      return res.json({
+        available: false,
+        encoders: [],
+        nvenc: false,
+        qsv: false,
+        amf: false,
+        videotoolbox: false
+      });
+    }
+
+    const hasNvenc = stdout.includes('h264_nvenc') || stdout.includes('hevc_nvenc');
+    const hasQsv = stdout.includes('h264_qsv') || stdout.includes('hevc_qsv');
+    const hasAmf = stdout.includes('h264_amf') || stdout.includes('hevc_amf');
+    const hasVideotoolbox = stdout.includes('h264_videotoolbox');
+
+    res.json({
+      available: hasNvenc || hasQsv || hasAmf || hasVideotoolbox,
+      nvenc: hasNvenc,
+      qsv: hasQsv,
+      amf: hasAmf,
+      videotoolbox: hasVideotoolbox,
+      recommended: hasNvenc ? 'nvenc' : (hasQsv ? 'qsv' : (hasAmf ? 'amf' : 'off'))
+    });
+  });
+});
 
 app.get('/api/convert/files', (req, res) => {
   try {
@@ -1572,18 +1627,14 @@ app.get('/api/convert/files', (req, res) => {
     let files = [];
 
     if (user && user.downloadHistory) {
-      // Extract file names from completed downloads in user's history
       const userFiles = user.downloadHistory
         .filter(entry => entry.status === 'completed' && entry.fileName)
         .map(entry => entry.fileName);
 
-      // Only include files that actually still exist on disk
       files = userFiles.filter(file => fs.existsSync(path.join(downloadsDir, file)));
     }
 
-    // De-duplicate just in case
     files = [...new Set(files)];
-
     res.json({ files });
   } catch (error) {
     res.status(500).json({ error: 'Failed to list files' });
@@ -1591,7 +1642,7 @@ app.get('/api/convert/files', (req, res) => {
 });
 
 app.post('/api/convert', (req, res) => {
-  const { sourceFile, profile, options } = req.body;
+  const { sourceFile, profile, options, hwaccel } = req.body;
   if (!sourceFile) return res.status(400).json({ error: 'Source file is required' });
 
   const sourcePath = path.join(downloadsDir, sourceFile);
@@ -1611,10 +1662,15 @@ app.post('/api/convert', (req, res) => {
   const outputBaseName = `converted_${timestamp}_${safeSourceFile}`;
   const outputPath = path.join(downloadsDir, `${outputBaseName}.${outExt}`);
 
+  // Resolve video encoder based on explicit user setting (Default is Software libx264)
+  const selectedHwaccel = (options && options.hwaccel) || hwaccel || 'off';
+  const { vcodec, extraFlags } = resolveVideoEncoder(selectedHwaccel, options?.vcodec);
+
   let ffmpegCmd = `"${getFfmpegPath()}" -y -i "${sourcePath}"`;
 
   if (options && options.custom) {
-    if (options.vcodec) ffmpegCmd += ` -c:v ${options.vcodec}`;
+    ffmpegCmd += ` -c:v ${vcodec}`;
+    if (extraFlags) ffmpegCmd += ` ${extraFlags}`;
     if (options.acodec) ffmpegCmd += ` -c:a ${options.acodec}`;
     if (options.bitrate) ffmpegCmd += ` -b:v ${options.bitrate}`;
     if (options.fps) ffmpegCmd += ` -r ${options.fps}`;
@@ -1623,28 +1679,28 @@ app.post('/api/convert', (req, res) => {
     if (options.trimEnd) ffmpegCmd += ` -to ${options.trimEnd}`;
   } else if (profile) {
     if (profile === 'Mobile Low') {
-      ffmpegCmd += ' -vf scale=-2:240 -c:v libx264 -b:v 400k -c:a aac -b:a 64k';
+      ffmpegCmd += ` -vf scale=-2:240 -c:v ${vcodec} ${extraFlags} -b:v 400k -c:a aac -b:a 64k`;
     } else if (profile === 'Mobile Medium') {
-      ffmpegCmd += ' -vf scale=-2:480 -c:v libx264 -b:v 1000k -c:a aac -b:a 128k';
+      ffmpegCmd += ` -vf scale=-2:480 -c:v ${vcodec} ${extraFlags} -b:v 1000k -c:a aac -b:a 128k`;
     } else if (profile === 'Mobile High') {
-      ffmpegCmd += ' -vf scale=-2:720 -c:v libx264 -b:v 2500k -c:a aac -b:a 192k';
+      ffmpegCmd += ` -vf scale=-2:720 -c:v ${vcodec} ${extraFlags} -b:v 2500k -c:a aac -b:a 192k`;
     } else if (profile === 'Console PlayStation') {
-      ffmpegCmd += ' -c:v libx264 -preset fast -profile:v high -level 4.1 -b:v 4000k -c:a aac -b:a 256k';
+      ffmpegCmd += ` -c:v ${vcodec} ${extraFlags} -preset fast -profile:v high -level 4.1 -b:v 4000k -c:a aac -b:a 256k`;
     } else if (profile === 'Console Xbox') {
-      ffmpegCmd += ' -c:v libx264 -preset fast -profile:v main -level 4.1 -b:v 4000k -c:a aac -b:a 256k';
+      ffmpegCmd += ` -c:v ${vcodec} ${extraFlags} -preset fast -profile:v main -level 4.1 -b:v 4000k -c:a aac -b:a 256k`;
     } else if (profile === 'Web HLS') {
-      ffmpegCmd += ' -c:v libx264 -c:a aac -f hls -hls_time 10 -hls_list_size 0';
+      ffmpegCmd += ` -c:v ${vcodec} ${extraFlags} -c:a aac -f hls -hls_time 10 -hls_list_size 0`;
     } else if (profile === 'Web DASH') {
-      ffmpegCmd += ' -c:v libx264 -c:a aac -f dash';
+      ffmpegCmd += ` -c:v ${vcodec} ${extraFlags} -c:a aac -f dash`;
     } else if (profile === 'Web Optimized MP4') {
-      ffmpegCmd += ' -c:v libx264 -c:a aac -movflags +faststart';
+      ffmpegCmd += ` -c:v ${vcodec} ${extraFlags} -c:a aac -movflags +faststart`;
     }
   }
 
   ffmpegCmd += ` "${outputPath}"`;
-  console.log('Running conversion:', ffmpegCmd);
+  console.log(`[Conversion Job ${jobId}] HWAccel: ${selectedHwaccel} | Command:`, ffmpegCmd);
 
-  conversionJobs.set(jobId, { status: 'Processing', progress: 0, resultUrl: null, error: null });
+  conversionJobs.set(jobId, { status: 'Processing', progress: 0, resultUrl: null, error: null, hwaccel: selectedHwaccel });
 
   const proc = exec(ffmpegCmd, { timeout: 7200000 });
 
@@ -1668,11 +1724,24 @@ app.post('/api/convert', (req, res) => {
     if (code === 0) {
       conversionJobs.set(jobId, { status: 'Completed', progress: 100, resultUrl: `/api/download/file/${path.basename(outputPath)}`, error: null });
     } else {
-      conversionJobs.set(jobId, { status: 'Failed', progress: 0, resultUrl: null, error: 'FFmpeg process failed with code ' + code });
+      // If hardware acceleration failed, attempt automatic fallback to software CPU libx264
+      if (selectedHwaccel !== 'off') {
+        console.warn(`[Conversion Job ${jobId}] HW Acceleration failed with code ${code}. Attempting CPU fallback...`);
+        const fallbackCmd = ffmpegCmd.replace(new RegExp(`-c:v ${vcodec}[^ ]*`, 'g'), '-c:v libx264');
+        exec(fallbackCmd, { timeout: 7200000 }, (fbErr) => {
+          if (!fbErr && fs.existsSync(outputPath)) {
+            conversionJobs.set(jobId, { status: 'Completed', progress: 100, resultUrl: `/api/download/file/${path.basename(outputPath)}`, error: null, fallbackUsed: true });
+          } else {
+            conversionJobs.set(jobId, { status: 'Failed', progress: 0, resultUrl: null, error: `Conversion failed (Hardware encoder error code ${code})` });
+          }
+        });
+      } else {
+        conversionJobs.set(jobId, { status: 'Failed', progress: 0, resultUrl: null, error: 'FFmpeg process failed with code ' + code });
+      }
     }
   });
 
-  res.json({ jobId, message: 'Conversion started' });
+  res.json({ jobId, message: 'Conversion started', hwaccel: selectedHwaccel });
 });
 
 app.get('/api/convert/status/:id', (req, res) => {

@@ -371,7 +371,7 @@ We are constantly evolving to provide the fastest, cleanest, and most versatile 
 - [x] **Windows Setup Wizard (`Setup-Next-Videos.exe`):** 1-Click graphical installer auto-downloading FFmpeg, yt-dlp, Node runtime & creating desktop shortcuts.
 - [ ] **macOS Package (`.dmg`):** Universal Apple Silicon (M1/M2/M3/M4) and Intel binary with native dark mode support.
 - [ ] **Linux Suite (`.deb`, `.rpm`, `.AppImage`):** Open-source packaging with CLI and GUI modes.
-- [ ] **Hardware Acceleration:** GPU-accelerated transcoding (NVIDIA NVENC / Intel QuickSync / AMD AMF).
+- [x] **Hardware Acceleration:** GPU-accelerated transcoding (NVIDIA NVENC / Intel QuickSync / AMD AMF) with opt-in control and CPU fallback.
 
 #### 2. 🔗 Browser Extensions Ecosystem
 - [x] **Chrome / Edge Extension (v1.0):** Auto-detect active video tab, format/quality selector, SSE live download tracker, and context menu downloader.
