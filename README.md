@@ -325,12 +325,39 @@ Next-Videos incorporates branded format badge styling across the entire suite:
 
 ---
 
-## 🛡️ Admin Panel & Cookies Manager
+## 🛡️ Admin Panel & YouTube Cookies Manager
 
-Access the Admin Panel at `http://localhost:5173/#/admin`:
+Access the Admin Panel at `http://localhost:5173/#/admin` (or `http://localhost:3005/#/admin`):
+* **Default Admin Credentials:** Username: `admin` | Password: `admin123` *(configurable in `backend/.env`)*
 * **Live Customization:** Update Site Title, Hero Headline, Subtitles, and Footer Disclaimers in real-time.
-* **Theme Proposal:** Toggle between Default and Cyber-Glass themes.
-* **Cookies Manager:** Upload a `cookies.txt` file directly from the browser to allow `yt-dlp` to download age-restricted, private, or member-only videos.
+* **Storage & Disk Purge:** 1-click **"Clean All Downloaded Videos"** to free up server disk space.
+* **YouTube Cookies Manager:** Upload your `cookies.txt` file directly from the browser to bypass YouTube rate limits, bot detection, or download age-restricted/members-only videos.
+
+---
+
+## 🍪 YouTube Cookies Setup Guide (If Videos Fail to Download)
+
+If YouTube blocks anonymous downloads, rate-limits your IP, or if you want to download **18+ Age-Restricted / Members-Only** videos, follow this 30-second guide to link cookies:
+
+### Step 1: Install the Safe & Local Cookie Export Extension
+Install the official, privacy-first, and open-source Chrome extension:
+👉 **[Get cookies.txt LOCALLY (Chrome Web Store)](https://chromewebstore.google.com/detail/get-cookiestxt-locally/cclelndahbckbenkjhflpdbgdldlbecc)**
+
+> [!TIP]
+> **Privacy Recommendation:** We recommend logging into YouTube using a **secondary / dummy Google account** before exporting cookies to keep your primary personal account completely isolated and private.
+
+### Step 2: Export Cookies from YouTube
+1. Open **[YouTube.com](https://www.youtube.com)** in your browser and ensure you are logged in.
+2. Click the **Get cookies.txt LOCALLY** extension icon in your Chrome toolbar.
+3. Click **"Export"** (or *Download*) to save `cookies.txt` to your computer.
+
+### Step 3: Upload to Next-Videos Admin Panel
+1. Open the Next-Videos **Admin Panel** at `/#/admin` (e.g. `http://localhost:5173/#/admin`).
+2. Log in with your admin credentials.
+3. In the **YouTube Cookies Management** card, click **"Upload cookies.txt"** and select the downloaded file.
+4. ✅ **Done!** Next-Videos will automatically use your cookies for all future YouTube downloads, resolving all bot-verification blocks.
+
+*(Alternatively, you can place the downloaded `cookies.txt` directly into the `backend/` folder on your server).*
 
 ---
 

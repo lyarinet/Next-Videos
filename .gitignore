@@ -25,6 +25,11 @@ image.png
 .env
 app/.env
 backend/.env
+cookies.txt
+backend/cookies.txt
+*.cookies
+users.json
+backend/users.json
 
 # Logs and temporary files
 logs/

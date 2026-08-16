@@ -211,6 +211,36 @@
       },
       "downloadHistory": [
         {
+          "id": "e6e0cacf-4271-4b97-adf4-7f7dee686243",
+          "url": "https://www.instagram.com/reels/DcEZ_JVxiq3/",
+          "title": "Video by esportsverse.in",
+          "quality": "720p HD",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "Instagram",
+          "status": "completed",
+          "fileName": "720p ln-lyarinet-1786888503943270.mp4",
+          "createdAt": "2026-08-16T13:55:10.663Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "video",
+            "outputFormat": "MP4",
+            "sizeLimit": "Off",
+            "qualityMode": "Optimal quality",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "audioCodec": "AAC",
+            "noAudio": "Off",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-08-16T13:55:17.962Z"
+        },
+        {
           "id": "ec9b62b8-906b-4eb0-971c-32e1e9546e06",
           "url": "https://www.instagram.com/reels/DcEZ_JVxiq3/",
           "title": "Video by esportsverse.in",
