@@ -249,22 +249,22 @@ const getVideoFormatScore = (format) => {
 async function fetchYtDlpMetadata(url) {
   const nodePath = getNodePath();
   const cookies = getCookiesFlag();
-  const hasCookies = !!cookies;
-  const clients = hasCookies ? 'tv' : 'android,web';
-  const metadataTimeout = 30000;
-  let cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams ${getFfmpegLocationFlag()} --js-runtimes "node:${nodePath}" ${cookies} --extractor-args "youtube:player_client=${clients}" "${url}"`;
+  const metadataTimeout = 40000;
+
+  // Query with player_client=all,default and audio-multistreams to discover all audio tracks & dubs
+  let cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams ${getFfmpegLocationFlag()} --js-runtimes "node:${nodePath}" ${cookies} --extractor-args "youtube:player_client=all,default" "${url}"`;
 
   try {
-    const result = await execPromise(cmd, { timeout: metadataTimeout, maxBuffer: 10 * 1024 * 1024 });
+    const result = await execPromise(cmd, { timeout: metadataTimeout, maxBuffer: 25 * 1024 * 1024 });
     return JSON.parse(result.stdout);
   } catch (err) {
     if (err.stdout && err.stdout.trim().startsWith('{')) {
       return JSON.parse(err.stdout);
     }
 
-    console.log(`yt-dlp ${clients} failed (${err.message?.slice(0, 120)}), trying default...`);
+    console.log(`yt-dlp multi-client metadata failed (${err.message?.slice(0, 100)}), falling back to standard...`);
     cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams ${getFfmpegLocationFlag()} --js-runtimes "node:${nodePath}" ${cookies} "${url}"`;
-    const result = await execPromise(cmd, { timeout: metadataTimeout, maxBuffer: 10 * 1024 * 1024 });
+    const result = await execPromise(cmd, { timeout: metadataTimeout, maxBuffer: 25 * 1024 * 1024 });
     return JSON.parse(result.stdout);
   }
 }
@@ -1049,8 +1049,7 @@ app.post('/api/download', async (req, res) => {
     // Native yt-dlp download pipeline with direct audio track selection and multi-audio support
     const dlNodePath = getNodePath();
     const plainCookies = getCookiesFlag();
-    const plainClient = plainCookies ? 'tv' : 'android,web';
-    let cmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${getFfmpegLocationFlag()} ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}" --extractor-args "youtube:player_client=${plainClient}"`;
+    let cmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${getFfmpegLocationFlag()} ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}"`;
     cmd += ` -o "${outputTemplate}.%(ext)s"`;
 
     if (quality.startsWith('Audio (') || quality === 'Audio Only') {
@@ -1061,7 +1060,7 @@ app.post('/api/download', async (req, res) => {
       else if (format.toLowerCase() === 'opus') audioFormat = 'opus';
 
       if (audioTrack && audioTrack !== 'default' && audioTrack !== 'all') {
-        cmd += ` -f "bestaudio[language=${audioTrack}]/bestaudio[language*=${audioTrack}]/bestaudio"`;
+        cmd += ` -f "bestaudio[language=${audioTrack}]/bestaudio[language*=${audioTrack}]/bestaudio" -S "lang:${audioTrack}"`;
       } else {
         cmd += ' -f bestaudio';
       }
@@ -1074,8 +1073,8 @@ app.post('/api/download', async (req, res) => {
         // Multi-audio streams download into MKV container
         cmd += ` --audio-multistreams -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" --merge-output-format mkv`;
       } else if (audioTrack && audioTrack !== 'default') {
-        // Specific language audio track
-        cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio[language=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio[language*=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" --merge-output-format mp4`;
+        // Specific language audio track merged with video
+        cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio[language=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio[language*=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" -S "lang:${audioTrack}" --merge-output-format mp4`;
       } else {
         // Default original audio track
         cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" --merge-output-format mp4`;
