@@ -1120,6 +1120,57 @@ app.get(['/api/download/file/:filename', '/download/file/:filename'], (req, res)
   });
 });
 
+// Stream video files with HTTP 206 Range support for smooth HTML5 player seeking
+app.get(['/api/stream/file/:filename', '/stream/file/:filename'], (req, res) => {
+  const filename = req.params.filename;
+  const filepath = path.join(downloadsDir, filename);
+
+  if (!fs.existsSync(filepath)) {
+    return res.status(404).json({ error: 'File not found' });
+  }
+
+  const stat = fs.statSync(filepath);
+  const fileSize = stat.size;
+  const range = req.headers.range;
+
+  const ext = path.extname(filename).toLowerCase();
+  const mimeTypes = {
+    '.mp4': 'video/mp4',
+    '.webm': 'video/webm',
+    '.mkv': 'video/x-matroska',
+    '.mp3': 'audio/mpeg',
+    '.m4a': 'audio/mp4',
+    '.wav': 'audio/wav',
+    '.ogg': 'audio/ogg',
+    '.3gp': 'video/3gpp'
+  };
+  const contentType = mimeTypes[ext] || 'application/octet-stream';
+
+  if (range) {
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    const chunksize = (end - start) + 1;
+    const file = fs.createReadStream(filepath, { start, end });
+    const head = {
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunksize,
+      'Content-Type': contentType,
+    };
+    res.writeHead(206, head);
+    file.pipe(res);
+  } else {
+    const head = {
+      'Content-Length': fileSize,
+      'Content-Type': contentType,
+      'Accept-Ranges': 'bytes',
+    };
+    res.writeHead(200, head);
+    fs.createReadStream(filepath).pipe(res);
+  }
+});
+
 // Thumbnail proxy - fetches external images server-side to bypass CORP restrictions
 app.get('/api/thumbnail-proxy', (req, res) => {
   const { url } = req.query;
@@ -1784,6 +1835,96 @@ app.post('/api/convert', (req, res) => {
 app.get('/api/convert/status/:id', (req, res) => {
   const id = req.params.id;
   const job = conversionJobs.get(id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  res.json(job);
+});
+
+// Real-time Video Splitter & Segment Trimming Engine
+const splitJobs = new Map();
+
+app.post('/api/video/split', (req, res) => {
+  const { sourceFile, mode = 'trim', startTime = 0, endTime = 0, partDuration = 30, lossless = true, format = 'mp4', hwaccel = 'off' } = req.body;
+
+  if (!sourceFile) return res.status(400).json({ error: 'Source file is required' });
+  const sourcePath = path.join(downloadsDir, sourceFile);
+  if (!fs.existsSync(sourcePath)) return res.status(404).json({ error: 'Source file not found' });
+
+  const jobId = crypto.randomUUID();
+  const timestamp = Date.now();
+  const safeBaseName = sanitizeFilenamePart(path.basename(sourceFile, path.extname(sourceFile)));
+
+  splitJobs.set(jobId, {
+    status: 'Processing',
+    progress: 10,
+    sourceFile,
+    createdAt: new Date().toISOString()
+  });
+
+  res.json({ jobId, message: 'Splitting job initiated' });
+
+  (async () => {
+    try {
+      if (mode === 'trim') {
+        const outExt = format ? format.toLowerCase() : 'mp4';
+        const outputFileName = `split_${timestamp}_${safeBaseName}.${outExt}`;
+        const outputPath = path.join(downloadsDir, outputFileName);
+
+        const duration = Math.max(0.1, endTime - startTime);
+        let ffmpegCmd = `"${getFfmpegPath()}" -y -ss ${startTime} -i "${sourcePath}" -t ${duration}`;
+
+        if (lossless && (outExt === 'mp4' || outExt === 'mkv')) {
+          // Lossless ultra-fast stream copy
+          ffmpegCmd += ` -c copy "${outputPath}"`;
+        } else {
+          const { vcodec, extraFlags } = resolveVideoEncoder(hwaccel);
+          ffmpegCmd += ` -c:v ${vcodec} ${extraFlags} -c:a aac -b:a 192k "${outputPath}"`;
+        }
+
+        console.log('[VideoSplitter] Executing trim:', ffmpegCmd);
+        await execPromise(ffmpegCmd);
+
+        splitJobs.set(jobId, {
+          status: 'Completed',
+          progress: 100,
+          outputFile: outputFileName,
+          downloadUrl: `/api/download/file/${outputFileName}`
+        });
+      } else if (mode === 'equal_parts') {
+        // Split into equal segments of partDuration (for WhatsApp / Reels / Shorts)
+        const segmentDuration = Math.max(5, parseInt(partDuration) || 30);
+        const outputPattern = `part_%03d_${timestamp}_${safeBaseName}.mp4`;
+        const outputPathPattern = path.join(downloadsDir, outputPattern);
+
+        let ffmpegCmd = `"${getFfmpegPath()}" -y -i "${sourcePath}" -c copy -map 0 -segment_time ${segmentDuration} -f segment -reset_timestamps 1 "${outputPathPattern}"`;
+        console.log('[VideoSplitter] Executing equal parts split:', ffmpegCmd);
+        await execPromise(ffmpegCmd);
+
+        const allFiles = fs.readdirSync(downloadsDir);
+        const partFiles = allFiles
+          .filter(f => f.startsWith('part_') && f.includes(String(timestamp)))
+          .map(f => ({ name: f, url: `/api/download/file/${f}` }));
+
+        splitJobs.set(jobId, {
+          status: 'Completed',
+          progress: 100,
+          parts: partFiles,
+          outputFile: partFiles[0]?.name,
+          downloadUrl: partFiles[0]?.url
+        });
+      }
+    } catch (err) {
+      console.error('[VideoSplitter] Split error:', err);
+      splitJobs.set(jobId, {
+        status: 'Failed',
+        error: err.message
+      });
+    }
+  })();
+});
+
+app.get('/api/video/split/status/:id', (req, res) => {
+  const id = req.params.id;
+  const job = splitJobs.get(id);
   if (!job) return res.status(404).json({ error: 'Job not found' });
   res.json(job);
 });

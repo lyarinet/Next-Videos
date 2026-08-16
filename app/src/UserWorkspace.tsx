@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import Converter from './components/Converter'
 import WasmConverter from './components/WasmConverter'
+import VideoSplitter from './components/VideoSplitter'
 import { ThemeSwitcher } from './components/ThemeSwitcher'
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 const USER_TOKEN_KEY = 'workspaceUserToken'
@@ -700,6 +701,7 @@ export default function UserWorkspace() {
           </Card>
         </div>
 
+        <VideoSplitter token={token} />
         <Converter token={token} />
         {siteConfig?.enableWasmConversion && <WasmConverter token={token} />}
 
