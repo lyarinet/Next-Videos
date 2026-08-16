@@ -1047,8 +1047,8 @@ app.post('/api/download', async (req, res) => {
       const maxHeight = qualityMap[quality] || '720';
 
       if (audioTrack === 'all') {
-        // Multi-audio streams download into MKV container
-        cmd += ` --audio-multistreams -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" --merge-output-format mkv`;
+        // Multi-audio streams download into MKV container with all audio tracks
+        cmd += ` --audio-multistreams -f "bestvideo[height<=${maxHeight}]+mergeall[format_id^=251]/bestvideo[height<=${maxHeight}]+mergeall[format_id^=140]/bestvideo[height<=${maxHeight}]+mergeall[vcodec=none]/best[height<=${maxHeight}]" --merge-output-format mkv`;
       } else if (audioTrack && audioTrack !== 'default') {
         // Specific language audio track merged with video
         cmd += ` --audio-multistreams -f "bestvideo[height<=${maxHeight}]+bestaudio[language=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio[language*=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" -S "lang:${audioTrack}" --merge-output-format mp4`;

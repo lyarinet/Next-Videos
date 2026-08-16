@@ -314,22 +314,46 @@ function renderVideoInfo(info, serverUrl = '') {
     audioTrackSection.classList.add('hidden');
   }
 
-  // Render format buttons
-  formatsContainer.innerHTML = '';
-  if (info.formats && info.formats.length > 0) {
-    info.formats.forEach((fmt) => {
-      const btn = document.createElement('button');
-      btn.className = 'format-btn';
-      btn.innerHTML = `
-        <span class="format-quality">${fmt.quality}</span>
-        <span class="format-details">${fmt.format} • ${fmt.size}</span>
-      `;
-      btn.addEventListener('click', () => startPersistentDownload(fmt));
-      formatsContainer.appendChild(btn);
-    });
-  }
+  // Re-render formats when audio track selection changes (e.g. MKV for all tracks)
+  audioTrackSelect.onchange = () => {
+    renderFormatList(info);
+  };
 
+  renderFormatList(info);
   previewCard.classList.remove('hidden');
+}
+
+function renderFormatList(info) {
+  formatsContainer.innerHTML = '';
+  if (!info || !info.formats || info.formats.length === 0) return;
+
+  const isAllAudio = audioTrackSelect && audioTrackSelect.value === 'all';
+
+  info.formats.forEach((fmt) => {
+    const isAudio = (fmt.quality || '').startsWith('Audio');
+    const dispFmt = (!isAudio && isAllAudio) ? 'MKV' : (fmt.format || 'MP4');
+    const upperFmt = dispFmt.toUpperCase();
+
+    let badgeClass = 'fmt-badge-mp4';
+    if (upperFmt === 'MKV') badgeClass = 'fmt-badge-mkv';
+    else if (upperFmt === '3GP') badgeClass = 'fmt-badge-3gp';
+    else if (upperFmt === 'MP3') badgeClass = 'fmt-badge-mp3';
+    else if (upperFmt === 'M4A') badgeClass = 'fmt-badge-m4a';
+
+    const btn = document.createElement('button');
+    btn.className = 'format-btn';
+    btn.innerHTML = `
+      <div class="fmt-badge-box ${badgeClass}">
+        <span class="fmt-badge-text">${upperFmt}</span>
+      </div>
+      <div class="fmt-info">
+        <span class="format-quality">${fmt.quality}</span>
+        <span class="format-details">${dispFmt} • ${fmt.size}</span>
+      </div>
+    `;
+    btn.addEventListener('click', () => startPersistentDownload(fmt));
+    formatsContainer.appendChild(btn);
+  });
 }
 
 // Start download via Background Service Worker

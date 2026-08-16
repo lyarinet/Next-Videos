@@ -614,21 +614,73 @@ export default function UserWorkspace() {
                       })}
                   </select>
 
-                  <div className="grid gap-2 max-h-64 overflow-y-auto pr-2">
-                    {videoInfo.formats.map((option) => (
-                      <button
-                        key={`${option.quality}-${option.format || 'unknown'}`}
-                        onClick={() => handleDownload(option)}
-                        disabled={isDownloading}
-                        className={`flex items-center justify-between rounded-xl border px-4 py-3 text-left transition ${recommendedQuality === option.quality || (option.format && preset?.outputFormat && option.format.toUpperCase() === preset.outputFormat.toUpperCase()) ? 'border-orange-400/30 bg-orange-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
-                      >
-                        <div>
-                          <div className="font-medium">{option.quality}</div>
-                          <div className="text-sm text-gray-400">{option.format || 'Unknown'} · {option.size}</div>
-                        </div>
-                        {(recommendedQuality === option.quality || (option.format && preset?.outputFormat && option.format.toUpperCase() === preset.outputFormat.toUpperCase())) && <Badge variant="secondary" className="bg-orange-500/15 text-orange-200 border-orange-400/20">Preset</Badge>}
-                      </button>
-                    ))}
+                  <div className="grid gap-2.5 max-h-72 overflow-y-auto pr-1">
+                    {videoInfo.formats.map((option) => {
+                      const isAudio = option.quality.startsWith('Audio') || option.quality === 'Audio Only';
+                      const dispFmt = (!isAudio && selectedAudioTrack === 'all') ? 'MKV' : (option.format || 'MP4');
+                      const fmt = dispFmt.toUpperCase();
+                      let badge = {
+                        bg: 'bg-gradient-to-br from-cyan-500/20 to-blue-600/20 text-cyan-300 border-cyan-500/40',
+                        label: fmt,
+                        sub: 'VIDEO',
+                        pill: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/30'
+                      };
+                      if (fmt === 'MKV') {
+                        badge = {
+                          bg: 'bg-gradient-to-br from-amber-500/20 to-orange-600/20 text-amber-300 border-amber-500/40',
+                          label: 'MKV',
+                          sub: 'VIDEO',
+                          pill: 'bg-amber-500/20 text-amber-300 border-amber-400/30'
+                        };
+                      } else if (fmt === '3GP') {
+                        badge = {
+                          bg: 'bg-gradient-to-br from-emerald-500/20 to-teal-600/20 text-emerald-300 border-emerald-500/40',
+                          label: '3GP',
+                          sub: 'MOBILE',
+                          pill: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+                        };
+                      } else if (fmt === 'MP3') {
+                        badge = {
+                          bg: 'bg-gradient-to-br from-purple-500/20 to-pink-600/20 text-purple-300 border-purple-500/40',
+                          label: 'MP3',
+                          sub: 'AUDIO',
+                          pill: 'bg-purple-500/20 text-purple-300 border-purple-400/30'
+                        };
+                      } else if (fmt === 'M4A') {
+                        badge = {
+                          bg: 'bg-gradient-to-br from-indigo-500/20 to-blue-600/20 text-indigo-300 border-indigo-500/40',
+                          label: 'M4A',
+                          sub: 'AUDIO',
+                          pill: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/30'
+                        };
+                      }
+
+                      return (
+                        <button
+                          key={`${option.quality}-${option.format || 'unknown'}`}
+                          onClick={() => handleDownload(option)}
+                          disabled={isDownloading}
+                          className={`flex items-center justify-between rounded-xl border p-3 text-left transition group ${recommendedQuality === option.quality || (option.format && preset?.outputFormat && option.format.toUpperCase() === preset.outputFormat.toUpperCase()) ? 'border-orange-400/30 bg-orange-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center border ${badge.bg} shadow-sm shrink-0 transition-transform group-hover:scale-105 select-none`}>
+                              <span className="text-[11px] font-black tracking-wider leading-none font-mono">{badge.label}</span>
+                              <span className="text-[7px] font-bold tracking-widest mt-0.5 opacity-80">{badge.sub}</span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-white group-hover:text-red-300 transition-colors">{option.quality}</div>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border font-mono ${badge.pill}`}>
+                                  {dispFmt}
+                                </span>
+                                <span className="text-xs text-gray-400">• {option.size}</span>
+                              </div>
+                            </div>
+                          </div>
+                          {(recommendedQuality === option.quality || (option.format && preset?.outputFormat && option.format.toUpperCase() === preset.outputFormat.toUpperCase())) && <Badge variant="secondary" className="bg-orange-500/15 text-orange-200 border-orange-400/20">Preset</Badge>}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {isDownloading && selectedOption && (

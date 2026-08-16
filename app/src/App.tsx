@@ -9,8 +9,6 @@ import {
   Twitter,
   Instagram,
   Video,
-  Music,
-  FileVideo,
   Globe,
   Sparkles,
   Zap,
@@ -359,6 +357,64 @@ function App() {
     return option.format
   }
 
+  const getFormatBadgeDetails = (formatStr: string, isAudio: boolean) => {
+    const fmt = (formatStr || '').toUpperCase();
+    if (fmt === 'MKV') {
+      return {
+        bg: 'bg-gradient-to-br from-amber-500/20 via-amber-600/15 to-orange-600/20 text-amber-300 border-amber-500/40 shadow-amber-500/10',
+        label: 'MKV',
+        sub: 'VIDEO',
+        pill: 'bg-amber-500/20 text-amber-300 border-amber-400/30'
+      };
+    }
+    if (fmt === 'MP4') {
+      return {
+        bg: 'bg-gradient-to-br from-cyan-500/20 via-blue-600/15 to-indigo-600/20 text-cyan-300 border-cyan-500/40 shadow-cyan-500/10',
+        label: 'MP4',
+        sub: 'VIDEO',
+        pill: 'bg-cyan-500/20 text-cyan-300 border-cyan-400/30'
+      };
+    }
+    if (fmt === '3GP') {
+      return {
+        bg: 'bg-gradient-to-br from-emerald-500/20 via-teal-600/15 to-cyan-600/20 text-emerald-300 border-emerald-500/40 shadow-emerald-500/10',
+        label: '3GP',
+        sub: 'MOBILE',
+        pill: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/30'
+      };
+    }
+    if (fmt === 'MP3') {
+      return {
+        bg: 'bg-gradient-to-br from-purple-500/20 via-fuchsia-600/15 to-pink-600/20 text-purple-300 border-purple-500/40 shadow-purple-500/10',
+        label: 'MP3',
+        sub: 'AUDIO',
+        pill: 'bg-purple-500/20 text-purple-300 border-purple-400/30'
+      };
+    }
+    if (fmt === 'M4A') {
+      return {
+        bg: 'bg-gradient-to-br from-indigo-500/20 via-blue-600/15 to-sky-600/20 text-indigo-300 border-indigo-500/40 shadow-indigo-500/10',
+        label: 'M4A',
+        sub: 'AUDIO',
+        pill: 'bg-indigo-500/20 text-indigo-300 border-indigo-400/30'
+      };
+    }
+    if (fmt === 'WEBM') {
+      return {
+        bg: 'bg-gradient-to-br from-yellow-500/20 via-amber-600/15 to-orange-600/20 text-yellow-300 border-yellow-500/40 shadow-yellow-500/10',
+        label: 'WEBM',
+        sub: 'VIDEO',
+        pill: 'bg-yellow-500/20 text-yellow-300 border-yellow-400/30'
+      };
+    }
+    return {
+      bg: isAudio ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-red-500/20 text-red-300 border-red-500/30',
+      label: fmt || (isAudio ? 'AUD' : 'VID'),
+      sub: isAudio ? 'AUDIO' : 'VIDEO',
+      pill: isAudio ? 'bg-purple-500/20 text-purple-300 border-purple-400/30' : 'bg-red-500/20 text-red-300 border-red-400/30'
+    };
+  };
+
   const getAudioTrackHint = () => {
     if (selectedAudioTrack === 'all') {
       return 'Video downloads will be packaged as MKV with every detected language track. This can take longer to build.'
@@ -648,30 +704,38 @@ function App() {
                   <div className="mt-6 pt-6 border-t border-white/10">
                     <p className="text-sm text-gray-400 mb-4">Select download format:</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {videoInfo.formats.map((option, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleDownload(option)}
-                          disabled={isDownloading}
-                          className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-red-500/50 transition-all group"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${option.quality.startsWith('Audio') ? 'bg-purple-500/20' : 'bg-red-500/20'
-                              }`}>
-                              {option.quality.startsWith('Audio') ? (
-                                <Music className="w-5 h-5 text-purple-400" />
-                              ) : (
-                                <FileVideo className="w-5 h-5 text-red-400" />
-                              )}
+                      {videoInfo.formats.map((option, index) => {
+                        const dispFmt = getDisplayedFormat(option);
+                        const isAudio = option.quality.startsWith('Audio') || option.quality === 'Audio Only';
+                        const badge = getFormatBadgeDetails(dispFmt, isAudio);
+
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => handleDownload(option)}
+                            disabled={isDownloading}
+                            className="flex items-center justify-between p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-red-500/50 transition-all group shadow-sm hover:shadow-md"
+                          >
+                            <div className="flex items-center gap-3">
+                              {/* Dedicated Real Format Badge */}
+                              <div className={`w-11 h-11 rounded-xl flex flex-col items-center justify-center border ${badge.bg} shadow-sm shrink-0 transition-transform group-hover:scale-105 select-none`}>
+                                <span className="text-[12px] font-black tracking-wider leading-none font-mono">{badge.label}</span>
+                                <span className="text-[7.5px] font-bold tracking-widest mt-0.5 opacity-80">{badge.sub}</span>
+                              </div>
+                              <div className="text-left">
+                                <p className="font-medium text-white group-hover:text-red-300 transition-colors">{option.quality}</p>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border font-mono ${badge.pill}`}>
+                                    {dispFmt}
+                                  </span>
+                                  <span className="text-xs text-gray-400">• {option.size}</span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="text-left">
-                              <p className="font-medium text-white">{option.quality}</p>
-                              <p className="text-xs text-gray-500">{getDisplayedFormat(option)} • {option.size}</p>
-                            </div>
-                          </div>
-                          <Download className="w-4 h-4 text-gray-500 group-hover:text-red-400 transition-colors" />
-                        </button>
-                      ))}
+                            <Download className="w-4 h-4 text-gray-500 group-hover:text-red-400 transition-colors" />
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {/* Download Progress */}
