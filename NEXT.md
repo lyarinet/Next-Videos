@@ -4,12 +4,14 @@ We are constantly evolving to provide the fastest, cleanest, and most versatile 
 
 | Category | Feature / Milestone | Target Platform | Status |
 | :--- | :--- | :--- | :--- |
-| **Browser Extension** | Official Chrome Extension (Manifest V3) | Google Chrome, Edge, Brave | ✅ **Released (v1.0)** |
+| **Desktop Application** | Native Windows App (`Next-Videos.exe`) & Setup Suite | Windows 10 / 11 | ✅ **Ready & Released (v1.0)** |
+| **Browser Extension** | Official Chrome Extension (Manifest V3) | Google Chrome, Edge, Brave | ✅ **Ready & Released (v1.0)** |
+| **UI & Theming** | Sober Studio Minimal Luxury & Multi-Theme Engine | Web, Desktop, Extension | ✅ **Ready & Released (v1.0)** |
 | **Browser Extension** | Firefox Add-on & Safari Web Extension | Mozilla Firefox, Apple Safari | 🔄 In Development |
+| **Desktop Suite** | macOS Universal (`.dmg`) & Linux (`.AppImage`, `.deb`) | macOS (Apple Silicon / Intel), Linux | 🚧 In Progress |
+| **Core Features** | Full Playlist & Multi-URL Batch Downloader (`.zip`) | Universal Web / Backend | 🚧 In Progress |
 | **Mobile Apps** | Native Android APK with Background Downloader | Android 10+ | 🚧 Planned (Q3 2026) |
 | **Mobile Apps** | iOS Companion App & Shortcuts Integration | iOS 16+ | 📋 Roadmap |
-| **Desktop Suite** | Standalone Desktop Launcher (`.exe`, `.dmg`, `.AppImage`) | Windows, macOS, Linux | 🚧 In Progress |
-| **Core Features** | Full Playlist & Multi-URL Batch Downloader | Universal Web / Backend | 🚧 In Progress |
 | **AI Enhancements** | AI Subtitle Generation (`.srt`/`.vtt`) via Whisper | Universal Engine | 📋 Roadmap |
 | **Cloud Sync** | Direct Cloud Upload (Google Drive, Dropbox, OneDrive) | Universal Web | 📋 Roadmap |
 | **Bots & API** | Telegram & Discord Video Downloader Bots | Telegram, Discord | 📋 Roadmap |
@@ -18,19 +20,25 @@ We are constantly evolving to provide the fastest, cleanest, and most versatile 
 
 ### 🌟 Detailed Phase Breakdown
 
-#### 1. 🔗 Browser Extensions Ecosystem
+#### 1. 💻 Standalone Desktop Applications
+- [x] **Windows Native Desktop App (`Next-Videos.exe`):** Dedicated window mode app launcher with custom logo taskbar icon & zero-console background execution.
+- [x] **Windows Setup Wizard (`Setup-Next-Videos.exe`):** 1-Click graphical installer auto-downloading FFmpeg, yt-dlp, Node runtime & creating desktop shortcuts.
+- [ ] **macOS Package (`.dmg`):** Universal Apple Silicon (M1/M2/M3/M4) and Intel binary with native dark mode support.
+- [ ] **Linux Suite (`.deb`, `.rpm`, `.AppImage`):** Open-source packaging with CLI and GUI modes.
+- [ ] **Hardware Acceleration:** GPU-accelerated transcoding (NVIDIA NVENC / Intel QuickSync / AMD AMF).
+
+#### 2. 🔗 Browser Extensions Ecosystem
 - [x] **Chrome / Edge Extension (v1.0):** Auto-detect active video tab, format/quality selector, SSE live download tracker, and context menu downloader.
 - [ ] **Firefox Add-on:** Ported Manifest V3 with privacy-focused permissions.
+- [ ] **Safari Extension:** macOS and iOS Safari Web Extension companion.
 - [ ] **One-Click Page Overlays:** Embed sleek floating download buttons directly inside YouTube, TikTok, and Instagram player interfaces.
+- [ ] **macOS Package (`.dmg`):** Universal Apple Silicon (M1/M2/M3/M4) and Intel binary with native dark mode support.
+- [ ] **Linux Suite (`.deb`, `.rpm`, `.AppImage`):** Open-source packaging with CLI and GUI modes.
+- [ ] **Hardware Acceleration:** GPU-accelerated transcoding (NVIDIA NVENC / Intel QuickSync / AMD AMF).
 
-#### 2. 📱 Native Mobile Applications
+#### 3. 📱 Native Mobile Applications
 - [ ] **Android Native App (`.apk`):** Native Android downloader powered by Kotlin/React Native with background worker downloads, local media vault, and picture-in-picture player.
 - [ ] **iOS Companion:** Native share-sheet integration for instant video grabbing directly from iOS photos and social apps.
-
-#### 3. 💻 Standalone Desktop Applications
-- [ ] **Windows (`.exe` / `.msi`):** Lightweight desktop shell (Tauri/Electron) with hardware-accelerated transcoding (NVENC / QuickSync).
-- [ ] **macOS (`.dmg`):** Universal Apple Silicon (M1/M2/M3/M4) and Intel build with native dark mode support.
-- [ ] **Linux (`.deb`, `.rpm`, `.AppImage`):** Open-source packaging with CLI and GUI modes.
 
 #### 4. 🚀 Upcoming Advanced Core Features
 - [ ] **Batch & Playlist Downloader:** Download complete YouTube playlists, channel uploads, and Instagram carousels in 1-click as structured `.zip` archives.
