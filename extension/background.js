@@ -42,7 +42,7 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 
     chrome.storage.sync.get(['serverUrl'], (result) => {
       const serverUrl = (result.serverUrl || DEFAULT_SERVER_URL).replace(/\/$/, '');
-      const appUrl = `${serverUrl}/#url=${encodeURIComponent(targetUrl)}`;
+      const appUrl = `${serverUrl}/?url=${encodeURIComponent(targetUrl)}`;
       chrome.tabs.create({ url: appUrl });
     });
   }
@@ -54,7 +54,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     const isSupported = SUPPORTED_DOMAINS.some(domain => tab.url.includes(domain));
     if (isSupported) {
       chrome.action.setBadgeText({ tabId, text: 'VIDEO' });
-      chrome.action.setBadgeBackgroundColor({ tabId, color: '#f97316' });
+      chrome.action.setBadgeBackgroundColor({ tabId, color: '#0099DE' });
     } else {
       chrome.action.setBadgeText({ tabId, text: '' });
     }

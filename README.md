@@ -375,12 +375,9 @@ We are constantly evolving to provide the fastest, cleanest, and most versatile 
 
 #### 2. 🔗 Browser Extensions Ecosystem
 - [x] **Chrome / Edge Extension (v1.0):** Auto-detect active video tab, format/quality selector, SSE live download tracker, and context menu downloader.
+- [x] **One-Click Page Overlays:** Sleek floating & action bar download buttons embedded directly inside YouTube, YouTube Shorts, TikTok, Instagram & X player interfaces.
 - [ ] **Firefox Add-on:** Ported Manifest V3 with privacy-focused permissions.
 - [ ] **Safari Extension:** macOS and iOS Safari Web Extension companion.
-- [ ] **One-Click Page Overlays:** Embed sleek floating download buttons directly inside YouTube, TikTok, and Instagram player interfaces.
-- [ ] **macOS Package (`.dmg`):** Universal Apple Silicon (M1/M2/M3/M4) and Intel binary with native dark mode support.
-- [ ] **Linux Suite (`.deb`, `.rpm`, `.AppImage`):** Open-source packaging with CLI and GUI modes.
-- [ ] **Hardware Acceleration:** GPU-accelerated transcoding (NVIDIA NVENC / Intel QuickSync / AMD AMF).
 
 #### 3. 📱 Native Mobile Applications
 - [ ] **Android Native App (`.apk`):** Native Android downloader powered by Kotlin/React Native with background worker downloads, local media vault, and picture-in-picture player.

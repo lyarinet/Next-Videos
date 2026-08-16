@@ -155,6 +155,22 @@ function App() {
         }
       })
       .catch(() => { })
+
+    // Auto-parse incoming video URL from browser extension / context menu query param (?url=... or #url=...)
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const incomingUrl = searchParams.get('url') || hashParams.get('url');
+      if (incomingUrl) {
+        const decoded = decodeURIComponent(incomingUrl).trim();
+        if (decoded && isValidUrl(decoded)) {
+          setUrl(decoded);
+          fetchVideoInfo(decoded);
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing incoming URL parameter:', e);
+    }
   }, [])
 
   // Debounce URL input to auto-fetch info
