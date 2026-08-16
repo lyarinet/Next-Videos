@@ -1083,6 +1083,7 @@ app.post('/api/download', async (req, res) => {
       }
       downloadProgressMap.set(activeDownloadId, { progress: 100, downloadUrl: `/api/download/file/${downloadedFile}`, error: null });
       updateWorkspaceDownload({ status: 'completed', fileName: downloadedFile, completedAt: new Date().toISOString() });
+      setTimeout(() => cleanOrphanAndOldDownloads(6, 15 * 60 * 1000), 3000);
     }).stdout.on('data', (data) => {
       const match = data.toString().match(/\[download\]\s+([\d\.]+)%/);
       if (match) {
@@ -1811,33 +1812,68 @@ app.get('/{*path}', (req, res) => {
   }
 });
 
-// Start auto-cleanup cron job (runs every 15 minutes)
-// Deletes files older than 1 hour to prevent server disk space overflow
-setInterval(() => {
+// Automated Disk Hygiene Engine
+// Automatically deletes orphan temporary fragments and trims downloads to retain only the most recent files
+function cleanOrphanAndOldDownloads(maxKeep = 6, maxAgeMs = 15 * 60 * 1000) {
   try {
+    if (!fs.existsSync(downloadsDir)) return;
     const files = fs.readdirSync(downloadsDir);
     const now = Date.now();
+
+    // 1. Immediately delete orphan temporary / fragment / intermediate files
     files.forEach(file => {
-      // Ignore hidden files like .gitkeep
       if (file.startsWith('.')) return;
-
+      const isTemporary = file.endsWith('.part') || file.endsWith('.ytdl') || file.endsWith('.tmp') || /\.f\d+([-\w]*)\./i.test(file) || /\.temp\./i.test(file);
       const filePath = path.join(downloadsDir, file);
-      const stat = fs.statSync(filePath);
-
-      // Delete if file older than 1 hour (3600000 ms)
-      if (now - stat.mtimeMs > 3600000) {
-        try {
+      try {
+        const stat = fs.statSync(filePath);
+        // Delete temporary fragments older than 1 minute or files older than maxAgeMs
+        if (isTemporary && (now - stat.mtimeMs > 60000)) {
           fs.unlinkSync(filePath);
-          console.log(`Auto-Cleaned up old media file: ${file}`);
-        } catch (e) {
-          console.error(`Failed to delete old file ${file}:`, e.message);
+          console.log(`[Auto-Clean] Deleted temporary fragment: ${file}`);
+        } else if (now - stat.mtimeMs > maxAgeMs) {
+          fs.unlinkSync(filePath);
+          console.log(`[Auto-Clean] Deleted expired file (>15min): ${file}`);
         }
-      }
+      } catch (_) {}
     });
+
+    // 2. Keep only the most recent 'maxKeep' completed media files (prevent disk accumulation)
+    const validMediaExts = ['.mp4', '.mkv', '.webm', '.avi', '.mov', '.flv', '.ts', '.m4a', '.mp3', '.wav', '.flac', '.aac', '.ogg', '.3gp'];
+    const remainingFiles = fs.readdirSync(downloadsDir)
+      .filter(f => !f.startsWith('.') && validMediaExts.includes(path.extname(f).toLowerCase()))
+      .map(f => {
+        const fp = path.join(downloadsDir, f);
+        try {
+          return { name: f, path: fp, mtime: fs.statSync(fp).mtimeMs };
+        } catch (_) {
+          return null;
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.mtime - a.mtime); // Newest first
+
+    if (remainingFiles.length > maxKeep) {
+      const toDelete = remainingFiles.slice(maxKeep);
+      toDelete.forEach(item => {
+        try {
+          fs.unlinkSync(item.path);
+          console.log(`[Auto-Clean] Removed excess old download to free space: ${item.name}`);
+        } catch (_) {}
+      });
+    }
   } catch (err) {
-    console.error('Cleanup cron error:', err);
+    console.error('[Auto-Clean] Error during cleanup:', err.message);
   }
-}, 15 * 60 * 1000);
+}
+
+// Run auto-cleanup every 2 minutes
+setInterval(() => {
+  cleanOrphanAndOldDownloads(6, 15 * 60 * 1000);
+}, 2 * 60 * 1000);
+
+// Run initial cleanup on server startup
+cleanOrphanAndOldDownloads(6, 15 * 60 * 1000);
 
 // Start the server
 app.listen(PORT, () => {
