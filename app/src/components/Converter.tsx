@@ -84,7 +84,7 @@ export default function Converter({ token }: { token: string | null }) {
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval>
-    if (activeJobId && (!jobStatus || jobStatus.status === 'Processing')) {
+    if (activeJobId && (!jobStatus || jobStatus.status === 'Processing' || jobStatus.status === 'Pending')) {
       interval = setInterval(async () => {
         try {
           const res = await authorizedFetch(`${API_BASE_URL}/convert/status/${activeJobId}`)
@@ -102,7 +102,7 @@ export default function Converter({ token }: { token: string | null }) {
             }
           }
         } catch (e) {}
-      }, 1000)
+      }, 500)
     }
     return () => clearInterval(interval)
   }, [activeJobId, jobStatus, token])
@@ -113,7 +113,7 @@ export default function Converter({ token }: { token: string | null }) {
       return
     }
     try {
-      setJobStatus({ status: 'Pending', progress: 0 })
+      setJobStatus({ status: 'Processing', progress: 5 })
       const payload = isCustom 
         ? { sourceFile, hwaccel, options: { ...options, hwaccel, custom: true } } 
         : { sourceFile, profile, hwaccel }
@@ -303,36 +303,55 @@ export default function Converter({ token }: { token: string | null }) {
           </div>
 
           {jobStatus && (
-            <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4 space-y-3">
+            <div className="mt-4 rounded-xl border border-white/10 bg-slate-950/60 p-4 space-y-3 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  {jobStatus.status === 'Processing' && <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />}
+                  {(jobStatus.status === 'Processing' || jobStatus.status === 'Pending') && (
+                    <Loader2 className="w-4 h-4 text-orange-400 animate-spin" />
+                  )}
                   {jobStatus.status === 'Completed' && <CheckCircle2 className="w-4 h-4 text-green-400" />}
                   {jobStatus.status === 'Failed' && <XCircle className="w-4 h-4 text-red-400" />}
-                  <span className="font-medium text-white">{jobStatus.status}</span>
+                  <span className="font-semibold text-white">
+                    {jobStatus.status === 'Completed' ? 'Conversion Completed' : (jobStatus.status === 'Failed' ? 'Conversion Failed' : 'Converting Video...')}
+                  </span>
+                  {jobStatus.hwaccel && jobStatus.hwaccel !== 'off' && (
+                    <Badge variant="outline" className="text-[10px] text-green-400 border-green-500/30 bg-green-500/10 uppercase">
+                      GPU {jobStatus.hwaccel}
+                    </Badge>
+                  )}
                 </div>
-                {jobStatus.status === 'Processing' && (
-                  <span className="text-sm font-medium text-orange-400">{jobStatus.progress}%</span>
+                {(jobStatus.status === 'Processing' || jobStatus.status === 'Pending') && (
+                  <span className="text-sm font-bold text-orange-400 font-mono">
+                    {Math.max(jobStatus.progress || 0, 5)}%
+                  </span>
                 )}
               </div>
               
-              {jobStatus.status === 'Processing' && (
-                <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                  <div className="h-full bg-red-500 transition-all duration-300" style={{ width: `${jobStatus.progress}%` }} />
+              {(jobStatus.status === 'Processing' || jobStatus.status === 'Pending') && (
+                <div className="space-y-1.5">
+                  <div className="h-3 rounded-full bg-white/10 overflow-hidden p-0.5 border border-white/5">
+                    <div 
+                      className="h-full rounded-full bg-gradient-to-r from-orange-500 via-red-500 to-pink-500 transition-all duration-300 shadow-sm shadow-orange-500/30 animate-pulse" 
+                      style={{ width: `${Math.max(jobStatus.progress || 0, 5)}%` }} 
+                    />
+                  </div>
+                  <p className="text-xs text-gray-400 text-right font-mono">
+                    Processing frames & audio tracks...
+                  </p>
                 </div>
               )}
 
               {jobStatus.resultUrl && (
-                <div className="pt-2">
-                  <a href={jobStatus.resultUrl} target="_blank" rel="noreferrer">
-                    <Button variant="outline" className="border-green-500/30 bg-green-500/10 text-green-300 hover:bg-green-500/20 w-full sm:w-auto">
-                      Download Result
+                <div className="pt-2 flex items-center gap-3">
+                  <a href={jobStatus.resultUrl} target="_blank" rel="noreferrer" className="flex-1 sm:flex-none">
+                    <Button variant="default" className="border border-green-500/40 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white shadow-lg shadow-green-600/20 w-full sm:w-auto font-semibold">
+                      <CheckCircle2 className="w-4 h-4 mr-2" /> Download Converted File
                     </Button>
                   </a>
                 </div>
               )}
               {jobStatus.error && (
-                <p className="text-sm text-red-400 bg-red-400/10 p-2 rounded">{jobStatus.error}</p>
+                <p className="text-sm text-red-400 bg-red-500/10 border border-red-500/20 p-2.5 rounded-lg">{jobStatus.error}</p>
               )}
             </div>
           )}

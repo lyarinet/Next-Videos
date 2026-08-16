@@ -211,6 +211,36 @@
       },
       "downloadHistory": [
         {
+          "id": "ec9b62b8-906b-4eb0-971c-32e1e9546e06",
+          "url": "https://www.instagram.com/reels/DcEZ_JVxiq3/",
+          "title": "Video by esportsverse.in",
+          "quality": "1080p HD",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "Instagram",
+          "status": "completed",
+          "fileName": "1080p ln-lyarinet-1786888254123821.mp4",
+          "createdAt": "2026-08-16T13:51:00.873Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "video",
+            "outputFormat": "MP4",
+            "sizeLimit": "Off",
+            "qualityMode": "Optimal quality",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "audioCodec": "AAC",
+            "noAudio": "Off",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-08-16T13:51:07.806Z"
+        },
+        {
           "id": "a9475017-38ba-439c-aca6-87d942bc08f8",
           "url": "https://www.youtube.com/watch?v=vY31qIX7LzQ",
           "title": "How To Use YouTube's Multi-Language Audio Tracks (MLA)",
