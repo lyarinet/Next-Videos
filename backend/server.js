@@ -1729,6 +1729,36 @@ app.get('/api/convert/files', (req, res) => {
   }
 });
 
+// Purge all files in downloads directory
+app.post(['/api/downloads/clean-all', '/api/admin/clean-downloads'], (req, res) => {
+  try {
+    if (!fs.existsSync(downloadsDir)) {
+      return res.json({ success: true, count: 0, message: 'Downloads directory is empty' });
+    }
+
+    const files = fs.readdirSync(downloadsDir);
+    let deletedCount = 0;
+
+    files.forEach(file => {
+      if (file.startsWith('.')) return; // Keep hidden files like .gitkeep
+      const fp = path.join(downloadsDir, file);
+      try {
+        if (fs.statSync(fp).isFile()) {
+          fs.unlinkSync(fp);
+          deletedCount++;
+        }
+      } catch (e) {
+        console.error(`Failed to delete ${file}:`, e.message);
+      }
+    });
+
+    console.log(`[Storage Cleanup] Purged ${deletedCount} files from downloads directory`);
+    res.json({ success: true, count: deletedCount, message: `Successfully deleted ${deletedCount} downloaded media files.` });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to clean downloads directory', message: err.message });
+  }
+});
+
 app.post('/api/convert', (req, res) => {
   const { sourceFile, profile, options, hwaccel } = req.body;
   if (!sourceFile) return res.status(400).json({ error: 'Source file is required' });

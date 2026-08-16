@@ -24,6 +24,7 @@ export default function Admin() {
     enableWasmConversion: false,
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isCleaningStorage, setIsCleaningStorage] = useState(false);
   const [cookiesStatus, setCookiesStatus] = useState<{ exists: boolean; size?: number; modified?: string } | null>(null);
   const [isUploadingCookies, setIsUploadingCookies] = useState(false);
   const cookiesFileRef = useRef<HTMLInputElement>(null);
@@ -88,6 +89,29 @@ export default function Admin() {
       }
     } catch (_) {
       toast.error('Failed to remove cookies');
+    }
+  };
+
+  const handleCleanAllDownloads = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL downloaded videos and media from the server? This cannot be undone.')) {
+      return;
+    }
+    setIsCleaningStorage(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/admin/clean-downloads`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success(data.message || `Cleaned ${data.count || 0} files.`);
+      } else {
+        toast.error(data.error || 'Failed to clean downloads');
+      }
+    } catch (_) {
+      toast.error('Network error while cleaning storage');
+    } finally {
+      setIsCleaningStorage(false);
     }
   };
 
@@ -414,6 +438,32 @@ export default function Admin() {
                     Remove
                   </Button>
                 )}
+              </div>
+            </div>
+
+            {/* Storage & Disk Cleanup */}
+            <div className="mt-6 space-y-4 shadow-sm p-4 bg-white/5 rounded-xl border border-white/5">
+              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+                <div className="flex items-center gap-2">
+                  <Trash2 className="w-5 h-5 text-red-400" />
+                  <h3 className="text-lg font-semibold text-white">Storage & Disk Cleanup</h3>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-400">
+                Purge all downloaded media files, converted clips, and temporary fragments from the server downloads directory to free up disk space immediately.
+              </p>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  type="button"
+                  onClick={handleCleanAllDownloads}
+                  disabled={isCleaningStorage}
+                  className="bg-red-600 hover:bg-red-700 text-white shadow-lg font-medium"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  {isCleaningStorage ? 'Purging Storage...' : 'Clean All Downloaded Videos'}
+                </Button>
               </div>
             </div>
           </CardContent>

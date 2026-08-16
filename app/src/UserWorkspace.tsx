@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { ArrowLeft, CheckCircle2, Download, History, Loader2, LogOut, Save, Settings2, Shield, User2 } from 'lucide-react'
+import { ArrowLeft, CheckCircle2, Download, History, Loader2, LogOut, Save, Settings2, Shield, User2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -131,6 +131,7 @@ export default function UserWorkspace() {
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadProgress, setDownloadProgress] = useState(0)
   const [siteConfig, setSiteConfig] = useState<any>(null)
+  const [isCleaningStorage, setIsCleaningStorage] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -144,7 +145,7 @@ export default function UserWorkspace() {
 
   useEffect(() => {
     if (token) {
-      fetchWorkspace(token)
+      fetchWorkspace()
     }
     return () => {
       abortControllerRef.current?.abort()
@@ -156,17 +157,18 @@ export default function UserWorkspace() {
 
   const authorizedFetch = async (input: string, init: RequestInit = {}) => {
     const headers = new Headers(init.headers || {})
-    if (token) headers.set('Authorization', `Bearer ${token}`)
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`)
+    }
     return fetch(input, { ...init, headers })
   }
 
-  const fetchWorkspace = async (authToken: string) => {
+  const fetchWorkspace = async () => {
+    if (!token) return
     try {
-      const res = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: { Authorization: `Bearer ${authToken}` }
-      })
-      if (!res.ok) throw new Error('Session expired')
+      const res = await authorizedFetch(`${API_BASE_URL}/workspace`)
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to load workspace')
       setUser(data.user)
       setPreset(data.preset || defaultPreset)
       setDownloadHistory(data.downloadHistory || [])
@@ -176,6 +178,25 @@ export default function UserWorkspace() {
       setUser(null)
       setDownloadHistory([])
       toast.error(err.message || 'Could not load workspace')
+    }
+  }
+
+  const handleCleanAllDownloads = async () => {
+    if (!window.confirm('Are you sure you want to delete ALL downloaded videos and media from server storage?')) return
+    setIsCleaningStorage(true)
+    try {
+      const res = await authorizedFetch(`${API_BASE_URL}/downloads/clean-all`, { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        toast.success(data.message || `Cleaned ${data.count || 0} media files.`)
+        fetchWorkspace()
+      } else {
+        toast.error(data.error || 'Failed to clean downloads')
+      }
+    } catch (_) {
+      toast.error('Network error while cleaning storage')
+    } finally {
+      setIsCleaningStorage(false)
     }
   }
 
@@ -305,7 +326,7 @@ export default function UserWorkspace() {
           window.open(downloadLink, '_blank')
           sse?.close()
           setIsDownloading(false)
-          fetchWorkspace(token || '')
+          fetchWorkspace()
           toast.success('Download completed')
         }
       }
@@ -323,7 +344,7 @@ export default function UserWorkspace() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.message || data.error || 'Download failed')
-      fetchWorkspace(token || '')
+      fetchWorkspace()
     } catch (err: any) {
       toast.error(err.message || 'Download failed')
       setIsDownloading(false)
@@ -707,9 +728,21 @@ export default function UserWorkspace() {
 
         <Card className="bg-slate-900/50 border-white/10 backdrop-blur-xl">
           <CardContent className="p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <History className="w-5 h-5 text-orange-400" />
-              <h2 className="text-xl font-semibold">My Downloads</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-white/10 pb-3">
+              <div className="flex items-center gap-2">
+                <History className="w-5 h-5 text-orange-400" />
+                <h2 className="text-xl font-semibold">My Downloads</h2>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCleanAllDownloads}
+                disabled={isCleaningStorage}
+                className="border-red-500/30 bg-red-500/10 text-red-300 hover:bg-red-500/20 hover:text-white text-xs"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                {isCleaningStorage ? 'Purging Storage...' : 'Clean All Downloaded Videos'}
+              </Button>
             </div>
             <div className="grid gap-3">
               {downloadHistory.length === 0 && <p className="text-sm text-gray-400">No downloads yet.</p>}
