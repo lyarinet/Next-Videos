@@ -50,20 +50,28 @@
 
 * **📡 1000+ Platforms Universal Support:** Powered by `yt-dlp` and `ffmpeg` to download from YouTube, Facebook, Instagram, TikTok, X (Twitter), LinkedIn, Reddit, Twitch, Vimeo, Bilibili, Dailymotion, and 1000+ more.
 * **📊 Real-Time Progress Engine:** Sub-second frame-sync live percentage progress bar using **Server-Sent Events (SSE)**.
+* **✂️ Interactive Real-Time Video Splitter & Trimmer:**
+  * **Frame-Accurate Video Player:** Built-in HTML5 player powered by backend HTTP 206 Range Streaming for instant video seeking.
+  * **Dual Timeline Range Slider:** Dual-handle timeline scrubber with live "Set Start" & "Set End" buttons.
+  * **Instant Lossless StreamCopy:** Extract any portion of a video in under a second with 0% re-encoding quality loss (`-c copy`).
+  * **Equal Parts Splitter (Reels & Shorts):** Automatically split long videos into 15s, 30s, 60s clips ready for TikTok, Instagram Reels, and YouTube Shorts.
+* **📱 Vintage & Old Feature Phone (3GP) Profiles:**
+  * **Feature Phone QCIF (176x144):** H.263 video with AMR narrowband audio for vintage Nokia / Samsung / button phones.
+  * **Feature Phone QVGA (320x240):** MPEG-4 video with AAC audio for classic multimedia devices.
 * **🔊 Multi-Language Dubbed Audio Extraction & MKV Merging:** Full support for YouTube's Multi-Language Audio (MLA) tracks (Hindi, Spanish, English, Urdu, French, Japanese, etc.). Download individual dubbed tracks in MP4 or download **All Audio Tracks** merged into a single multi-track **MKV** container with proper ISO language tags.
 * **🎨 Real Format Badge System:** Branded visual badge icons for all media containers (**MP4**, **MKV**, **3GP**, **MP3**, **M4A**) with dynamic real-time format switching across Web App, User Workspace, and Chrome Extension.
-* **⚡ GPU Hardware Acceleration:** Opt-in GPU-accelerated transcoding (NVIDIA NVENC, Intel QuickSync, AMD AMF) with automatic detection and seamless CPU fallback.
+* **⚡ GPU Hardware Acceleration & Live Progress:** Opt-in GPU-accelerated transcoding (NVIDIA NVENC, Intel QuickSync, AMD AMF) with automatic detection, seamless CPU fallback, and animated real-time progress bar.
 * **🔄 Dual-Engine Video Converter:**
-  * **Server-Side FFmpeg Engine:** Encode to Mobile (240p/480p/720p), PlayStation, Xbox, Web HLS (`m3u8`), Web DASH, and Web Optimized FastStart MP4.
-  * **Client-Side WebAssembly FFmpeg Engine:** Converts videos locally inside the browser using `@ffmpeg/core` with zero server CPU consumption.
+  * **Server-Side FFmpeg Engine:** Encode to Mobile (240p/480p/720p), 3GP Feature Phone, PlayStation, Xbox, Web HLS (`m3u8`), Web DASH, and FastStart MP4.
+  * **Client-Side WebAssembly FFmpeg Engine:** Locally bundled `@ffmpeg/core` running inside Web Workers with **zero external CDN latency** and Cross-Origin Isolation (COOP/COEP).
 * **📱 Mobile-Desktop QR Handoff:**
   * **Send to Phone:** Scan a generated SVG QR code on your desktop to instantly transfer completed downloads to your smartphone.
   * **Send to Desktop:** Scan a QR on your phone to open a zero-install mobile page, paste any video URL, and stream it straight to your desktop downloader.
 * **👤 User Workspace & Custom Presets:** User authentication with `scrypt` password hashing, personal download history, and customizable video encoding presets (bitrate, codecs, CRF/CQ, FPS, aspect ratios).
-* **🛡️ Admin Control Panel (`/#/admin`):** Secure dashboard to edit site titles, hero messages, disclaimer, theme options, and upload `cookies.txt` for restricted or member-only videos.
+* **🛡️ Admin Control Panel & Storage Purge (`/#/admin`):** Secure dashboard to edit site titles, hero messages, disclaimer, theme options, upload `cookies.txt`, and 1-click **Clean All Downloaded Videos** storage purge.
 * **🖼️ Smart Thumbnail Proxy:** Bypass Instagram/Facebook CORS and `403 Forbidden` restrictions with server-side proxy headers.
 * **🧩 Official Chrome Browser Extension (Manifest V3):** Persistent background downloading (continues smoothly even if you switch tabs or close the popup), active tab auto-URL capture, and right-click context menu downloading.
-* **🪟 Native Windows `.exe` Setup & Standalone Launcher:** Graphical Setup Wizard (`Setup-Next-Videos.exe`) and Dedicated App Launcher (`Next-Videos.exe`) with official brand icon.
+* **🪟 Native Windows `.exe` Setup & Standalone Launcher:** Graphical Setup Wizard (`Setup-Next-Videos.exe`) and Dedicated App Launcher (`Next-Videos.exe`) with direct Desktop Quick Access Hub to Workspace and Admin controls.
 
 ---
 
@@ -260,20 +268,30 @@ Because Next-Videos performs real-time video downloading, multi-language audio e
 
 ---
 
-## 🎛️ Dual-Engine Video Converter
+## 🎛️ Media Suite: Video Splitter, Transcoder & WebAssembly
 
-Next-Videos gives you two ways to convert videos:
+Next-Videos offers an end-to-end media manipulation suite inside the **User Workspace** (`/#/workspace`):
 
-1. **Server-Side FFmpeg Engine (`/api/convert`):**
-   * **Mobile Profiles:** Low (240p), Medium (480p), High (720p).
-   * **Console Profiles:** PlayStation & Xbox optimized MP4.
-   * **Web Streaming:** HLS (`.m3u8` playlists) and MPEG-DASH.
-   * **Web Optimized MP4:** FastStart header placement for instant web streaming.
-   * **Custom Encoding:** Custom bitrate, FPS, scale, trim start/end timestamps.
+### 1. ✂️ Interactive Real-Time Video Splitter & Trimmer (`/api/video/split`)
+* **Live HTML5 Preview & Scrubber:** Uses HTTP 206 Range Streaming for instant video seeking.
+* **Dual Timeline Range Slider:** Pick exact start and end points with live "Set Start" & "Set End" controls.
+* **Instant Lossless StreamCopy:** Extract any clip in seconds with **zero re-encoding** and original quality intact (`-c copy`).
+* **Equal Parts Splitter:** Auto-split long videos into 15s, 30s, or 60s clips tailored for TikTok, Instagram Reels, and YouTube Shorts.
+* **Multi-Format Export:** Lossless MP4/MKV, Feature Phone 3GP, and MP3 Audio.
 
-2. **In-Browser WebAssembly Converter ([WasmConverter.tsx](app/src/components/WasmConverter.tsx)):**
-   * Powered by `@ffmpeg/core` running inside Web Workers.
-   * Transcodes downloaded files directly in your browser without utilizing server CPU or bandwidth.
+### 2. ⚡ Server-Side GPU & CPU Video Converter (`/api/convert`)
+* **Feature Phone (3GP) Profiles:**
+  * `QCIF 176x144` (H.263 / AMR narrowband) for vintage button phones.
+  * `QVGA 320x240` (MPEG-4 / AAC) for classic mobile players.
+* **Mobile & Web Profiles:** Low (240p), Medium (480p), High (720p), FastStart MP4, HLS (`.m3u8`), and DASH.
+* **Console Profiles:** PlayStation & Xbox optimized MP4.
+* **GPU Hardware Acceleration:** Opt-in NVIDIA NVENC (`h264_nvenc`), Intel QuickSync (`h264_qsv`), and AMD AMF (`h264_amf`).
+* **Live Progress Bar:** Real-time animated percentage progress tracking with sub-second polling.
+
+### 3. 🌐 Client-Side WebAssembly Converter ([WasmConverter.tsx](app/src/components/WasmConverter.tsx))
+* **Zero External CDN Latency:** Bundled with local `@ffmpeg/core` assets for instant startup.
+* **Full Browser Isolation:** Runs in Web Workers with `Cross-Origin-Opener-Policy` (COOP) and `Cross-Origin-Embedder-Policy` (COEP).
+* **Zero Server Load:** Encodes media directly in the user's browser without consuming server CPU.
 
 ---
 
