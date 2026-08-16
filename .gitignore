@@ -1,6 +1,10 @@
 # Dependencies
 node_modules/
 backend/venv/
+backend/bin/
+bin/
+*.exe
+*.zip
 app/dist/
 combined/
 
