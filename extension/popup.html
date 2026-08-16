@@ -50,6 +50,33 @@
         </button>
       </div>
 
+      <!-- Active Persistent Download Card -->
+      <div id="activeDownloadCard" class="preview-card hidden" style="border: 1px solid rgba(0, 153, 222, 0.4); background: rgba(0, 71, 186, 0.08);">
+        <div class="thumb-wrapper">
+          <img id="activeThumb" src="icons/icon128.png" alt="Video Thumbnail" />
+          <span id="activeDuration" class="duration-tag">0:00</span>
+          <span id="activePlatformTag" class="platform-tag">Active</span>
+        </div>
+        <div class="video-meta">
+          <h3 id="activeTitle" class="video-title">Downloading Video...</h3>
+          <p id="activeQuality" class="video-channel" style="color: #0099DE; font-weight: 600;">1080p HD • MP4</p>
+        </div>
+
+        <div class="progress-section" style="margin-top: 10px;">
+          <div class="progress-info">
+            <span id="activeProgressStatus" style="font-weight: 600;">Downloading in background...</span>
+            <span id="activeProgressPercent" style="color: #0099DE; font-weight: 700;">0%</span>
+          </div>
+          <div class="progress-bar-bg" style="height: 8px; margin-top: 6px;">
+            <div id="activeProgressBarFill" class="progress-bar-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <button id="dismissActiveBtn" class="secondary-btn" style="width: 100%; margin-top: 12px; justify-content: center;">
+          Download Another Video
+        </button>
+      </div>
+
       <!-- Error Message -->
       <div id="errorBox" class="alert-box error hidden">
         <span id="errorText">Error fetching video details.</span>

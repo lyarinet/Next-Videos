@@ -1,10 +1,10 @@
-// Next-Videos Chrome Extension - Popup Logic
+// Next-Videos Chrome Extension - Persistent Popup Logic
 
 const DEFAULT_SERVER_URL = 'http://localhost:3005';
 const CANDIDATE_PORTS = ['3005', '3000', '5000'];
 
 let currentVideoInfo = null;
-let activeDownloadEventSource = null;
+let currentServerUrl = DEFAULT_SERVER_URL;
 
 // DOM Elements
 const videoUrlInput = document.getElementById('videoUrlInput');
@@ -23,10 +23,6 @@ const platformTag = document.getElementById('platformTag');
 const audioTrackSection = document.getElementById('audioTrackSection');
 const audioTrackSelect = document.getElementById('audioTrackSelect');
 const formatsContainer = document.getElementById('formatsContainer');
-const progressSection = document.getElementById('progressSection');
-const progressStatus = document.getElementById('progressStatus');
-const progressPercent = document.getElementById('progressPercent');
-const progressBarFill = document.getElementById('progressBarFill');
 const openAppBtn = document.getElementById('openAppBtn');
 const settingsBtn = document.getElementById('settingsBtn');
 const settingsModal = document.getElementById('settingsModal');
@@ -34,20 +30,37 @@ const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 const serverUrlInput = document.getElementById('serverUrlInput');
 
+// Persistent Active Download Elements
+const activeDownloadCard = document.getElementById('activeDownloadCard');
+const activeThumb = document.getElementById('activeThumb');
+const activeTitle = document.getElementById('activeTitle');
+const activeQuality = document.getElementById('activeQuality');
+const activeDuration = document.getElementById('activeDuration');
+const activePlatformTag = document.getElementById('activePlatformTag');
+const activeProgressStatus = document.getElementById('activeProgressStatus');
+const activeProgressPercent = document.getElementById('activeProgressPercent');
+const activeProgressBarFill = document.getElementById('activeProgressBarFill');
+const dismissActiveBtn = document.getElementById('dismissActiveBtn');
+
+// Handle image load fallbacks
+if (videoThumb) videoThumb.onerror = () => { videoThumb.src = 'icons/icon128.png'; };
+if (activeThumb) activeThumb.onerror = () => { activeThumb.src = 'icons/icon128.png'; };
+
 // Get configured Server URL or auto-detect working local port
 async function getServerUrl() {
   return new Promise((resolve) => {
     chrome.storage.sync.get(['serverUrl'], async (result) => {
       let savedUrl = (result.serverUrl || '').trim().replace(/\/$/, '');
       if (savedUrl) {
-        // Test saved URL
         try {
           const res = await fetch(`${savedUrl}/api/health`, { signal: AbortSignal.timeout(1200) });
-          if (res.ok) return resolve(savedUrl);
+          if (res.ok) {
+            currentServerUrl = savedUrl;
+            return resolve(savedUrl);
+          }
         } catch (_) {}
       }
 
-      // Auto-probe candidate ports
       for (const port of CANDIDATE_PORTS) {
         const testUrl = `http://localhost:${port}`;
         try {
@@ -55,44 +68,143 @@ async function getServerUrl() {
           if (res.ok) {
             chrome.storage.sync.set({ serverUrl: testUrl });
             if (serverUrlInput) serverUrlInput.value = testUrl;
+            currentServerUrl = testUrl;
             return resolve(testUrl);
           }
         } catch (_) {}
       }
 
-      resolve(savedUrl || DEFAULT_SERVER_URL);
+      currentServerUrl = savedUrl || DEFAULT_SERVER_URL;
+      resolve(currentServerUrl);
     });
   });
 }
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
-  // Load server URL in settings input
   const serverUrl = await getServerUrl();
-  serverUrlInput.value = serverUrl;
+  if (serverUrlInput) serverUrlInput.value = serverUrl;
 
-  // Auto-detect URL from active Chrome tab
+  let currentTab = null;
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-    if (tab && tab.url && tab.url.startsWith('http')) {
-      videoUrlInput.value = tab.url;
-      // If on video site, auto-analyze
-      if (
-        tab.url.includes('youtube.com') ||
-        tab.url.includes('youtu.be') ||
-        tab.url.includes('instagram.com') ||
-        tab.url.includes('tiktok.com') ||
-        tab.url.includes('facebook.com') ||
-        tab.url.includes('x.com') ||
-        tab.url.includes('twitter.com') ||
-        tab.url.includes('vimeo.com')
-      ) {
-        fetchVideoInfo(tab.url);
-      }
+    currentTab = tab;
+  } catch (e) {}
+
+  // 1. Check if there is an active background download
+  chrome.storage.local.get(['activeDownload'], async (result) => {
+    const active = result.activeDownload;
+
+    if (active && active.status === 'downloading') {
+      renderActiveDownload(active);
+      return;
     }
-  } catch (e) {
-    console.error('Error querying tab:', e);
+
+    if (active && active.status === 'finished') {
+      // If user switched to another tab or finished more than 3 seconds ago, clear it
+      const timeSinceFinish = Date.now() - (active.finishedAt || 0);
+      const isDifferentTab = currentTab && currentTab.url && currentTab.url !== active.url;
+
+      if (timeSinceFinish > 3000 || isDifferentTab) {
+        chrome.storage.local.remove(['activeDownload']);
+        handleTabAutoDetect(currentTab);
+      } else {
+        renderActiveDownload(active);
+        // Transition after 3 seconds to active tab
+        setTimeout(() => {
+          chrome.storage.local.remove(['activeDownload'], () => {
+            handleTabAutoDetect(currentTab);
+          });
+        }, 3000);
+      }
+      return;
+    }
+
+    // 2. Fresh open: auto-detect URL from active tab
+    handleTabAutoDetect(currentTab);
+  });
+});
+
+function handleTabAutoDetect(tab) {
+  if (tab && tab.url && tab.url.startsWith('http')) {
+    videoUrlInput.value = tab.url;
+    if (
+      tab.url.includes('youtube.com') ||
+      tab.url.includes('youtu.be') ||
+      tab.url.includes('instagram.com') ||
+      tab.url.includes('tiktok.com') ||
+      tab.url.includes('facebook.com') ||
+      tab.url.includes('x.com') ||
+      tab.url.includes('twitter.com') ||
+      tab.url.includes('vimeo.com')
+    ) {
+      fetchVideoInfo(tab.url);
+    }
   }
+}
+
+// Listen to real-time progress updates from Background Service Worker
+chrome.runtime.onMessage.addListener((msg) => {
+  if (msg.action === 'downloadProgressUpdate' && msg.activeDownload) {
+    renderActiveDownload(msg.activeDownload);
+
+    // If just finished, auto dismiss after 3.5 seconds
+    if (msg.activeDownload.status === 'finished') {
+      setTimeout(async () => {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        chrome.storage.local.remove(['activeDownload'], () => {
+          handleTabAutoDetect(tab);
+        });
+      }, 3500);
+    }
+  }
+});
+
+// Render Active Download Card
+function renderActiveDownload(active) {
+  if (!activeDownloadCard) return;
+
+  hideError();
+  previewCard.classList.add('hidden');
+  activeDownloadCard.classList.remove('hidden');
+
+  activeTitle.textContent = active.title || 'Downloading Video...';
+  activeQuality.textContent = `${active.quality || 'Best Quality'} • ${active.format || 'MP4'}`;
+  activeDuration.textContent = active.duration || '';
+  activePlatformTag.textContent = active.platform || 'Next-Videos';
+
+  let thumbUrl = 'icons/icon128.png';
+  if (active.thumbnail) {
+    thumbUrl = active.thumbnail.startsWith('/') ? `${currentServerUrl}${active.thumbnail}` : active.thumbnail;
+  }
+  activeThumb.src = thumbUrl;
+
+  const pct = active.progress || 0;
+  activeProgressPercent.textContent = `${pct}%`;
+  activeProgressBarFill.style.width = `${pct}%`;
+
+  if (active.status === 'finished') {
+    activeProgressStatus.textContent = '✅ Download Complete! Saved to Downloads.';
+    activeProgressBarFill.style.background = '#10b981';
+    dismissActiveBtn.textContent = 'Download Another Video';
+  } else if (active.status === 'error') {
+    activeProgressStatus.textContent = `❌ ${active.error || 'Download Error'}`;
+    activeProgressBarFill.style.background = '#ef4444';
+    dismissActiveBtn.textContent = 'Try Another Video';
+  } else {
+    activeProgressStatus.textContent = `Downloading in background (${pct}%)...`;
+    activeProgressBarFill.style.background = 'linear-gradient(90deg, #0047BA, #0099DE)';
+    dismissActiveBtn.textContent = 'Download Another Video';
+  }
+}
+
+// Dismiss active download to start fresh
+dismissActiveBtn.addEventListener('click', async () => {
+  chrome.storage.local.remove(['activeDownload'], async () => {
+    activeDownloadCard.classList.add('hidden');
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    handleTabAutoDetect(tab);
+  });
 });
 
 // Paste button
@@ -147,7 +259,7 @@ async function fetchVideoInfo(url) {
   hideError();
   setLoading(true);
   previewCard.classList.add('hidden');
-  progressSection.classList.add('hidden');
+  activeDownloadCard.classList.add('hidden');
 
   try {
     const serverUrl = await getServerUrl();
@@ -210,7 +322,7 @@ function renderVideoInfo(info, serverUrl = '') {
         <span class="format-quality">${fmt.quality}</span>
         <span class="format-details">${fmt.format} • ${fmt.size}</span>
       `;
-      btn.addEventListener('click', () => startDownload(fmt));
+      btn.addEventListener('click', () => startPersistentDownload(fmt));
       formatsContainer.appendChild(btn);
     });
   }
@@ -218,81 +330,26 @@ function renderVideoInfo(info, serverUrl = '') {
   previewCard.classList.remove('hidden');
 }
 
-// Start download handler
-async function startDownload(option) {
+// Start download via Background Service Worker
+async function startPersistentDownload(option) {
   if (!currentVideoInfo) return;
 
   const serverUrl = await getServerUrl();
-  const progressId = Date.now().toString();
   const selectedAudio = audioTrackSelect ? audioTrackSelect.value : 'default';
 
-  progressSection.classList.remove('hidden');
-  progressStatus.textContent = `Initializing ${option.quality}...`;
-  progressPercent.textContent = '0%';
-  progressBarFill.style.width = '0%';
-
-  if (activeDownloadEventSource) {
-    activeDownloadEventSource.close();
-  }
-
-  // Connect SSE for progress
-  try {
-    const sse = new EventSource(`${serverUrl}/api/progress/${progressId}`);
-    activeDownloadEventSource = sse;
-
-    sse.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.progress !== undefined) {
-          const percent = Math.min(Math.round(data.progress), 100);
-          progressPercent.textContent = `${percent}%`;
-          progressBarFill.style.width = `${percent}%`;
-          progressStatus.textContent = `Downloading ${option.quality}...`;
-        }
-
-        if (data.downloadUrl) {
-          const downloadPath = data.downloadUrl.startsWith('/') ? data.downloadUrl : `/${data.downloadUrl}`;
-          const finalUrl = `${serverUrl}${downloadPath}`;
-          progressStatus.textContent = 'Download Complete!';
-          progressPercent.textContent = '100%';
-          progressBarFill.style.width = '100%';
-          chrome.tabs.create({ url: finalUrl });
-          sse.close();
-        }
-
-        if (data.error) {
-          showError(data.error);
-          sse.close();
-        }
-      } catch (e) {
-        console.error('SSE parse error:', e);
-      }
-    };
-
-    sse.onerror = () => {
-      sse.close();
-    };
-
-    // Send Download Request to API
-    const response = await fetch(`${serverUrl}/api/download`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        url: currentVideoInfo.url || videoUrlInput.value.trim(),
-        quality: option.quality,
-        format: option.format,
-        downloadId: progressId,
-        audioTrack: selectedAudio
-      })
-    });
-
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.message || errData.error || 'Download initialization failed');
+  chrome.runtime.sendMessage({
+    action: 'startBackgroundDownload',
+    payload: {
+      videoInfo: currentVideoInfo,
+      option,
+      audioTrack: selectedAudio,
+      serverUrl
     }
-  } catch (err) {
-    showError(err.message || 'Download error occurred.');
-  }
+  }, (res) => {
+    if (res && res.activeDownload) {
+      renderActiveDownload(res.activeDownload);
+    }
+  });
 }
 
 // Helpers

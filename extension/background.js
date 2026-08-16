@@ -60,3 +60,168 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     }
   }
 });
+
+// Persistent Background Download Engine
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'startBackgroundDownload') {
+    const { videoInfo, option, audioTrack, serverUrl } = request.payload;
+    const downloadId = Date.now().toString();
+
+    const activeDownload = {
+      downloadId,
+      url: videoInfo.url,
+      title: videoInfo.title || 'Video',
+      thumbnail: videoInfo.thumbnail || '',
+      platform: videoInfo.platform || 'Video',
+      duration: videoInfo.duration || '',
+      channel: videoInfo.channel || '',
+      quality: option.quality,
+      format: option.format,
+      progress: 0,
+      status: 'downloading',
+      error: null,
+      serverUrl: serverUrl || DEFAULT_SERVER_URL,
+      startedAt: Date.now()
+    };
+
+    chrome.storage.local.set({ activeDownload });
+    executeBackgroundDownload(activeDownload, audioTrack);
+
+    sendResponse({ success: true, activeDownload });
+    return true;
+  }
+
+  if (request.action === 'cancelActiveDownload') {
+    chrome.storage.local.remove(['activeDownload'], () => {
+      sendResponse({ success: true });
+    });
+    return true;
+  }
+});
+
+/**
+ * Execute Download and monitor SSE progress persistently in Background Service Worker
+ */
+async function executeBackgroundDownload(activeDownload, audioTrack) {
+  const { downloadId, url, quality, format, serverUrl } = activeDownload;
+
+  try {
+    const response = await fetch(`${serverUrl}/api/download`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        url,
+        quality,
+        format,
+        downloadId,
+        audioTrack: audioTrack || 'default'
+      })
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.message || errData.error || 'Server rejected download request');
+    }
+
+    const eventSourceUrl = `${serverUrl}/api/progress/${downloadId}`;
+    const sseResponse = await fetch(eventSourceUrl);
+    const reader = sseResponse.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const chunks = buffer.split('\n\n');
+      buffer = chunks.pop();
+
+      for (const chunk of chunks) {
+        if (chunk.startsWith('data:')) {
+          try {
+            const data = JSON.parse(chunk.replace(/^data:\s*/, ''));
+
+            if (data.progress !== undefined) {
+              activeDownload.progress = Math.min(Math.round(data.progress), 100);
+              activeDownload.status = 'downloading';
+              chrome.storage.local.set({ activeDownload });
+
+              chrome.runtime.sendMessage({
+                action: 'downloadProgressUpdate',
+                activeDownload
+              }).catch(() => {});
+            }
+
+            if (data.downloadUrl) {
+              const downloadPath = data.downloadUrl.startsWith('/') ? data.downloadUrl : `/${data.downloadUrl}`;
+              const finalFileUrl = `${serverUrl}${downloadPath}`;
+
+              activeDownload.progress = 100;
+              activeDownload.status = 'finished';
+              activeDownload.finishedAt = Date.now();
+              activeDownload.downloadUrl = finalFileUrl;
+              chrome.storage.local.set({ activeDownload });
+
+              // Native Chrome Download
+              chrome.downloads.download({
+                url: finalFileUrl,
+                saveAs: false
+              }, () => {
+                if (chrome.runtime.lastError) {
+                  chrome.tabs.create({ url: finalFileUrl });
+                }
+              });
+
+              chrome.runtime.sendMessage({
+                action: 'downloadProgressUpdate',
+                activeDownload
+              }).catch(() => {});
+
+              // Auto-clear from storage after 6 seconds so next opens are fresh
+              setTimeout(() => {
+                chrome.storage.local.get(['activeDownload'], (res) => {
+                  if (res.activeDownload && res.activeDownload.downloadId === downloadId && res.activeDownload.status === 'finished') {
+                    chrome.storage.local.remove(['activeDownload']);
+                  }
+                });
+              }, 6000);
+
+              return;
+            }
+
+            if (data.error) {
+              activeDownload.status = 'error';
+              activeDownload.error = data.error;
+              chrome.storage.local.set({ activeDownload });
+
+              chrome.runtime.sendMessage({
+                action: 'downloadProgressUpdate',
+                activeDownload
+              }).catch(() => {});
+
+              setTimeout(() => {
+                chrome.storage.local.remove(['activeDownload']);
+              }, 5000);
+
+              return;
+            }
+          } catch (e) {}
+        }
+      }
+    }
+  } catch (err) {
+    activeDownload.status = 'error';
+    activeDownload.error = err.message || 'Download failed';
+    chrome.storage.local.set({ activeDownload });
+
+    chrome.runtime.sendMessage({
+      action: 'downloadProgressUpdate',
+      activeDownload
+    }).catch(() => {});
+
+    setTimeout(() => {
+      chrome.storage.local.remove(['activeDownload']);
+    }, 5000);
+  }
+}
