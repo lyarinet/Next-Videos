@@ -222,16 +222,30 @@ export default function Converter({ token }: { token: string | null }) {
           {!isCustom ? (
             <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
               {[
-                'Mobile Low', 'Mobile Medium', 'Mobile High', 
-                'Console PlayStation', 'Console Xbox', 
-                'Web HLS', 'Web DASH', 'Web Optimized MP4'
+                'Feature Phone (QCIF 176x144)',
+                'Feature Phone (QVGA 320x240)',
+                'Mobile Low', 
+                'Mobile Medium', 
+                'Mobile High', 
+                'Console PlayStation', 
+                'Console Xbox', 
+                'Web HLS', 
+                'Web DASH', 
+                'Web Optimized MP4'
               ].map(p => (
                 <button
                   key={p}
                   onClick={() => setProfile(p)}
-                  className={`p-3 rounded-lg text-left border transition-colors ${profile === p ? 'bg-red-500/10 border-red-400/40 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
+                  className={`p-3 rounded-lg text-left border transition-colors ${profile === p ? 'bg-orange-500/15 border-orange-400/50 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}
                 >
-                  <div className="font-medium text-sm">{p}</div>
+                  <div className="font-medium text-sm flex items-center justify-between">
+                    <span>{p}</span>
+                    {p.includes('Feature Phone') && (
+                      <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300 text-[10px] px-1.5 py-0 font-mono">
+                        3GP
+                      </Badge>
+                    )}
+                  </div>
                 </button>
               ))}
             </div>
@@ -240,19 +254,19 @@ export default function Converter({ token }: { token: string | null }) {
               <div>
                 <label className="text-sm text-gray-400 mb-1 block">Output Format</label>
                 <select value={options.format} onChange={e => setOptions({...options, format: e.target.value})} className="h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 text-white">
-                  {['MP4', 'MKV', 'AVI', 'WEBM', 'MOV', '3GP'].map(f => <option key={f} value={f} className="bg-slate-900">{f}</option>)}
+                  {['MP4', '3GP', 'MKV', 'AVI', 'WEBM', 'MOV'].map(f => <option key={f} value={f} className="bg-slate-900">{f}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-sm text-gray-400 mb-1 block">Video Codec</label>
                 <select value={options.vcodec} onChange={e => setOptions({...options, vcodec: e.target.value})} className="h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 text-white">
-                  {['libx264', 'libx265', 'libvpx', 'libvpx-vp9', 'mpeg4'].map(c => <option key={c} value={c} className="bg-slate-900">{c}</option>)}
+                  {['libx264', 'h263', 'mpeg4', 'libx265', 'libvpx', 'libvpx-vp9'].map(c => <option key={c} value={c} className="bg-slate-900">{c}</option>)}
                 </select>
               </div>
               <div>
                 <label className="text-sm text-gray-400 mb-1 block">Audio Codec</label>
                 <select value={options.acodec} onChange={e => setOptions({...options, acodec: e.target.value})} className="h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 text-white">
-                  {['aac', 'mp3', 'libopus', 'flac'].map(c => <option key={c} value={c} className="bg-slate-900">{c}</option>)}
+                  {['aac', 'amr_nb', 'mp3', 'libopus', 'flac'].map(c => <option key={c} value={c} className="bg-slate-900">{c}</option>)}
                 </select>
               </div>
               <div>

@@ -1742,6 +1742,8 @@ app.post('/api/convert', (req, res) => {
   let outExt = 'mp4';
   if (options && options.format) {
     outExt = options.format.toLowerCase();
+  } else if (profile && (profile.includes('3GP') || profile.includes('Feature Phone'))) {
+    outExt = '3gp';
   } else if (profile && profile.includes('HLS')) {
     outExt = 'm3u8';
   }
@@ -1766,7 +1768,13 @@ app.post('/api/convert', (req, res) => {
     if (options.trimStart) ffmpegCmd += ` -ss ${options.trimStart}`;
     if (options.trimEnd) ffmpegCmd += ` -to ${options.trimEnd}`;
   } else if (profile) {
-    if (profile === 'Mobile Low') {
+    if (profile === 'Feature Phone 3GP (176x144 QCIF / H.263 / AMR)' || profile === 'Feature Phone (QCIF 176x144)') {
+      // Classic Nokia / Java / Keypad Phone format (176x144, 15fps, H.263, AMR-NB 8kHz)
+      ffmpegCmd += ` -s 176x144 -r 15 -c:v h263 -b:v 128k -c:a amr_nb -ar 8000 -ac 1 -b:a 12.2k`;
+    } else if (profile === 'Feature Phone 3GP (320x240 QVGA / MPEG-4 / AAC)' || profile === 'Feature Phone (QVGA 320x240)') {
+      // High Quality 3GP format for color keypad phones (320x240, 20fps, MPEG-4, AAC)
+      ffmpegCmd += ` -s 320x240 -r 20 -c:v mpeg4 -b:v 320k -c:a aac -ar 32000 -ac 2 -b:a 48k`;
+    } else if (profile === 'Mobile Low') {
       ffmpegCmd += ` -vf scale=-2:240 -c:v ${vcodec} ${extraFlags} -b:v 400k -c:a aac -b:a 64k`;
     } else if (profile === 'Mobile Medium') {
       ffmpegCmd += ` -vf scale=-2:480 -c:v ${vcodec} ${extraFlags} -b:v 1000k -c:a aac -b:a 128k`;
@@ -1872,7 +1880,12 @@ app.post('/api/video/split', (req, res) => {
         const duration = Math.max(0.1, endTime - startTime);
         let ffmpegCmd = `"${getFfmpegPath()}" -y -ss ${startTime} -i "${sourcePath}" -t ${duration}`;
 
-        if (lossless && (outExt === 'mp4' || outExt === 'mkv')) {
+        if (outExt === '3gp') {
+          // Feature Phone 3GP compliant encoding (320x240, 20fps, MPEG-4, AAC)
+          ffmpegCmd += ` -s 320x240 -r 20 -c:v mpeg4 -b:v 320k -c:a aac -ar 32000 -ac 2 -b:a 48k "${outputPath}"`;
+        } else if (outExt === 'mp3') {
+          ffmpegCmd += ` -vn -c:a mp3 -b:a 192k "${outputPath}"`;
+        } else if (lossless && (outExt === 'mp4' || outExt === 'mkv')) {
           // Lossless ultra-fast stream copy
           ffmpegCmd += ` -c copy "${outputPath}"`;
         } else {

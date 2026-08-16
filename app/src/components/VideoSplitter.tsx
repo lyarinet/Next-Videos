@@ -478,6 +478,7 @@ export default function VideoSplitter({ token }: { token: string | null }) {
                       className="h-9 w-full rounded-lg border border-white/10 bg-slate-950 px-2 text-xs text-white outline-none"
                     >
                       <option value="mp4">MP4 (Universal)</option>
+                      <option value="3gp">3GP (Feature Phone / Keypad)</option>
                       <option value="mkv">MKV (Multi-track)</option>
                       <option value="mp3">MP3 (Audio Only)</option>
                     </select>
