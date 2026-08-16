@@ -650,6 +650,113 @@ const updateUserRecord = (userId, updater) => {
   return nextUser;
 };
 
+const multer = require('multer');
+const upload = multer({ dest: tmpUploadsDir });
+
+// Workspace User Authentication Routes
+app.post(['/api/auth/register', '/auth/register'], (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    if (!username || !email || !password) {
+      return res.status(400).json({ error: 'Username, email, and password are required' });
+    }
+
+    const cleanUsername = String(username).trim();
+    const cleanEmail = String(email).trim().toLowerCase();
+
+    const usersData = readUsersData();
+    const existing = usersData.users.find(u => u.email.toLowerCase() === cleanEmail || u.username.toLowerCase() === cleanUsername.toLowerCase());
+    if (existing) {
+      return res.status(400).json({ error: 'User with this email or username already exists' });
+    }
+
+    const newUser = {
+      id: crypto.randomUUID(),
+      username: cleanUsername,
+      email: cleanEmail,
+      passwordHash: hashPassword(password),
+      password: hashPassword(password),
+      preset: defaultWorkspacePreset(),
+      downloadHistory: [],
+      createdAt: new Date().toISOString()
+    };
+
+    usersData.users.push(newUser);
+    writeUsersData(usersData);
+
+    const token = crypto.randomBytes(32).toString('hex');
+    userSessions.set(token, newUser.id);
+
+    console.log(`[Workspace Auth] Registered new user: ${cleanUsername} (${cleanEmail})`);
+    res.json({
+      token,
+      user: publicUser(newUser),
+      preset: newUser.preset,
+      downloadHistory: newUser.downloadHistory
+    });
+  } catch (err) {
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Failed to create account', message: err.message });
+  }
+});
+
+app.post(['/api/auth/login', '/auth/login'], (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const cleanIdentifier = String(email).trim().toLowerCase();
+    const usersData = readUsersData();
+    const user = usersData.users.find(u => (u.email && u.email.toLowerCase() === cleanIdentifier) || (u.username && u.username.toLowerCase() === cleanIdentifier));
+
+    const storedHash = user ? (user.passwordHash || user.password) : null;
+    if (!user || !verifyPassword(password, storedHash)) {
+      return res.status(401).json({ error: 'Invalid email/username or password' });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    userSessions.set(token, user.id);
+
+    console.log(`[Workspace Auth] User logged in: ${user.username}`);
+    res.json({
+      token,
+      user: publicUser(user),
+      preset: user.preset || defaultWorkspacePreset(),
+      downloadHistory: user.downloadHistory || []
+    });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Failed to login', message: err.message });
+  }
+});
+
+app.post(['/api/auth/logout', '/auth/logout'], (req, res) => {
+  const token = getUserTokenFromRequest(req);
+  if (token) {
+    userSessions.delete(token);
+  }
+  res.json({ success: true, message: 'Logged out' });
+});
+
+app.get(['/api/workspace', '/api/auth/me'], verifyUser, (req, res) => {
+  res.json({
+    user: publicUser(req.user),
+    preset: req.user.preset || defaultWorkspacePreset(),
+    downloadHistory: req.user.downloadHistory || []
+  });
+});
+
+app.post(['/api/user/preset', '/api/workspace/preset'], verifyUser, (req, res) => {
+  const sanitized = sanitizeWorkspacePreset(req.body);
+  const updatedUser = updateUserRecord(req.user.id, (user) => ({
+    ...user,
+    preset: sanitized
+  }));
+  res.json({ success: true, preset: updatedUser.preset });
+});
+
 // Admin setup
 const adminToken = crypto.randomBytes(32).toString('hex');
 const adminUsername = process.env.ADMIN_USERNAME || 'admin';
@@ -660,6 +767,74 @@ console.log(`URL: /#/admin`);
 console.log(`USERNAME: ${adminUsername}`);
 console.log(`PASSWORD: ${adminPassword}`);
 console.log('=================================\n');
+
+const verifyAdmin = (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1];
+  if (token && token === adminToken) {
+    return next();
+  }
+  res.status(401).json({ error: 'Unauthorized admin access' });
+};
+
+// Admin Login
+app.post(['/api/admin/login', '/admin/login'], (req, res) => {
+  const { username, password } = req.body;
+  if (username === adminUsername && password === adminPassword) {
+    return res.json({ token: adminToken, message: 'Admin authenticated successfully' });
+  }
+  res.status(401).json({ error: 'Invalid admin credentials' });
+});
+
+// Site Configuration endpoints
+app.get(['/api/config', '/config'], (req, res) => {
+  try {
+    if (fs.existsSync(configFilePath)) {
+      const data = JSON.parse(fs.readFileSync(configFilePath, 'utf8') || '{}');
+      return res.json(data);
+    }
+    res.json({});
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read site config' });
+  }
+});
+
+app.post(['/api/config', '/config'], verifyAdmin, (req, res) => {
+  try {
+    fs.writeFileSync(configFilePath, JSON.stringify(req.body, null, 2));
+    res.json({ message: 'Configuration saved successfully' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save configuration' });
+  }
+});
+
+// YouTube Cookies Management for Admin
+app.get(['/api/admin/cookies-status', '/admin/cookies-status'], verifyAdmin, (req, res) => {
+  const cookiesPath = path.join(__dirname, 'cookies.txt');
+  if (fs.existsSync(cookiesPath)) {
+    const stats = fs.statSync(cookiesPath);
+    return res.json({ exists: true, size: stats.size, modified: stats.mtime });
+  }
+  res.json({ exists: false });
+});
+
+app.post(['/api/admin/upload-cookies', '/admin/upload-cookies'], verifyAdmin, upload.single('cookies'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No file uploaded' });
+  }
+  const cookiesPath = path.join(__dirname, 'cookies.txt');
+  fs.rename(req.file.path, cookiesPath, (err) => {
+    if (err) return res.status(500).json({ error: 'Failed to save cookies.txt' });
+    res.json({ message: 'cookies.txt uploaded successfully' });
+  });
+});
+
+app.delete(['/api/admin/cookies', '/admin/cookies'], verifyAdmin, (req, res) => {
+  const cookiesPath = path.join(__dirname, 'cookies.txt');
+  if (fs.existsSync(cookiesPath)) {
+    fs.unlinkSync(cookiesPath);
+  }
+  res.json({ message: 'cookies.txt removed' });
+});
 
 // Global state for SSE real-time download tracking
 const downloadProgressMap = new Map();
@@ -802,156 +977,6 @@ app.get('/api/config', (req, res) => {
       error: 'Failed to read config',
       message: err.message
     });
-  }
-});
-
-// Admin Authentication API
-app.post('/api/admin/login', (req, res) => {
-  const { username, password } = req.body || {};
-  if (username === adminUsername && password === adminPassword) {
-    res.json({ token: adminToken });
-  } else {
-    res.status(401).json({ error: 'Invalid username or password' });
-  }
-});
-
-app.post('/api/auth/register', (req, res) => {
-  const { username, email, password } = req.body || {};
-  const cleanUsername = sanitizeFilenamePart(username || '').replace(/\s+/g, '-').slice(0, 40);
-  const cleanEmail = String(email || '').trim().toLowerCase().slice(0, 120);
-  const rawPassword = String(password || '');
-
-  if (!cleanUsername || !cleanEmail || rawPassword.length < 6) {
-    return res.status(400).json({ error: 'Username, email, and password (min 6 chars) are required' });
-  }
-
-  const usersData = readUsersData();
-  const emailExists = usersData.users.some((item) => item.email === cleanEmail);
-  const usernameExists = usersData.users.some((item) => item.username.toLowerCase() === cleanUsername.toLowerCase());
-  if (emailExists || usernameExists) {
-    return res.status(409).json({ error: 'User already exists' });
-  }
-
-  const user = {
-    id: crypto.randomUUID(),
-    username: cleanUsername,
-    email: cleanEmail,
-    passwordHash: hashPassword(rawPassword),
-    createdAt: new Date().toISOString(),
-    preset: defaultWorkspacePreset(),
-    downloadHistory: []
-  };
-
-  usersData.users.push(user);
-  writeUsersData(usersData);
-
-  const token = crypto.randomBytes(32).toString('hex');
-  userSessions.set(token, user.id);
-  res.json({ token, user: publicUser(user), preset: user.preset, downloadHistory: user.downloadHistory });
-});
-
-app.post('/api/auth/login', (req, res) => {
-  const { email, password } = req.body || {};
-  const cleanEmail = String(email || '').trim().toLowerCase();
-  const usersData = readUsersData();
-  const user = usersData.users.find((item) => item.email === cleanEmail);
-
-  if (!user || !verifyPassword(password || '', user.passwordHash)) {
-    return res.status(401).json({ error: 'Invalid email or password' });
-  }
-
-  const token = crypto.randomBytes(32).toString('hex');
-  userSessions.set(token, user.id);
-  res.json({ token, user: publicUser(user), preset: user.preset || defaultWorkspacePreset(), downloadHistory: user.downloadHistory || [] });
-});
-
-app.post('/api/auth/logout', verifyUser, (req, res) => {
-  const token = getUserTokenFromRequest(req);
-  if (token) userSessions.delete(token);
-  res.json({ success: true });
-});
-
-app.get('/api/auth/me', verifyUser, (req, res) => {
-  res.json({
-    user: publicUser(req.user),
-    preset: req.user.preset || defaultWorkspacePreset(),
-    downloadHistory: req.user.downloadHistory || []
-  });
-});
-
-app.get('/api/user/workspace', verifyUser, (req, res) => {
-  res.json({
-    user: publicUser(req.user),
-    preset: req.user.preset || defaultWorkspacePreset(),
-    downloadHistory: req.user.downloadHistory || []
-  });
-});
-
-app.post('/api/user/preset', verifyUser, (req, res) => {
-  const nextPreset = sanitizeWorkspacePreset(req.body);
-  const updatedUser = updateUserRecord(req.user.id, (currentUser) => ({
-    ...currentUser,
-    preset: nextPreset
-  }));
-
-  if (!updatedUser) {
-    return res.status(404).json({ error: 'User not found' });
-  }
-
-  res.json({ success: true, preset: updatedUser.preset });
-});
-
-app.get('/api/user/downloads', verifyUser, (req, res) => {
-  res.json({ downloadHistory: req.user.downloadHistory || [] });
-});
-
-const verifyAdmin = (req, res, next) => {
-  const token = req.headers.authorization?.split(' ')[1];
-  if (token && token === adminToken) {
-    next();
-  } else {
-    res.status(401).json({ error: 'Unauthorized' });
-  }
-};
-
-app.post('/api/admin/config', verifyAdmin, (req, res) => {
-  try {
-    const currentConfig = JSON.parse(fs.readFileSync(configFilePath, 'utf8') || '{}');
-    const newConfig = { ...currentConfig, ...req.body };
-    fs.writeFileSync(configFilePath, JSON.stringify(newConfig, null, 2));
-    res.json({ success: true, config: newConfig });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to write config' });
-  }
-});
-
-// Cookies management — upload, status, delete
-const multer = require('multer');
-const cookiesPath = path.join(__dirname, 'cookies.txt');
-const multerUpload = multer({ dest: tmpUploadsDir });
-
-app.get('/api/admin/cookies-status', verifyAdmin, (req, res) => {
-  if (!fs.existsSync(cookiesPath)) return res.json({ exists: false });
-  const stat = fs.statSync(cookiesPath);
-  res.json({ exists: true, size: stat.size, modified: stat.mtime });
-});
-
-app.post('/api/admin/upload-cookies', verifyAdmin, multerUpload.single('cookies'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-  try {
-    fs.renameSync(req.file.path, cookiesPath);
-    res.json({ success: true, message: 'cookies.txt saved — all future downloads will use it' });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to save cookies file' });
-  }
-});
-
-app.delete('/api/admin/cookies', verifyAdmin, (req, res) => {
-  try {
-    if (fs.existsSync(cookiesPath)) fs.unlinkSync(cookiesPath);
-    res.json({ success: true });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to delete cookies file' });
   }
 });
 
