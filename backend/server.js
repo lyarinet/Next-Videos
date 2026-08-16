@@ -133,67 +133,19 @@ async function probeAudioTracksFromFormats(audioFormats) {
   return tracks;
 }
 
-const LANGUAGE_DISPLAY_NAMES = {
-  en: 'English',
-  'en-us': 'English (US)',
-  'en-gb': 'English (UK)',
-  hi: 'Hindi (हिंदी)',
-  ur: 'Urdu (اردو)',
-  es: 'Spanish (Español)',
-  'es-419': 'Spanish (Latin America)',
-  'es-es': 'Spanish (Spain)',
-  ar: 'Arabic (العربية)',
-  fr: 'French (Français)',
-  de: 'German (Deutsch)',
-  ru: 'Russian (Русский)',
-  pt: 'Portuguese (Português)',
-  'pt-br': 'Portuguese (Brazil)',
-  ja: 'Japanese (日本語)',
-  ko: 'Korean (한국어)',
-  zh: 'Chinese (中文)',
-  'zh-hans': 'Chinese (Simplified)',
-  'zh-hant': 'Chinese (Traditional)',
-  it: 'Italian (Italiano)',
-  tr: 'Turkish (Türkçe)',
-  id: 'Indonesian (Bahasa Indonesia)',
-  bn: 'Bengali (বাংলা)',
-  pa: 'Punjabi (ਪੰਜਾਬੀ)',
-  mr: 'Marathi (मराठी)',
-  ta: 'Tamil (தமிழ்)',
-  te: 'Telugu (తెలుగు)',
-  gu: 'Gujarati (ગુજરાતી)',
-  ml: 'Malayalam (മലയാളം)',
-  kn: 'Kannada (ಕನ್ನಡ)',
-  vi: 'Vietnamese (Tiếng Việt)',
-  th: 'Thai (ไทย)',
-  fa: 'Persian (فارسی)',
-  nl: 'Dutch (Nederlands)',
-  pl: 'Polish (Polski)',
-  uk: 'Ukrainian (Українська)',
-  el: 'Greek (Ελληνικά)',
-  he: 'Hebrew (עברית)',
-  sv: 'Swedish (Svenska)',
-  ro: 'Romanian (Română)',
-  hu: 'Hungarian (Magyar)',
-  cs: 'Czech (Čeština)',
-  ms: 'Malay (Bahasa Melayu)',
-  fil: 'Filipino (Tagalog)'
-};
-
-function getLanguageDisplayName(code, rawNote) {
-  if (!code && !rawNote) return 'Default Audio';
-  const cleanCode = String(code || '').trim().toLowerCase().replace(/_/g, '-');
-  if (LANGUAGE_DISPLAY_NAMES[cleanCode]) return LANGUAGE_DISPLAY_NAMES[cleanCode];
-
-  const base = cleanCode.split('-')[0];
-  if (LANGUAGE_DISPLAY_NAMES[base]) return LANGUAGE_DISPLAY_NAMES[base];
-
-  if (rawNote) {
-    const cleanNote = rawNote.split(',')[0].replace(/\s*\(default\)/gi, '').replace(/\s*original$/gi, '').trim();
-    if (cleanNote) return cleanNote;
+// Auto-extract audio track display name directly from YouTube format metadata
+function extractAudioTrackName(format) {
+  if (format.format_note) {
+    const clean = format.format_note
+      .replace(/,\s*(?:low|medium|high|ultralow|tiny).*$/i, '')
+      .replace(/\s*\(default\)/gi, '')
+      .trim();
+    if (clean) return clean;
   }
-
-  return cleanCode.toUpperCase() || 'Audio Track';
+  if (format.language) {
+    return format.language.toUpperCase();
+  }
+  return 'Original Audio';
 }
 
 const normalizeLanguageCode = (value) => String(value || '').trim().toLowerCase().replace(/_/g, '-');
@@ -713,9 +665,9 @@ app.get('/api/video-info', async (req, res) => {
       //   3. default      — last resort
       const videoData = await fetchYtDlpMetadata(url);
 
-      // Extract unique audio tracks from available formats
+      // Extract unique audio tracks directly from YouTube's video formats
       const audioFormats = videoData.formats ? videoData.formats.filter(f => f.vcodec === 'none' && f.acodec !== 'none') : [];
-      const langMap = new Map();
+      const trackMap = new Map();
 
       for (const f of audioFormats) {
         let langCode = f.language;
@@ -727,19 +679,20 @@ app.get('/api/video-info', async (req, res) => {
           const match = f.format_id.match(/[-_]([a-zA-Z]{2,3}(?:-[a-zA-Z0-9]+)?)$/);
           if (match) langCode = match[1];
         }
+        if (!langCode) {
+          langCode = 'default';
+        }
 
-        if (langCode) {
-          const norm = normalizeLanguageCode(langCode);
-          if (!langMap.has(norm)) {
-            langMap.set(norm, {
-              code: norm,
-              name: getLanguageDisplayName(norm, f.format_note)
-            });
-          }
+        const normCode = normalizeLanguageCode(langCode);
+        if (!trackMap.has(normCode)) {
+          trackMap.set(normCode, {
+            code: normCode,
+            name: extractAudioTrackName(f)
+          });
         }
       }
 
-      let languages = [...langMap.values()];
+      let languages = [...trackMap.values()];
 
       // Deep probing fallback if enabled
       if (ENABLE_DEEP_AUDIO_PROBE && languages.length <= 1 && audioFormats.length > 0) {
