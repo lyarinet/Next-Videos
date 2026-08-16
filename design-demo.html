@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Next-Videos Design Demo</title>
+  <style>
+    :root {
+      --bg: #07111f;
+      --panel: rgba(8, 19, 35, 0.86);
+      --panel-strong: rgba(11, 24, 43, 0.96);
+      --line: rgba(255, 255, 255, 0.09);
+      --soft: #8b9ab0;
+      --text: #eef4ff;
+      --accent: #ff6b2c;
+      --accent-2: #ffb347;
+      --success: #34d399;
+      --chip: rgba(255, 255, 255, 0.06);
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255, 107, 44, 0.22), transparent 28%),
+        radial-gradient(circle at top right, rgba(255, 179, 71, 0.18), transparent 26%),
+        linear-gradient(180deg, #0a1527 0%, #07111f 48%, #050d18 100%);
+      color: var(--text);
+    }
+
+    body {
+      padding: 28px;
+    }
+
+    .shell {
+      max-width: 1380px;
+      margin: 0 auto;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(4, 11, 21, 0.72);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 20px 28px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(4, 10, 18, 0.7);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      color: #08111f;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 12px 30px rgba(255, 107, 44, 0.32);
+    }
+
+    .brand-copy h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      line-height: 1.1;
+    }
+
+    .brand-copy p {
+      margin: 5px 0 0;
+      color: var(--soft);
+      font-size: 0.9rem;
+    }
+
+    .topnav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill,
+    .ghost-btn,
+    .primary-btn,
+    .quality {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--text);
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      text-decoration: none;
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #07111f;
+      border: none;
+      font-weight: 700;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      min-height: 820px;
+    }
+
+    .hero {
+      padding: 34px 28px 32px;
+      border-right: 1px solid var(--line);
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--line);
+      color: #dfe7f4;
+      font-size: 0.88rem;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--success);
+      box-shadow: 0 0 0 5px rgba(52, 211, 153, 0.14);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .headline h2 {
+      margin: 0;
+      font-size: clamp(2.8rem, 5vw, 5rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .headline .accent {
+      display: block;
+      color: #ffc278;
+    }
+
+    .headline p {
+      margin: 18px 0 0;
+      max-width: 36rem;
+      color: var(--soft);
+      font-size: 1.04rem;
+      line-height: 1.7;
+    }
+
+    .stats {
+      display: grid;
+      gap: 14px;
+    }
+
+    .stat {
+      padding: 18px 18px 16px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 1.55rem;
+      margin-bottom: 6px;
+    }
+
+    .stat span {
+      color: var(--soft);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .input-panel {
+      background: var(--panel-strong);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 20px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+    }
+
+    .url-box {
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 18px;
+      padding: 0 18px;
+      display: flex;
+      align-items: center;
+      min-height: 62px;
+    }
+
+    .url-box input {
+      width: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    .url-box input::placeholder {
+      color: #7788a1;
+    }
+
+    .analyze-btn {
+      min-width: 158px;
+      border: none;
+      border-radius: 18px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #07111f;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 18px 40px rgba(255, 107, 44, 0.28);
+    }
+
+    .subtools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .subtools span {
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--line);
+      color: var(--soft);
+      font-size: 0.86rem;
+    }
+
+    .format-panel {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .quality {
+      padding: 14px 14px 12px;
+      border-radius: 18px;
+      text-align: left;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .quality strong {
+      display: block;
+      font-size: 0.98rem;
+      margin-bottom: 4px;
+    }
+
+    .quality span {
+      color: var(--soft);
+      font-size: 0.82rem;
+    }
+
+    .quality.active {
+      background: linear-gradient(180deg, rgba(255, 107, 44, 0.18), rgba(255, 179, 71, 0.08));
+      border-color: rgba(255, 194, 120, 0.4);
+    }
+
+    .platform-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .platform-strip span {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line);
+      color: #dce6f5;
+      font-size: 0.9rem;
+    }
+
+    .preview-side {
+      padding: 34px 28px 32px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0)),
+        rgba(4, 10, 18, 0.28);
+    }
+
+    .preview-card {
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: var(--panel-strong);
+    }
+
+    .preview-media {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      background: #040a13;
+    }
+
+    .preview-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .play-badge,
+    .time-badge,
+    .source-badge {
+      position: absolute;
+      border-radius: 999px;
+      backdrop-filter: blur(14px);
+    }
+
+    .play-badge {
+      inset: 0;
+      margin: auto;
+      width: 82px;
+      height: 82px;
+      display: grid;
+      place-items: center;
+      background: rgba(7, 17, 31, 0.46);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 1.5rem;
+    }
+
+    .time-badge {
+      right: 16px;
+      bottom: 16px;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      background: rgba(6, 14, 25, 0.78);
+    }
+
+    .source-badge {
+      left: 16px;
+      top: 16px;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      background: rgba(6, 14, 25, 0.78);
+      color: #ffd7bf;
+    }
+
+    .preview-body {
+      padding: 20px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .meta-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--soft);
+      font-size: 0.9rem;
+    }
+
+    .audio-panel,
+    .queue-panel,
+    .insight-panel {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 20px;
+      padding: 18px;
+    }
+
+    .audio-panel h3,
+    .queue-panel h3,
+    .insight-panel h3 {
+      margin: 0 0 14px;
+      font-size: 1rem;
+    }
+
+    .audio-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .audio-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid transparent;
+    }
+
+    .audio-item.active {
+      border-color: rgba(255, 194, 120, 0.3);
+      background: rgba(255, 179, 71, 0.08);
+    }
+
+    .audio-item span {
+      color: var(--soft);
+      font-size: 0.88rem;
+    }
+
+    .queue-line {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .queue-line:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .queue-line strong {
+      display: block;
+      font-size: 0.96rem;
+    }
+
+    .queue-line span {
+      color: var(--soft);
+      font-size: 0.84rem;
+    }
+
+    .status {
+      padding: 8px 11px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      border: 1px solid var(--line);
+    }
+
+    .status.live {
+      background: rgba(52, 211, 153, 0.12);
+      color: #8ef0c4;
+    }
+
+    .status.wait {
+      background: rgba(255, 179, 71, 0.12);
+      color: #ffd39a;
+    }
+
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .insight {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--line);
+    }
+
+    .insight strong {
+      display: block;
+      font-size: 1.15rem;
+      margin-bottom: 6px;
+    }
+
+    .insight span {
+      color: var(--soft);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1160px) {
+      .workspace,
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 14px;
+      }
+
+      .shell {
+        border-radius: 22px;
+      }
+
+      .topbar,
+      .hero,
+      .preview-side {
+        padding-left: 18px;
+        padding-right: 18px;
+      }
+
+      .input-row,
+      .format-panel,
+      .insight-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .analyze-btn {
+        min-height: 58px;
+      }
+
+      .headline h2 {
+        font-size: 2.6rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">NV</div>
+        <div class="brand-copy">
+          <h1>Next-Videos</h1>
+          <p>Downloader dashboard redesign demo</p>
+        </div>
+      </div>
+      <nav class="topnav">
+        <a class="pill" href="#">Smart Queue</a>
+        <a class="pill" href="#">Audio Tracks</a>
+        <a class="pill" href="#">Device Ready</a>
+        <a class="primary-btn" href="#">Design Preview</a>
+      </nav>
+    </header>
+
+    <main class="workspace">
+      <section class="hero">
+        <div class="eyebrow">Stable links, cleaner analysis flow, stronger first impression</div>
+
+        <div class="hero-grid">
+          <div class="headline">
+            <h2>
+              Download media with
+              <span class="accent">a sharper control panel</span>
+            </h2>
+            <p>
+              This concept moves the page away from a generic hero and into a focused downloader workspace.
+              The URL action, quality selection, preview, and queue state are visible together so the page feels
+              like a tool from the first screen.
+            </p>
+          </div>
+
+          <div class="stats">
+            <div class="stat">
+              <strong>1 screen</strong>
+              <span>Input, preview, audio selection, and progress direction all stay visible without extra scrolling.</span>
+            </div>
+            <div class="stat">
+              <strong>Cleaner flow</strong>
+              <span>The visual hierarchy pushes the analyze action forward and reduces empty hero space.</span>
+            </div>
+            <div class="stat">
+              <strong>More premium</strong>
+              <span>Warmer contrast, stronger framing, and denser information make it feel more intentional.</span>
+            </div>
+          </div>
+        </div>
+
+        <section class="input-panel">
+          <div class="input-row">
+            <label class="url-box">
+              <input type="text" value="https://www.youtube.com/watch?v=dQw4w9WgXcQ" aria-label="Video URL" />
+            </label>
+            <button class="analyze-btn" type="button">Analyze Video</button>
+          </div>
+
+          <div class="subtools">
+            <span>YouTube</span>
+            <span>Facebook</span>
+            <span>Instagram</span>
+            <span>X / Twitter</span>
+            <span>Audio track picker</span>
+            <span>MKV multi-audio export</span>
+          </div>
+
+          <div class="format-panel">
+            <div class="quality active">
+              <strong>1080p HD</strong>
+              <span>MP4 · recommended</span>
+            </div>
+            <div class="quality">
+              <strong>720p HD</strong>
+              <span>MP4 · lighter file</span>
+            </div>
+            <div class="quality">
+              <strong>Audio Only</strong>
+              <span>MP3 · quick export</span>
+            </div>
+            <div class="quality">
+              <strong>Multi Audio</strong>
+              <span>MKV · all tracks</span>
+            </div>
+          </div>
+        </section>
+
+        <div class="platform-strip">
+          <span>Paste link</span>
+          <span>Review preview</span>
+          <span>Pick quality</span>
+          <span>Choose audio</span>
+          <span>Download</span>
+        </div>
+      </section>
+
+      <aside class="preview-side">
+        <section class="preview-card">
+          <div class="preview-media">
+            <img src="https://i.ytimg.com/vi/dQw4w9WgXcQ/maxresdefault.jpg" alt="Video preview" />
+            <div class="source-badge">YouTube detected</div>
+            <div class="play-badge">▶</div>
+            <div class="time-badge">3:33</div>
+          </div>
+
+          <div class="preview-body">
+            <div>
+              <h3 style="margin:0 0 10px;font-size:1.28rem;line-height:1.35;">Rick Astley - Never Gonna Give You Up (Official Video)</h3>
+              <div class="meta-line">
+                <span>Rick Astley</span>
+                <span>1.6B views</span>
+                <span>Analyzed successfully</span>
+              </div>
+            </div>
+
+            <section class="audio-panel">
+              <h3>Audio Tracks</h3>
+              <div class="audio-list">
+                <div class="audio-item active"><strong>Default Audio</strong><span>Best available</span></div>
+                <div class="audio-item"><strong>English</strong><span>Single track export</span></div>
+                <div class="audio-item"><strong>All Tracks</strong><span>Exports as MKV</span></div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="queue-panel">
+          <h3>Download Activity</h3>
+          <div class="queue-line">
+            <div>
+              <strong>1080p MP4</strong>
+              <span>Ready to start</span>
+            </div>
+            <div class="status live">Active</div>
+          </div>
+          <div class="queue-line">
+            <div>
+              <strong>Audio Only MP3</strong>
+              <span>Alternative quick export</span>
+            </div>
+            <div class="status wait">Queued</div>
+          </div>
+          <div class="queue-line">
+            <div>
+              <strong>Multi Audio MKV</strong>
+              <span>Longer packaging time</span>
+            </div>
+            <div class="status wait">Optional</div>
+          </div>
+        </section>
+
+        <section class="insight-panel">
+          <h3>Why This Direction</h3>
+          <div class="insight-grid">
+            <div class="insight">
+              <strong>Less hero</strong>
+              <span>The page reads like a real tool instead of a marketing landing page.</span>
+            </div>
+            <div class="insight">
+              <strong>More context</strong>
+              <span>Preview and options stay visible together, which reduces uncertainty after paste.</span>
+            </div>
+            <div class="insight">
+              <strong>Better focus</strong>
+              <span>The analyze action becomes the center of the first screen, not the surrounding decoration.</span>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+</body>
+</html>

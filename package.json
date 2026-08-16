@@ -1,0 +1,28 @@
+{
+  "name": "next-videos-root",
+  "version": "1.0.0",
+  "description": "Universal Video Downloader & Converter Suite - Multi-Platform (Windows, Linux, macOS)",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n \"backend,frontend\" -c \"green.bold,cyan.bold\" \"npm --prefix backend run dev\" \"npm --prefix app run dev\"",
+    "start": "node backend/server.js",
+    "build": "npm --prefix app run build",
+    "install:all": "npm install && npm --prefix backend install && npm --prefix app install",
+    "install:backend": "npm --prefix backend install",
+    "install:app": "npm --prefix app install"
+  },
+  "keywords": [
+    "video-downloader",
+    "yt-dlp",
+    "ffmpeg",
+    "react",
+    "nodejs",
+    "windows",
+    "linux",
+    "macos"
+  ],
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3"
+  }
+}

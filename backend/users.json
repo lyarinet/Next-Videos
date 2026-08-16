@@ -1,0 +1,190 @@
+{
+  "users": [
+    {
+      "id": "56901dda-8675-46f2-b659-3050e159da81",
+      "username": "asifagaria",
+      "email": "asifagaria@gmail.com",
+      "passwordHash": "aaf4414965f6e5cb2adc37cfdc845d10:d6f111edff384621ab7da07d0e4f4c5d5ec7feb6ce0eb5c90a7113d201524113cd33924479b2e4df20d16a7e762d8d3880838b08b88bb25c35b36270ee972f65",
+      "createdAt": "2026-04-29T18:05:31.070Z",
+      "preset": {
+        "presetName": "My Default Profile",
+        "activeTab": "watermark",
+        "sizeLimit": "Off",
+        "videoEncode": "MPEG4 (Xvid)",
+        "videoSize": "320x240",
+        "bitrate": "Default",
+        "crfCq": "10 (High quality)",
+        "fps": "Default",
+        "aspectRatio": "Fully Expand",
+        "subtitleMode": "Off",
+        "extraMode": "Other"
+      },
+      "downloadHistory": [
+        {
+          "id": "91924476-83f1-4e10-a3af-2e22ce16bde7",
+          "url": "https://www.instagram.com/reel/DXokImCEmi4/?utm_source=ig_web_copy_link&igsh=NTc4MTIwNjQ2YQ==",
+          "title": "Video by wehxkavuif",
+          "quality": "720p HD",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "Instagram",
+          "status": "completed",
+          "fileName": "720p unicq-lyarinet-1777495335311320.mp4",
+          "createdAt": "2026-04-29T20:42:16.732Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "watermark",
+            "sizeLimit": "Off",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-04-29T20:42:18.625Z"
+        },
+        {
+          "id": "ad68b398-7ef6-45fe-8edd-f3a752ece96b",
+          "url": "https://www.youtube.com/watch?v=ETbFRFB3krE",
+          "title": "B/W to Color - Itna Na Mujhse Tu Pyar Badha | Chhaya | Lata, Talat Mahmood |  Asha Parekh,Sunil Dutt",
+          "quality": "240p (320x240)",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "YouTube",
+          "status": "completed",
+          "fileName": "240p unicq-lyarinet-1777486214839990.mp4",
+          "createdAt": "2026-04-29T18:10:19.314Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "watermark",
+            "sizeLimit": "Off",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-04-29T18:10:29.300Z"
+        },
+        {
+          "id": "c6c3b17c-c50d-4cde-ac40-7b6197032c4d",
+          "url": "https://www.youtube.com/watch?v=ETbFRFB3krE",
+          "title": "B/W to Color - Itna Na Mujhse Tu Pyar Badha | Chhaya | Lata, Talat Mahmood |  Asha Parekh,Sunil Dutt",
+          "quality": "240p (320x240)",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "YouTube",
+          "status": "completed",
+          "fileName": "240p unicq-lyarinet-1777486048426445.mp4",
+          "createdAt": "2026-04-29T18:07:32.397Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "watermark",
+            "sizeLimit": "Off",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-04-29T18:07:43.468Z"
+        }
+      ]
+    },
+    {
+      "id": "3c7128b6-2a80-4acb-bebb-3cf2f063f281",
+      "username": "funlyari",
+      "email": "funlyari@gmail.com",
+      "passwordHash": "11f7264e576502b137cb0d344aca3ffb:23d41c480b73c1403e1227b52e5ce8b664ff121900567af779036d6f807f79281a653e3ff516f699fe8411bcd4783045f45b01ce1a1822b4011547a5245a2339",
+      "createdAt": "2026-04-29T20:18:32.727Z",
+      "preset": {
+        "presetName": "My Default Profile",
+        "activeTab": "video",
+        "outputFormat": "MP4",
+        "sizeLimit": "Off",
+        "qualityMode": "Optimal quality",
+        "videoEncode": "MPEG4 (Xvid)",
+        "videoSize": "320x240",
+        "bitrate": "Default",
+        "crfCq": "10 (High quality)",
+        "audioCodec": "AAC",
+        "noAudio": "Off",
+        "fps": "Default",
+        "aspectRatio": "Fully Expand",
+        "subtitleMode": "Off",
+        "extraMode": "Other"
+      },
+      "downloadHistory": [
+        {
+          "id": "26886333-5d7f-4d86-b7b1-0faa1d4b2788",
+          "url": "https://www.youtube.com/shorts/GKC6ppEY-U8",
+          "title": "Funny trainee#fanlinastar #douyin #funnyvideos 😂",
+          "quality": "240p (320x240)",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "YouTube",
+          "status": "completed",
+          "fileName": "240p unicq-lyarinet-1777494966342392.mp4",
+          "createdAt": "2026-04-29T20:36:10.062Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "video",
+            "outputFormat": "MP4",
+            "sizeLimit": "Off",
+            "qualityMode": "Optimal quality",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "audioCodec": "AAC",
+            "noAudio": "Off",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-04-29T20:36:14.292Z"
+        },
+        {
+          "id": "60b37f21-bb28-4c82-8713-6fdd6ebafa09",
+          "url": "https://www.youtube.com/watch?v=zRtGL0-5rg4",
+          "title": "Last To Leave Grocery Store, Wins $250,000",
+          "quality": "1080p HD",
+          "format": "MP4",
+          "audioTrack": "hi",
+          "platform": "YouTube",
+          "status": "completed",
+          "fileName": "1080p unicq-lyarinet-1777494014926181.mkv",
+          "createdAt": "2026-04-29T20:20:19.799Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "video",
+            "outputFormat": "MP4",
+            "sizeLimit": "Off",
+            "qualityMode": "Optimal quality",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "audioCodec": "AAC",
+            "noAudio": "Off",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-04-29T20:22:11.700Z"
+        }
+      ]
+    }
+  ]
+}

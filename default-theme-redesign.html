@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Next-Videos | Modern Default Redesign</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --bg-color: #0f172a; /* Slate 900 */
+      --bg-secondary: #1e293b; /* Slate 800 */
+      --bg-tertiary: #334155; /* Slate 700 */
+      
+      --accent: #ef4444; /* Red 500 */
+      --accent-hover: #dc2626; /* Red 600 */
+      --accent-light: rgba(239, 68, 68, 0.15);
+      
+      --text-main: #f8fafc; /* Slate 50 */
+      --text-muted: #94a3b8; /* Slate 400 */
+      
+      --border-color: rgba(255, 255, 255, 0.08);
+      --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+      --font-family: 'Inter', sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(239, 68, 68, 0.04), transparent 25%),
+        radial-gradient(circle at 85% 30%, rgba(239, 68, 68, 0.04), transparent 25%);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar */
+    header {
+      padding: 20px 0;
+      background: rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-color);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #ef4444, #f97316);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 16px rgba(239, 68, 68, 0.25);
+      transition: transform 0.2s ease;
+    }
+
+    .logo-container:hover .logo-icon {
+      transform: scale(1.05);
+    }
+
+    .logo-icon svg {
+      width: 22px;
+      height: 22px;
+      fill: none;
+      stroke: white;
+      stroke-width: 2.5;
+    }
+
+    .logo-text {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-main);
+    }
+
+    /* Main Workspace */
+    main {
+      flex: 1;
+      max-width: 1000px;
+      margin: 60px auto;
+      padding: 0 24px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-light);
+      color: #fca5a5;
+      padding: 6px 16px;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 24px;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 5vw, 4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1px;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(to right, #fca5a5, #ef4444);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+
+    /* Search/Input Area */
+    .input-card {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 12px;
+      display: flex;
+      gap: 12px;
+      box-shadow: var(--card-shadow);
+      margin-bottom: 40px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .input-card:focus-within {
+      border-color: rgba(239, 68, 68, 0.5);
+      box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+    }
+
+    .input-field {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 16px;
+      padding: 0 20px;
+    }
+
+    .input-field svg {
+      color: var(--text-muted);
+      width: 22px;
+      height: 22px;
+      margin-right: 12px;
+    }
+
+    .input-field input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      font-size: 1.1rem;
+      height: 56px;
+      outline: none;
+      font-family: var(--font-family);
+    }
+
+    .input-field input::placeholder {
+      color: var(--bg-tertiary);
+    }
+
+    .btn-analyze {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      padding: 0 32px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-family);
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-analyze:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-analyze:active {
+      transform: scale(0.98);
+    }
+
+    /* Analysis Results Structure */
+    .results-container {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    /* Media Info Card */
+    .media-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .media-thumbnail {
+      width: 100%;
+      height: 200px;
+      background: url('https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1000&auto=format&fit=crop') center/cover;
+      position: relative;
+    }
+
+    .platform-badge {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .media-details {
+      padding: 24px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .media-details h3 {
+      font-size: 1.25rem;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .media-meta {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+
+    .audio-picker {
+      margin-top: auto;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .audio-picker h4 {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .audio-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .audio-option {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: var(--bg-tertiary);
+      cursor: pointer;
+      font-size: 0.9rem;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .audio-option:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .audio-option.active {
+      background: var(--accent-light);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+
+    /* Formats Grid */
+    .formats-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .formats-card h3 {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .format-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+      flex: 1;
+    }
+
+    .format-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .format-item:hover {
+      border-color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .format-item.active {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .format-info {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .format-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-main);
+    }
+
+    .format-item.active .format-icon {
+      background: var(--accent);
+    }
+
+    .format-text h5 {
+      font-size: 1.1rem;
+      margin-bottom: 2px;
+    }
+
+    .format-text span {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .format-size {
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .format-item.active .format-size {
+      color: #fca5a5;
+    }
+
+    .btn-download {
+      width: 100%;
+      padding: 18px;
+      border-radius: 16px;
+      border: none;
+      background: var(--text-main);
+      color: var(--bg-color);
+      font-size: 1.1rem;
+      font-weight: 700;
+      font-family: var(--font-family);
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      transition: transform 0.1s;
+    }
+
+    .btn-download:hover {
+      background: #e2e8f0;
+    }
+
+    .btn-download:active {
+      transform: scale(0.98);
+    }
+
+    /* Responsive */
+    @media (max-width: 800px) {
+      .results-container {
+        grid-template-columns: 1fr;
+      }
+      .input-card {
+        flex-direction: column;
+        padding: 8px;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+      }
+      .input-card:focus-within {
+        box-shadow: none;
+      }
+      .input-field {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+      }
+      .btn-analyze {
+        width: 100%;
+        height: 56px;
+        justify-content: center;
+      }
+      .hero h1 {
+        font-size: 2.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-content">
+      <div class="logo-container">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </div>
+        <span class="logo-text">Next-Videos</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#">Workspace</a>
+        <a href="#">Admin Panel</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <div class="hero">
+      <div class="hero-pill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Fast & Unlimited Downloads
+      </div>
+      <h1>Download Any Video<br><span>From Any Platform.</span></h1>
+      <p>Clean, simple, and extremely fast. Paste your link below to fetch high-quality video and audio tracks instantly.</p>
+    </div>
+
+    <div class="input-card">
+      <div class="input-field">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+        <input type="text" placeholder="Paste your link here (YouTube, Twitter, Instagram...)">
+      </div>
+      <button class="btn-analyze">
+        Analyze Video
+      </button>
+    </div>
+
+    <!-- Simulated Results Section -->
+    <div class="results-container">
+      
+      <!-- Left side: Media Info -->
+      <div class="media-card">
+        <div class="media-thumbnail">
+          <div class="platform-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33 2.78 2.78 0 0 0 1.94 2c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.33 29 29 0 0 0-.46-5.33z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="white"/></svg>
+            YouTube
+          </div>
+        </div>
+        <div class="media-details">
+          <h3>Beautiful 4K Nature Relaxation - Healing Scenery</h3>
+          <div class="media-meta">Relaxation Channel • 1.2M Views • 2:14:00</div>
+
+          <div class="audio-picker">
+            <h4>Select Audio Track</h4>
+            <div class="audio-list">
+              <div class="audio-option active">
+                <span>Default Audio</span>
+                <span>Stereo</span>
+              </div>
+              <div class="audio-option">
+                <span>English (Original)</span>
+                <span>Separate Track</span>
+              </div>
+              <div class="audio-option">
+                <span>Ambient Only</span>
+                <span>Separate Track</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right side: Formats & Download -->
+      <div class="formats-card">
+        <h3>Available Formats</h3>
+        
+        <div class="format-list">
+          <div class="format-item active">
+            <div class="format-info">
+              <div class="format-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+              </div>
+              <div class="format-text">
+                <h5>1080p HD</h5>
+                <span>Video + Audio (MP4)</span>
+              </div>
+            </div>
+            <div class="format-size">145 MB</div>
+          </div>
+
+          <div class="format-item">
+            <div class="format-info">
+              <div class="format-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line><line x1="2" y1="7" x2="7" y2="7"></line><line x1="2" y1="17" x2="7" y2="17"></line><line x1="17" y1="17" x2="22" y2="17"></line><line x1="17" y1="7" x2="22" y2="7"></line></svg>
+              </div>
+              <div class="format-text">
+                <h5>720p</h5>
+                <span>Video + Audio (MP4)</span>
+              </div>
+            </div>
+            <div class="format-size">85 MB</div>
+          </div>
+
+          <div class="format-item">
+            <div class="format-info">
+              <div class="format-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+              </div>
+              <div class="format-text">
+                <h5>Audio Only</h5>
+                <span>High Quality (MP3)</span>
+              </div>
+            </div>
+            <div class="format-size">12 MB</div>
+          </div>
+        </div>
+
+        <button class="btn-download">
+          Download 1080p HD
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </button>
+      </div>
+
+    </div>
+  </main>
+
+</body>
+</html>
