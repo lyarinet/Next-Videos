@@ -14,6 +14,8 @@ export default function WasmConverter({ token }: { token: string | null }) {
   const [format, setFormat] = useState('mp4')
   
   const [isReady, setIsReady] = useState(false)
+  const [isLoadingWasm, setIsLoadingWasm] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [progress, setProgress] = useState(0)
   const [isConverting, setIsConverting] = useState(false)
   const [log, setLog] = useState('')
@@ -46,27 +48,48 @@ export default function WasmConverter({ token }: { token: string | null }) {
   }, [token])
 
   const loadFFmpeg = async () => {
-    const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
+    setIsLoadingWasm(true)
+    setLoadError(null)
     const ffmpeg = ffmpegRef.current
+    
     ffmpeg.on('log', ({ message }: any) => {
       setLog(message)
     })
     ffmpeg.on('progress', ({ progress }: any) => {
       setProgress(Math.round(progress * 100))
     })
-    
-    await ffmpeg.load({
-      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-    })
-    setIsReady(true)
+
+    const cdnMirrors = [
+      'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm',
+      'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm',
+      'https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.12.6/esm'
+    ]
+
+    let loaded = false
+    for (const baseURL of cdnMirrors) {
+      try {
+        console.log(`Attempting to load FFmpeg WASM from: ${baseURL}`)
+        await ffmpeg.load({
+          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+        })
+        loaded = true
+        setIsReady(true)
+        setIsLoadingWasm(false)
+        break
+      } catch (err: any) {
+        console.warn(`Failed loading FFmpeg WASM from ${baseURL}:`, err.message || err)
+      }
+    }
+
+    if (!loaded) {
+      setIsLoadingWasm(false)
+      setLoadError('Could not load browser WebAssembly FFmpeg core from CDN.')
+    }
   }
 
   useEffect(() => {
-    loadFFmpeg().catch(err => {
-      console.error('Failed to load ffmpeg:', err)
-      toast.error('Failed to load WebAssembly FFmpeg engine.')
-    })
+    loadFFmpeg()
   }, [])
 
   const handleConvert = async () => {
@@ -197,12 +220,32 @@ export default function WasmConverter({ token }: { token: string | null }) {
           <div className="bg-slate-950 rounded-xl p-4 border border-white/5 relative overflow-hidden">
             <h4 className="text-sm font-semibold text-gray-300 mb-3 border-b border-white/10 pb-2">Status Output</h4>
             
-            {!isReady ? (
-              <div className="flex flex-col items-center justify-center h-32 text-gray-500">
-                <Loader2 className="w-6 h-6 animate-spin mb-2" />
+            {isLoadingWasm && (
+              <div className="flex flex-col items-center justify-center h-32 text-gray-400">
+                <Loader2 className="w-6 h-6 animate-spin mb-2 text-purple-400" />
                 <span className="text-sm">Loading FFmpeg WebAssembly core...</span>
+                <span className="text-xs text-gray-500 mt-1">Connecting to high-speed CDN mirrors</span>
               </div>
-            ) : (
+            )}
+
+            {!isLoadingWasm && loadError && (
+              <div className="flex flex-col items-center justify-center h-32 text-center p-2">
+                <p className="text-xs text-amber-400 mb-2">{loadError}</p>
+                <p className="text-[11px] text-gray-400 mb-3">
+                  Tip: Use the <strong>Native Video Converter & Transcoder</strong> above for instant GPU & CPU transcoding without browser limits!
+                </p>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={loadFFmpeg} 
+                  className="border-white/10 bg-white/5 text-xs text-white hover:bg-white/10"
+                >
+                  Retry Loading WASM
+                </Button>
+              </div>
+            )}
+
+            {!isLoadingWasm && isReady && (
               <div className="space-y-4">
                 {isConverting ? (
                   <div>
@@ -220,7 +263,7 @@ export default function WasmConverter({ token }: { token: string | null }) {
                 ) : (
                   <div className="flex flex-col items-center justify-center h-32 text-green-500/50">
                     <CheckCircle2 className="w-8 h-8 mb-2" />
-                    <span className="text-sm text-gray-400">Ready to convert</span>
+                    <span className="text-sm text-gray-400">Ready to convert in browser</span>
                   </div>
                 )}
               </div>
