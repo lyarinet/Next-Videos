@@ -1026,7 +1026,7 @@ app.post('/api/download', async (req, res) => {
     // Native yt-dlp download pipeline with direct audio track selection and multi-audio support
     const dlNodePath = getNodePath();
     const plainCookies = getCookiesFlag();
-    let cmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${getFfmpegLocationFlag()} ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}"`;
+    let cmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${getFfmpegLocationFlag()} ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}" --extractor-args "youtube:player_client=all"`;
     cmd += ` -o "${outputTemplate}.%(ext)s"`;
 
     if (quality.startsWith('Audio (') || quality === 'Audio Only') {
@@ -1037,7 +1037,7 @@ app.post('/api/download', async (req, res) => {
       else if (format.toLowerCase() === 'opus') audioFormat = 'opus';
 
       if (audioTrack && audioTrack !== 'default' && audioTrack !== 'all') {
-        cmd += ` -f "bestaudio[language=${audioTrack}]/bestaudio[language*=${audioTrack}]/bestaudio" -S "lang:${audioTrack}"`;
+        cmd += ` --audio-multistreams -f "bestaudio[language=${audioTrack}]/bestaudio[language*=${audioTrack}]/bestaudio" -S "lang:${audioTrack}"`;
       } else {
         cmd += ' -f bestaudio';
       }
@@ -1051,7 +1051,7 @@ app.post('/api/download', async (req, res) => {
         cmd += ` --audio-multistreams -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" --merge-output-format mkv`;
       } else if (audioTrack && audioTrack !== 'default') {
         // Specific language audio track merged with video
-        cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio[language=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio[language*=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" -S "lang:${audioTrack}" --merge-output-format mp4`;
+        cmd += ` --audio-multistreams -f "bestvideo[height<=${maxHeight}]+bestaudio[language=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio[language*=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" -S "lang:${audioTrack}" --merge-output-format mp4`;
       } else {
         // Default original audio track
         cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" --merge-output-format mp4`;
