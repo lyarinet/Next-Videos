@@ -780,9 +780,22 @@ function App() {
               <span className="text-xl font-bold">{siteConfig?.siteTitle || 'Next-Videos'}</span>
             </div>
             
-            <p className="text-sm text-gray-500 font-medium">
-              {siteConfig?.footerText || '© 2026 Next-Videos. All rights reserved.'}
-            </p>
+            <div className="flex flex-col sm:items-center text-center gap-1">
+              <p className="text-sm text-gray-500 font-medium">
+                {siteConfig?.footerText || '© 2026 Next-Videos. All rights reserved.'}
+              </p>
+              <p className="text-xs text-gray-400">
+                Developed by{' '}
+                <a
+                  href="https://lyaritech.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-semibold text-orange-400 hover:text-orange-300 underline underline-offset-4 transition-colors"
+                >
+                  Lyarinet
+                </a>
+              </p>
+            </div>
             
             <div className="flex items-center gap-6">
               <a href="#/terms" className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Terms</a>

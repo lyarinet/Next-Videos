@@ -72,9 +72,20 @@ export default function ContentPage({ title, field }: ContentPageProps) {
 
       {/* Footer */}
       <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-white/10 mt-auto">
-        <div className="max-w-6xl mx-auto text-center">
+        <div className="max-w-6xl mx-auto text-center space-y-1">
           <p className="text-sm text-gray-500">
             © 2026 {siteTitle}. All rights reserved.
+          </p>
+          <p className="text-xs text-gray-400">
+            Developed by{' '}
+            <a
+              href="https://lyaritech.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-orange-400 hover:text-orange-300 underline underline-offset-4 transition-colors"
+            >
+              Lyarinet
+            </a>
           </p>
         </div>
       </footer>
