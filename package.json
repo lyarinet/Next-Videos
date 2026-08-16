@@ -7,6 +7,7 @@
     "dev": "concurrently -k -n \"backend,frontend\" -c \"green.bold,cyan.bold\" \"npm --prefix backend run dev\" \"npm --prefix app run dev\"",
     "start": "node backend/server.js",
     "build": "npm --prefix app run build",
+    "pack:extension": "node scripts/pack-extension.js",
     "install:all": "npm install && npm --prefix backend install && npm --prefix app install",
     "install:backend": "npm --prefix backend install",
     "install:app": "npm --prefix app install"

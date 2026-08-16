@@ -7,6 +7,8 @@ bin/
 !Setup-Next-Videos.exe
 !Next-Videos.exe
 *.zip
+!dist-extension/*.zip
+!dist-extension/*.crx
 app/dist/
 combined/
 
