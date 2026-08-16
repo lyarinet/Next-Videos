@@ -211,6 +211,36 @@
       },
       "downloadHistory": [
         {
+          "id": "a9475017-38ba-439c-aca6-87d942bc08f8",
+          "url": "https://www.youtube.com/watch?v=vY31qIX7LzQ",
+          "title": "How To Use YouTube's Multi-Language Audio Tracks (MLA)",
+          "quality": "720p HD",
+          "format": "MP4",
+          "audioTrack": "default",
+          "platform": "YouTube",
+          "status": "completed",
+          "fileName": "720p ln-lyarinet-1786887730727300.mp4",
+          "createdAt": "2026-08-16T13:42:23.121Z",
+          "preset": {
+            "presetName": "My Default Profile",
+            "activeTab": "video",
+            "outputFormat": "MP4",
+            "sizeLimit": "Off",
+            "qualityMode": "Optimal quality",
+            "videoEncode": "MPEG4 (Xvid)",
+            "videoSize": "320x240",
+            "bitrate": "Default",
+            "crfCq": "10 (High quality)",
+            "audioCodec": "AAC",
+            "noAudio": "Off",
+            "fps": "Default",
+            "aspectRatio": "Fully Expand",
+            "subtitleMode": "Off",
+            "extraMode": "Other"
+          },
+          "completedAt": "2026-08-16T13:42:41.973Z"
+        },
+        {
           "id": "34d88ce5-8be3-4da2-8ab8-1879c7a7bf23",
           "url": "https://www.youtube.com/watch?v=vY31qIX7LzQ",
           "title": "How To Use YouTube's Multi-Language Audio Tracks (MLA)",
