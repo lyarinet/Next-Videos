@@ -501,6 +501,13 @@ const ENABLE_DEEP_AUDIO_PROBE = process.env.ENABLE_DEEP_AUDIO_PROBE === 'true';
 app.use(cors());
 app.use(express.json());
 
+// Enable WebAssembly cross-origin isolation
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+  next();
+});
+
 // Serve static frontend files
 const staticPath = path.join(__dirname, 'public');
 if (fs.existsSync(staticPath)) {

@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { FFmpeg } from '@ffmpeg/ffmpeg'
-import { fetchFile, toBlobURL } from '@ffmpeg/util'
+import { fetchFile } from '@ffmpeg/util'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -59,32 +59,49 @@ export default function WasmConverter({ token }: { token: string | null }) {
       setProgress(Math.round(progress * 100))
     })
 
-    const cdnMirrors = [
+    const fetchBlobWithTimeout = async (url: string, type: string, timeoutMs = 8000): Promise<string> => {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), timeoutMs)
+      try {
+        const response = await fetch(url, { signal: controller.signal })
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        const blob = await response.blob()
+        clearTimeout(timer)
+        return URL.createObjectURL(new Blob([blob], { type }))
+      } catch (err) {
+        clearTimeout(timer)
+        throw err
+      }
+    }
+
+    const candidateSources = [
+      `${window.location.origin}/ffmpeg`,
+      '/ffmpeg',
       'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm',
-      'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm',
-      'https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.12.6/esm'
+      'https://unpkg.com/@ffmpeg/core@0.12.6/dist/esm'
     ]
 
     let loaded = false
-    for (const baseURL of cdnMirrors) {
+    for (const baseURL of candidateSources) {
       try {
-        console.log(`Attempting to load FFmpeg WASM from: ${baseURL}`)
-        await ffmpeg.load({
-          coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-          wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-        })
+        console.log(`[WASM] Attempting to load FFmpeg core from: ${baseURL}`)
+        const coreURL = await fetchBlobWithTimeout(`${baseURL}/ffmpeg-core.js`, 'text/javascript')
+        const wasmURL = await fetchBlobWithTimeout(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm')
+        
+        await ffmpeg.load({ coreURL, wasmURL })
         loaded = true
         setIsReady(true)
         setIsLoadingWasm(false)
+        console.log(`[WASM] FFmpeg core successfully loaded from ${baseURL}`)
         break
       } catch (err: any) {
-        console.warn(`Failed loading FFmpeg WASM from ${baseURL}:`, err.message || err)
+        console.warn(`[WASM] Could not load from ${baseURL}:`, err.message || err)
       }
     }
 
     if (!loaded) {
       setIsLoadingWasm(false)
-      setLoadError('Could not load browser WebAssembly FFmpeg core from CDN.')
+      setLoadError('Browser WebAssembly FFmpeg core could not load. (Use Native Server Converter above for instant conversion)')
     }
   }
 

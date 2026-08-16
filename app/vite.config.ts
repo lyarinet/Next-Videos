@@ -11,6 +11,10 @@ export default defineConfig({
     host: '0.0.0.0', // Listen on all interfaces (LAN + localhost)
     port: 5173,
     allowedHosts: ['vd.lyarinet.com', 'ventoy.lyarinet.com'], // Explicitly allow domains
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
+    },
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:3005',
