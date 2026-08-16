@@ -296,17 +296,19 @@ function renderVideoInfo(info, serverUrl = '') {
   // Audio track selector
   if (info.audioTracks && info.audioTracks.length > 0) {
     audioTrackSection.classList.remove('hidden');
-    let opts = '<option value="default">⭐ Default Audio (Original)</option>';
+    const firstTrack = info.audioTracks[0];
+    const firstName = firstTrack ? (typeof firstTrack === 'string' ? firstTrack : firstTrack.name) : 'Original';
+    let opts = `<option value="default">⭐ ${info.audioTracks.length === 1 ? `${firstName} (Original)` : `Default Audio (${firstName})`}</option>`;
     if (info.audioTracks.length > 1) {
       opts += '<option value="all">🎵 All Audio Tracks (MKV)</option>';
+      info.audioTracks.forEach(track => {
+        const code = typeof track === 'string' ? track : track.code;
+        const name = typeof track === 'string' ? track.toUpperCase() : track.name;
+        if (code && code !== 'default' && code !== 'all') {
+          opts += `<option value="${code}">🎙️ ${name}</option>`;
+        }
+      });
     }
-    info.audioTracks.forEach(track => {
-      const code = typeof track === 'string' ? track : track.code;
-      const name = typeof track === 'string' ? track.toUpperCase() : track.name;
-      if (code && code !== 'default' && code !== 'all') {
-        opts += `<option value="${code}">🎙️ ${name}</option>`;
-      }
-    });
     audioTrackSelect.innerHTML = opts;
   } else {
     audioTrackSection.classList.add('hidden');

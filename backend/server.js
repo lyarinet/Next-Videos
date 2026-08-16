@@ -133,18 +133,42 @@ async function probeAudioTracksFromFormats(audioFormats) {
   return tracks;
 }
 
+function getNativeLanguageName(code) {
+  if (!code || code === 'default' || code === 'und') return null;
+  try {
+    const dn = new Intl.DisplayNames(['en'], { type: 'language' });
+    return dn.of(code);
+  } catch (_) {
+    return null;
+  }
+}
+
 // Auto-extract audio track display name directly from YouTube format metadata
 function extractAudioTrackName(format) {
-  if (format.format_note) {
-    const clean = format.format_note
-      .replace(/,\s*(?:low|medium|high|ultralow|tiny).*$/i, '')
-      .replace(/\s*\(default\)/gi, '')
-      .trim();
-    if (clean) return clean;
+  let note = format.format_note || '';
+
+  // Clean out quality descriptions like "low", "medium", "high", "DRC", "(default)"
+  let cleanNote = note
+    .replace(/\b(?:ultra[- ]?low|tiny|low|medium|high|standard|drc|original)\b/gi, '')
+    .replace(/\s*\(default\)/gi, '')
+    .replace(/^[\s,–\-:]+|[\s,–\-:]+$/g, '')
+    .trim();
+
+  const langCode = format.language;
+  const standardName = getNativeLanguageName(langCode);
+
+  if (cleanNote && cleanNote.length > 1 && !/^\d+k?$/i.test(cleanNote)) {
+    return cleanNote;
   }
-  if (format.language) {
-    return format.language.toUpperCase();
+
+  if (standardName) {
+    return standardName;
   }
+
+  if (langCode && langCode !== 'und' && langCode !== 'default') {
+    return langCode.toUpperCase();
+  }
+
   return 'Original Audio';
 }
 

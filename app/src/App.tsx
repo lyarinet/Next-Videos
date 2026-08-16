@@ -338,17 +338,21 @@ function App() {
   }
 
   const getAudioTrackLabel = (trackCode: string) => {
-    if (trackCode === 'default') return 'Default Audio (Best)'
-    if (trackCode === 'all') return 'All Audio Tracks'
+    if (trackCode === 'default') {
+      const firstTrack = videoInfo?.audioTracks?.[0];
+      const firstName = firstTrack ? (typeof firstTrack === 'string' ? firstTrack : firstTrack.name) : null;
+      return firstName ? `Default Audio (${firstName})` : 'Default Audio (Original)';
+    }
+    if (trackCode === 'all') return 'All Audio Tracks';
 
     const matchingTrack = (videoInfo?.audioTracks ?? []).find((track) => {
-      const code = typeof track === 'string' ? track : track.code
-      return code === trackCode
-    })
+      const code = typeof track === 'string' ? track : track.code;
+      return code === trackCode;
+    });
 
-    if (!matchingTrack) return trackCode.toUpperCase()
-    return typeof matchingTrack === 'string' ? matchingTrack.toUpperCase() : matchingTrack.name
-  }
+    if (!matchingTrack) return trackCode.toUpperCase();
+    return typeof matchingTrack === 'string' ? matchingTrack.toUpperCase() : matchingTrack.name;
+  };
 
   const getDisplayedFormat = (option: DownloadOption) => {
     if (!option.quality.startsWith('Audio') && selectedAudioTrack === 'all') return 'MKV'
@@ -604,11 +608,15 @@ function App() {
                       value={selectedAudioTrack}
                       onChange={(e) => setSelectedAudioTrack(e.target.value)}
                     >
-                      <option value="default" className="bg-gray-900">⭐ Default Audio (Original)</option>
+                      <option value="default" className="bg-gray-900">
+                        ⭐ {(videoInfo.audioTracks ?? []).length === 1 
+                          ? `${typeof videoInfo.audioTracks?.[0] === 'string' ? videoInfo.audioTracks[0] : (videoInfo.audioTracks?.[0]?.name || 'Original')} (Original)` 
+                          : `Default Audio (${typeof videoInfo.audioTracks?.[0] === 'string' ? videoInfo.audioTracks[0] : (videoInfo.audioTracks?.[0]?.name || 'Original')})`}
+                      </option>
                       {(videoInfo.audioTracks ?? []).length > 1 && (
                         <option value="all" className="bg-gray-900">🎵 All Audio Tracks (Saves as MKV)</option>
                       )}
-                      {(videoInfo.audioTracks ?? [])
+                      {(videoInfo.audioTracks ?? []).length > 1 && (videoInfo.audioTracks ?? [])
                         .filter((track) => {
                           const code = typeof track === 'string' ? track : track.code;
                           return code && code !== 'default' && code !== 'all';
