@@ -30,8 +30,11 @@ export default function WasmConverter({ token }: { token: string | null }) {
     try {
       const res = await authorizedFetch(`${API_BASE_URL}/convert/files`)
       const data = await res.json()
-      if (res.ok) {
-        setFiles(data.files || [])
+      if (res.ok && data.files) {
+        setFiles(data.files)
+        if (data.files.length > 0 && !sourceFile) {
+          setSourceFile(data.files[0])
+        }
       }
     } catch (err) {
       console.error('Failed to fetch files', err)

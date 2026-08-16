@@ -1659,6 +1659,17 @@ app.get('/api/convert/files', (req, res) => {
       files = userFiles.filter(file => fs.existsSync(path.join(downloadsDir, file)));
     }
 
+    // Include all completed media files present in downloads directory
+    if (fs.existsSync(downloadsDir)) {
+      const validMediaExts = ['.mp4', '.mkv', '.webm', '.avi', '.mov', '.flv', '.ts', '.m4a', '.mp3', '.wav', '.flac', '.aac', '.ogg', '.3gp'];
+      const dirFiles = fs.readdirSync(downloadsDir).filter(f => {
+        const ext = path.extname(f).toLowerCase();
+        const isIntermediate = /\.f\d+([-\w]*)\./i.test(f) || /\.temp\./i.test(f);
+        return validMediaExts.includes(ext) && !f.endsWith('.part') && !f.endsWith('.ytdl') && !f.endsWith('.tmp') && !isIntermediate;
+      });
+      files = [...files, ...dirFiles];
+    }
+
     files = [...new Set(files)];
     res.json({ files });
   } catch (error) {
