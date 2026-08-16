@@ -72,6 +72,18 @@ const getNodePath = () => {
   return process.execPath || (isWindows ? 'node.exe' : 'node');
 };
 
+const getFfmpegLocationFlag = () => {
+  const localBin = path.join(__dirname, 'bin');
+  const localFfmpeg = isWindows ? path.join(localBin, 'ffmpeg.exe') : path.join(localBin, 'ffmpeg');
+  if (fs.existsSync(localFfmpeg)) {
+    return `--ffmpeg-location "${localBin}"`;
+  }
+  if (process.env.FFMPEG_PATH && fs.existsSync(process.env.FFMPEG_PATH)) {
+    return `--ffmpeg-location "${path.dirname(process.env.FFMPEG_PATH)}"`;
+  }
+  return '';
+};
+
 // Returns --cookies flag if a cookies.txt file is present in the backend directory
 const getCookiesFlag = () => {
   const cookiesPath = path.join(__dirname, 'cookies.txt');
@@ -175,9 +187,9 @@ async function fetchYtDlpMetadata(url) {
   const nodePath = getNodePath();
   const cookies = getCookiesFlag();
   const hasCookies = !!cookies;
-  const clients = hasCookies ? 'tv' : 'android_vr';
+  const clients = hasCookies ? 'tv' : 'android,web';
   const metadataTimeout = 30000;
-  let cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams --js-runtimes "node:${nodePath}" ${cookies} --extractor-args "youtube:player_client=${clients}" "${url}"`;
+  let cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams ${getFfmpegLocationFlag()} --js-runtimes "node:${nodePath}" ${cookies} --extractor-args "youtube:player_client=${clients}" "${url}"`;
 
   try {
     const result = await execPromise(cmd, { timeout: metadataTimeout, maxBuffer: 10 * 1024 * 1024 });
@@ -188,7 +200,7 @@ async function fetchYtDlpMetadata(url) {
     }
 
     console.log(`yt-dlp ${clients} failed (${err.message?.slice(0, 120)}), trying default...`);
-    cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams --js-runtimes "node:${nodePath}" ${cookies} "${url}"`;
+    cmd = `"${getYtDlpPath()}" --dump-json --no-download --audio-multistreams ${getFfmpegLocationFlag()} --js-runtimes "node:${nodePath}" ${cookies} "${url}"`;
     const result = await execPromise(cmd, { timeout: metadataTimeout, maxBuffer: 10 * 1024 * 1024 });
     return JSON.parse(result.stdout);
   }
@@ -342,13 +354,13 @@ async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack
   }
 
   const jsRuntime = `--js-runtimes "node:${nodePath}"`;
-  const dlClients = cookies ? 'tv' : 'android_vr';
+  const dlClients = cookies ? 'tv' : 'android,web';
   const dlClientArg = `--extractor-args "youtube:player_client=${dlClients}"`;
   const selectedAudioFormat = selectedAudioFormats[0];
   let tempVideoPath = null;
   let tempAudioPath = null;
 
-  const audioDownloadCmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${cookies} ${jsRuntime} ${dlClientArg} ` +
+  const audioDownloadCmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${getFfmpegLocationFlag()} ${cookies} ${jsRuntime} ${dlClientArg} ` +
     `-f "${selectedAudioFormat.format_id}" -o "${tempAudioOutput}.%(ext)s" "${url}"`;
 
   if (isAudioOnly) {
@@ -361,7 +373,7 @@ async function downloadWithFfmpegTrackSelection(url, quality, format, audioTrack
       throw new Error(`No video stream found for quality "${quality}"`);
     }
 
-    const videoDownloadCmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${cookies} ${jsRuntime} ${dlClientArg} ` +
+    const videoDownloadCmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${getFfmpegLocationFlag()} ${cookies} ${jsRuntime} ${dlClientArg} ` +
       `-f "${bestVideoFormat.format_id}" -o "${tempVideoOutput}.%(ext)s" "${url}"`;
 
     await runYtDlpDownload(videoDownloadCmd, downloadId, 0, 55);
@@ -1000,8 +1012,8 @@ app.post('/api/download', async (req, res) => {
     // Plain yt-dlp path (default audio or all-tracks MKV)
     const dlNodePath = getNodePath();
     const plainCookies = getCookiesFlag();
-    const plainClient = plainCookies ? 'tv' : 'android_vr';
-    let cmd = `"${getYtDlpPath()}" --newline --progress --no-mtime --audio-multistreams ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}" --extractor-args "youtube:player_client=${plainClient}"`;
+    const plainClient = plainCookies ? 'tv' : 'android,web';
+    let cmd = `"${getYtDlpPath()}" --newline --progress --no-mtime --audio-multistreams ${getFfmpegLocationFlag()} ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}" --extractor-args "youtube:player_client=${plainClient}"`;
     cmd += ` -o "${outputTemplate}.%(ext)s"`;
 
     if (quality.startsWith('Audio (') || quality === 'Audio Only') {
