@@ -604,15 +604,22 @@ function App() {
                       value={selectedAudioTrack}
                       onChange={(e) => setSelectedAudioTrack(e.target.value)}
                     >
-                      <option value="default" className="bg-gray-900">Default Audio (Best)</option>
-                      <option value="all" className="bg-gray-900">All Audio Tracks (Saves as MKV)</option>
-                      {(videoInfo.audioTracks ?? []).map((track) => {
-                        const code = typeof track === 'string' ? track : track.code;
-                        const name = typeof track === 'string' ? track.toUpperCase() : track.name;
-                        return (
-                          <option key={code} value={code} className="bg-gray-900">{name}</option>
-                        );
-                      })}
+                      <option value="default" className="bg-gray-900">⭐ Default Audio (Original)</option>
+                      {(videoInfo.audioTracks ?? []).length > 1 && (
+                        <option value="all" className="bg-gray-900">🎵 All Audio Tracks (Saves as MKV)</option>
+                      )}
+                      {(videoInfo.audioTracks ?? [])
+                        .filter((track) => {
+                          const code = typeof track === 'string' ? track : track.code;
+                          return code && code !== 'default' && code !== 'all';
+                        })
+                        .map((track) => {
+                          const code = typeof track === 'string' ? track : track.code;
+                          const name = typeof track === 'string' ? track.toUpperCase() : track.name;
+                          return (
+                            <option key={code} value={code} className="bg-gray-900">🎙️ {name}</option>
+                          );
+                        })}
                     </select>
                     <div className="mt-3 flex flex-wrap items-center gap-2">
                       <Badge variant="secondary" className="bg-white/10 text-white border-white/10">

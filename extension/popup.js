@@ -296,18 +296,18 @@ function renderVideoInfo(info, serverUrl = '') {
   // Audio track selector
   if (info.audioTracks && info.audioTracks.length > 0) {
     audioTrackSection.classList.remove('hidden');
-    audioTrackSelect.innerHTML = `
-      <option value="default">Default Audio (Best)</option>
-      <option value="all">All Audio Tracks (MKV)</option>
-    `;
+    let opts = '<option value="default">⭐ Default Audio (Original)</option>';
+    if (info.audioTracks.length > 1) {
+      opts += '<option value="all">🎵 All Audio Tracks (MKV)</option>';
+    }
     info.audioTracks.forEach(track => {
       const code = typeof track === 'string' ? track : track.code;
       const name = typeof track === 'string' ? track.toUpperCase() : track.name;
-      const opt = document.createElement('option');
-      opt.value = code;
-      opt.textContent = name;
-      audioTrackSelect.appendChild(opt);
+      if (code && code !== 'default' && code !== 'all') {
+        opts += `<option value="${code}">🎙️ ${name}</option>`;
+      }
     });
+    audioTrackSelect.innerHTML = opts;
   } else {
     audioTrackSection.classList.add('hidden');
   }

@@ -133,6 +133,69 @@ async function probeAudioTracksFromFormats(audioFormats) {
   return tracks;
 }
 
+const LANGUAGE_DISPLAY_NAMES = {
+  en: 'English',
+  'en-us': 'English (US)',
+  'en-gb': 'English (UK)',
+  hi: 'Hindi (हिंदी)',
+  ur: 'Urdu (اردو)',
+  es: 'Spanish (Español)',
+  'es-419': 'Spanish (Latin America)',
+  'es-es': 'Spanish (Spain)',
+  ar: 'Arabic (العربية)',
+  fr: 'French (Français)',
+  de: 'German (Deutsch)',
+  ru: 'Russian (Русский)',
+  pt: 'Portuguese (Português)',
+  'pt-br': 'Portuguese (Brazil)',
+  ja: 'Japanese (日本語)',
+  ko: 'Korean (한국어)',
+  zh: 'Chinese (中文)',
+  'zh-hans': 'Chinese (Simplified)',
+  'zh-hant': 'Chinese (Traditional)',
+  it: 'Italian (Italiano)',
+  tr: 'Turkish (Türkçe)',
+  id: 'Indonesian (Bahasa Indonesia)',
+  bn: 'Bengali (বাংলা)',
+  pa: 'Punjabi (ਪੰਜਾਬੀ)',
+  mr: 'Marathi (मराठी)',
+  ta: 'Tamil (தமிழ்)',
+  te: 'Telugu (తెలుగు)',
+  gu: 'Gujarati (ગુજરાતી)',
+  ml: 'Malayalam (മലയാളം)',
+  kn: 'Kannada (ಕನ್ನಡ)',
+  vi: 'Vietnamese (Tiếng Việt)',
+  th: 'Thai (ไทย)',
+  fa: 'Persian (فارسی)',
+  nl: 'Dutch (Nederlands)',
+  pl: 'Polish (Polski)',
+  uk: 'Ukrainian (Українська)',
+  el: 'Greek (Ελληνικά)',
+  he: 'Hebrew (עברית)',
+  sv: 'Swedish (Svenska)',
+  ro: 'Romanian (Română)',
+  hu: 'Hungarian (Magyar)',
+  cs: 'Czech (Čeština)',
+  ms: 'Malay (Bahasa Melayu)',
+  fil: 'Filipino (Tagalog)'
+};
+
+function getLanguageDisplayName(code, rawNote) {
+  if (!code && !rawNote) return 'Default Audio';
+  const cleanCode = String(code || '').trim().toLowerCase().replace(/_/g, '-');
+  if (LANGUAGE_DISPLAY_NAMES[cleanCode]) return LANGUAGE_DISPLAY_NAMES[cleanCode];
+
+  const base = cleanCode.split('-')[0];
+  if (LANGUAGE_DISPLAY_NAMES[base]) return LANGUAGE_DISPLAY_NAMES[base];
+
+  if (rawNote) {
+    const cleanNote = rawNote.split(',')[0].replace(/\s*\(default\)/gi, '').replace(/\s*original$/gi, '').trim();
+    if (cleanNote) return cleanNote;
+  }
+
+  return cleanCode.toUpperCase() || 'Audio Track';
+}
+
 const normalizeLanguageCode = (value) => String(value || '').trim().toLowerCase().replace(/_/g, '-');
 
 const getNumericFormatValue = (value) => {
@@ -650,36 +713,40 @@ app.get('/api/video-info', async (req, res) => {
       //   3. default      — last resort
       const videoData = await fetchYtDlpMetadata(url);
 
-      // Extract unique language tracks using the language code field (not format_note which is a quality description)
+      // Extract unique audio tracks from available formats
       const audioFormats = videoData.formats ? videoData.formats.filter(f => f.vcodec === 'none' && f.acodec !== 'none') : [];
-
       const langMap = new Map();
+
       for (const f of audioFormats) {
-        if (f.language && !langMap.has(f.language)) {
-          // Build a clean display name from format_note (e.g. "English (US) original (default), low" → "English (US)")
-          let name = f.language;
-          if (f.format_note) {
-            name = f.format_note.split(',')[0]
-              .replace(/\s*\(default\)/gi, '')
-              .replace(/\s*original$/gi, '')
-              .trim() || f.language;
+        let langCode = f.language;
+        if (!langCode && f.format_note) {
+          const match = f.format_note.match(/\[([a-zA-Z]{2,3}(?:-[a-zA-Z0-9]+)?)\]/);
+          if (match) langCode = match[1];
+        }
+        if (!langCode && f.format_id) {
+          const match = f.format_id.match(/[-_]([a-zA-Z]{2,3}(?:-[a-zA-Z0-9]+)?)$/);
+          if (match) langCode = match[1];
+        }
+
+        if (langCode) {
+          const norm = normalizeLanguageCode(langCode);
+          if (!langMap.has(norm)) {
+            langMap.set(norm, {
+              code: norm,
+              name: getLanguageDisplayName(norm, f.format_note)
+            });
           }
-          langMap.set(f.language, name);
         }
       }
-      let languages = [...langMap.entries()].map(([code, name]) => ({ code, name }));
 
-      // Deep probing is intentionally opt-in because ffprobe against remote CDN URLs
-      // can add several seconds and make the analyze step feel stuck.
+      let languages = [...langMap.values()];
+
+      // Deep probing fallback if enabled
       if (ENABLE_DEEP_AUDIO_PROBE && languages.length <= 1 && audioFormats.length > 0) {
         const probed = await probeAudioTracksFromFormats(audioFormats);
         if (probed.length > languages.length) {
           languages = probed;
         }
-      }
-
-      if (languages.length === 0) {
-        languages = [{ code: 'default', name: 'Default Audio' }];
       }
 
       // Format the response
@@ -698,7 +765,7 @@ app.get('/api/video-info', async (req, res) => {
         audioTracks: languages
       };
 
-      console.log('Video info fetched:', responseData.title, '| audio tracks:', languages.length);
+      console.log('Video info fetched:', responseData.title, '| audio tracks detected:', languages.length);
       res.json(responseData);
 
     } catch (err) {
@@ -722,7 +789,7 @@ app.get('/api/video-info', async (req, res) => {
             platform: platform,
             url: url,
             formats: getAvailableFormats(info),
-            audioTracks: ['default']
+            audioTracks: []
           };
 
           console.log('Video info fetched (fallback):', videoData.title);
@@ -979,41 +1046,11 @@ app.post('/api/download', async (req, res) => {
       }));
     };
 
-    // When a specific audio track is selected, download that exact stream and mux it with video.
-    // When all audio tracks are selected, mux one downloaded audio file per language into a single MKV.
-    if (audioTrack && audioTrack !== 'default' && audioTrack !== 'all') {
-      console.log(`Using ffmpeg track selection for audioTrack="${audioTrack}"`);
-      downloadWithFfmpegTrackSelection(url, quality, format, audioTrack, outputTemplate, activeDownloadId)
-        .then(() => {
-          updateWorkspaceDownload({ status: 'completed', fileName: `${outputBaseName}.mkv`, completedAt: new Date().toISOString() });
-        })
-        .catch(err => {
-          console.error('ffmpeg track selection failed:', err.message);
-          downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'Download failed: ' + err.message });
-          updateWorkspaceDownload({ status: 'failed', error: err.message, completedAt: new Date().toISOString() });
-        });
-      return res.json({ success: true, downloadId: activeDownloadId });
-    }
-
-    if (audioTrack === 'all' && !(quality.startsWith('Audio (') || quality === 'Audio Only')) {
-      console.log('Using ffmpeg multi-track mux for all audio tracks');
-      downloadWithAllAudioTracks(url, quality, outputTemplate, activeDownloadId)
-        .then(() => {
-          updateWorkspaceDownload({ status: 'completed', fileName: `${outputBaseName}.mkv`, completedAt: new Date().toISOString() });
-        })
-        .catch(err => {
-          console.error('ffmpeg all-track mux failed:', err.message);
-          downloadProgressMap.set(activeDownloadId, { progress: 0, downloadUrl: null, error: 'Download failed: ' + err.message });
-          updateWorkspaceDownload({ status: 'failed', error: err.message, completedAt: new Date().toISOString() });
-        });
-      return res.json({ success: true, downloadId: activeDownloadId });
-    }
-
-    // Plain yt-dlp path (default audio or all-tracks MKV)
+    // Native yt-dlp download pipeline with direct audio track selection and multi-audio support
     const dlNodePath = getNodePath();
     const plainCookies = getCookiesFlag();
     const plainClient = plainCookies ? 'tv' : 'android,web';
-    let cmd = `"${getYtDlpPath()}" --newline --progress --no-mtime --audio-multistreams ${getFfmpegLocationFlag()} ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}" --extractor-args "youtube:player_client=${plainClient}"`;
+    let cmd = `"${getYtDlpPath()}" --newline --progress --no-mtime ${getFfmpegLocationFlag()} ${plainCookies} --embed-metadata --js-runtimes "node:${dlNodePath}" --extractor-args "youtube:player_client=${plainClient}"`;
     cmd += ` -o "${outputTemplate}.%(ext)s"`;
 
     if (quality.startsWith('Audio (') || quality === 'Audio Only') {
@@ -1023,14 +1060,26 @@ app.post('/api/download', async (req, res) => {
       else if (format.toLowerCase() === 'flac') audioFormat = 'flac';
       else if (format.toLowerCase() === 'opus') audioFormat = 'opus';
 
-      cmd += ' -f bestaudio';
+      if (audioTrack && audioTrack !== 'default' && audioTrack !== 'all') {
+        cmd += ` -f "bestaudio[language=${audioTrack}]/bestaudio[language*=${audioTrack}]/bestaudio"`;
+      } else {
+        cmd += ' -f bestaudio';
+      }
       cmd += ` -x --audio-format ${audioFormat} --audio-quality 0 --extract-audio`;
     } else {
       const qualityMap = { '4K (2160p)': '2160', '2K (1440p)': '1440', '1080p HD': '1080', '720p HD': '720', '480p': '480', '360p': '360', '240p (320x240)': '240', '144p': '144' };
       const maxHeight = qualityMap[quality] || '720';
 
-      cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best"`;
-      if (maxHeight >= '1440' || maxHeight === '144') cmd += ' --merge-output-format mp4';
+      if (audioTrack === 'all') {
+        // Multi-audio streams download into MKV container
+        cmd += ` --audio-multistreams -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" --merge-output-format mkv`;
+      } else if (audioTrack && audioTrack !== 'default') {
+        // Specific language audio track
+        cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio[language=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio[language*=${audioTrack}]/bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" --merge-output-format mp4`;
+      } else {
+        // Default original audio track
+        cmd += ` -f "bestvideo[height<=${maxHeight}]+bestaudio/best[height<=${maxHeight}]/best" --merge-output-format mp4`;
+      }
     }
 
     cmd += ` "${url}"`;

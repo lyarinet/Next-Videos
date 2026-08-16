@@ -594,13 +594,20 @@ export default function UserWorkspace() {
                   </div>
 
                   <select value={selectedAudioTrack} onChange={(e) => setSelectedAudioTrack(e.target.value)} className="h-10 w-full rounded-md border border-white/10 bg-white/5 px-3 text-white">
-                    <option className="bg-slate-900" value="default">Default Audio</option>
-                    <option className="bg-slate-900" value="all">All Audio Tracks (MKV)</option>
-                    {(videoInfo.audioTracks || []).map((track) => {
-                      const code = typeof track === 'string' ? track : track.code
-                      const name = typeof track === 'string' ? track : track.name
-                      return <option key={code} value={code} className="bg-slate-900">{name}</option>
-                    })}
+                    <option className="bg-slate-900" value="default">⭐ Default Audio (Original)</option>
+                    {(videoInfo.audioTracks || []).length > 1 && (
+                      <option className="bg-slate-900" value="all">🎵 All Audio Tracks (MKV)</option>
+                    )}
+                    {(videoInfo.audioTracks || [])
+                      .filter((track) => {
+                        const code = typeof track === 'string' ? track : track.code;
+                        return code && code !== 'default' && code !== 'all';
+                      })
+                      .map((track) => {
+                        const code = typeof track === 'string' ? track : track.code
+                        const name = typeof track === 'string' ? track : track.name
+                        return <option key={code} value={code} className="bg-slate-900">🎙️ {name}</option>
+                      })}
                   </select>
 
                   <div className="grid gap-2 max-h-64 overflow-y-auto pr-2">
