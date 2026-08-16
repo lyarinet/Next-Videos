@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
-import { 
-  Download, 
-  Link2, 
-  CheckCircle2, 
-  Youtube, 
-  Facebook, 
-  Twitter, 
-  Instagram, 
+import {
+  Download,
+  Link2,
+  CheckCircle2,
+  Youtube,
+  Facebook,
+  Twitter,
+  Instagram,
   Video,
   Music,
   FileVideo,
@@ -154,7 +154,7 @@ function App() {
           if (data.siteTitle) document.title = data.siteTitle;
         }
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [])
 
   // Debounce URL input to auto-fetch info
@@ -199,14 +199,14 @@ function App() {
     setIsLoading(true)
     setError(null)
     const timeoutId = window.setTimeout(() => controller.abort(), 30000)
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/video-info?url=${encodeURIComponent(videoUrl)}`, {
         signal: controller.signal
       })
 
       if (requestId !== activeRequestRef.current) return
-      
+
       if (!response.ok) {
         let errMsg = 'Failed to fetch video info'
         try {
@@ -217,7 +217,7 @@ function App() {
         }
         throw new Error(errMsg)
       }
-      
+
       const data = await response.json()
       if (requestId !== activeRequestRef.current) return
       setVideoInfo(data)
@@ -243,7 +243,7 @@ function App() {
 
   const handleDownload = async (option: DownloadOption) => {
     if (!videoInfo) return
-    
+
     setSelectedOption(option)
     setIsDownloading(true)
     setDownloadProgress(0)
@@ -261,7 +261,7 @@ function App() {
           if (data.progress !== undefined) {
             setDownloadProgress(data.progress)
           }
-          
+
           if (data.error) {
             toast.error(data.error);
             if (sse) sse.close();
@@ -417,7 +417,7 @@ function App() {
             <Sparkles className="w-3 h-3 mr-1" />
             Free & Unlimited Downloads
           </Badge>
-          
+
           <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold mb-8 leading-[1.1] tracking-tight">
             {siteConfig?.heroPrimaryText ? (
               siteConfig.heroPrimaryText.includes('Any Platform') ? (
@@ -440,14 +440,14 @@ function App() {
               </>
             )}
           </h1>
-          
+
           <p className="text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto flex flex-wrap justify-center items-center gap-x-1">
             {siteConfig?.heroSecondaryText ? (
               siteConfig.heroSecondaryText
             ) : (
               "Fast, free, and easy video downloader. Support for YouTube, Facebook, X, Instagram, and"
             )}
-            
+
             <Dialog>
               <DialogTrigger asChild>
                 <span className="cursor-pointer bg-red-500/20 text-red-500 font-medium px-2 py-0.5 rounded hover:bg-red-500/30 transition-colors inline-block whitespace-nowrap">
@@ -528,12 +528,12 @@ function App() {
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Detected: {videoInfo.platform}</span>
                   </div>
-                  
+
                   <div className="relative rounded-2xl overflow-hidden bg-slate-900/50 border border-white/10 shadow-2xl">
                     {/* Thumbnail */}
                     <div className="relative aspect-video">
-                      <img 
-                        src={videoInfo.thumbnail} 
+                      <img
+                        src={videoInfo.thumbnail}
                         alt={videoInfo.title}
                         className="w-full h-full object-cover"
                         onError={(e) => {
@@ -563,7 +563,7 @@ function App() {
                         <span>{videoInfo.platform}</span>
                       </div>
                     </div>
-                    
+
                     {/* Video Info */}
                     <div className="p-4 text-left">
                       <h3 className="font-semibold text-white mb-2 line-clamp-2">{videoInfo.title}</h3>
@@ -625,9 +625,8 @@ function App() {
                           className="flex items-center justify-between p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-red-500/50 transition-all group"
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                              option.quality.startsWith('Audio') ? 'bg-purple-500/20' : 'bg-red-500/20'
-                            }`}>
+                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${option.quality.startsWith('Audio') ? 'bg-purple-500/20' : 'bg-red-500/20'
+                              }`}>
                               {option.quality.startsWith('Audio') ? (
                                 <Music className="w-5 h-5 text-purple-400" />
                               ) : (
@@ -785,7 +784,7 @@ function App() {
               </div>
               <span className="text-xl font-bold">{siteConfig?.siteTitle || 'Next-Videos'}</span>
             </div>
-            
+
             <div className="flex flex-col sm:items-center text-center gap-1">
               <p className="text-sm text-gray-500 font-medium">
                 {siteConfig?.footerText || '© 2026 Next-Videos. All rights reserved.'}
@@ -802,14 +801,14 @@ function App() {
                 </a>
               </p>
             </div>
-            
+
             <div className="flex items-center gap-6">
               <a href="#/terms" className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Terms</a>
               <a href="#/privacy" className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Privacy</a>
               <a href="#/contact" className="text-sm font-medium text-gray-500 hover:text-white transition-colors">Contact</a>
             </div>
           </div>
-          
+
           <div className="mt-8 pt-8 border-t border-white/5 text-center">
             <p className="text-xs text-gray-600 max-w-2xl mx-auto">
               Please respect the intellectual property rights of others. This tool is intended for personal use only.

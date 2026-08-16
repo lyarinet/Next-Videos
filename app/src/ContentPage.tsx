@@ -24,7 +24,7 @@ export default function ContentPage({ title, field }: ContentPageProps) {
           setSiteTitle(data.siteTitle || 'Next-Videos');
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, [field]);
 
   return (
@@ -42,8 +42,8 @@ export default function ContentPage({ title, field }: ContentPageProps) {
           </div>
           <div className="flex items-center gap-3">
             <ThemeSwitcher />
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="text-gray-400 hover:text-white hover:bg-white/5"
               onClick={() => window.location.hash = '#/'}
             >
@@ -59,7 +59,7 @@ export default function ContentPage({ title, field }: ContentPageProps) {
           <h1 className="text-4xl sm:text-5xl font-bold mb-12 bg-gradient-to-r from-red-400 to-orange-400 bg-clip-text text-transparent">
             {title}
           </h1>
-          
+
           <Card className="bg-slate-900/50 border-white/10 backdrop-blur-xl">
             <CardContent className="p-8 sm:p-12">
               <div className="prose prose-invert max-w-none">
